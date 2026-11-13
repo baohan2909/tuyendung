@@ -14,7 +14,7 @@ export default function Login() {
     e.preventDefault()
     setLoi(null)
     const m = ma.trim().toUpperCase()
-    if (!/^[A-Z0-9]{3,20}$/.test(m)) return setLoi('Nhập mã nhân viên (VD: NS00490)')
+    if (!/^[A-Z0-9]{3,20}$/.test(m)) return setLoi('Nhập mã nhân viên (VD: NS00123)')
     if (!mk) return setLoi('Nhập mật khẩu')
     setDang(true)
     try {
