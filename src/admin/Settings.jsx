@@ -24,7 +24,7 @@ export default function Settings() {
     s.coSua && { v: 'nguon', t: 'Nguồn & QR' },
     s.coSua && { v: 'form', t: 'Biểu mẫu' },
     s.coSua && { v: 'pv', t: 'Phỏng vấn' },
-    s.coSua && { v: 'don', t: 'Dọn dẹp' }
+    s.laQT && { v: 'don', t: 'Dọn dẹp' }
   ].filter(Boolean)
   const [tab, setTab] = useState('tk')
   return (
