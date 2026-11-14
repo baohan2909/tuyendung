@@ -30,6 +30,7 @@ export default function Scorecard() {
   const [daGui, setDaGui] = useState(false)
   const [dangGui, setDangGui] = useState(false)
   const [loi, setLoi] = useState(null)
+  const [chot, setChot] = useState(true)
   const daNap = useRef(false)
   const hen = useRef(null)
   const doi = useRef(false)
@@ -63,8 +64,9 @@ export default function Scorecard() {
     setDangGui(true)
     try {
       await rpc('td_luu_danh_gia', { p_ho_so_id: id, p: { diem, nhan_xet: nhanXet, ket_luan: ketLuan, gui: true } })
+      if (chot && coChot) await rpc('td_chot_ket_qua', { p_id: id, p_ket_qua: ketLuan, p_ghi_chu: nhanXet ? nhanXet.slice(0, 200) : null })
       setDaGui(true)
-      bao(daGui ? 'Đã cập nhật phiếu chấm' : 'Đã gửi phiếu chấm')
+      bao(chot && coChot ? 'Đã gửi phiếu & chốt kết quả: ' + KET_LUAN[ketLuan].ten : daGui ? 'Đã cập nhật phiếu chấm' : 'Đã gửi phiếu chấm')
       reload(true)
       s.lamMoi()
     } catch (e) { setLoi(e.message) }
@@ -76,6 +78,7 @@ export default function Scorecard() {
   if (!s.coCham) return <div className="card"><Empty icon={Lock} tieuDe="Vai trò của bạn không chấm điểm">Liên hệ quản trị nếu cần quyền phỏng vấn.</Empty></div>
 
   const h = d.ho_so
+  var coChot = ['hen_pv', 'da_pv', 'de_xuat', 'du_bi'].includes(h.trang_thai)
   const lichNay = d.lich.find((l) => l.trang_thai !== 'huy' && ngayVN(l.bat_dau) === ngayVN()) || d.lich.find((l) => l.trang_thai !== 'huy')
   const anh = d.tep.find((t) => t.loai === 'anh')
   const nguoiKhac = d.danh_gia.filter((g) => g.nguoi_cham !== s.toi.id)
@@ -127,6 +130,9 @@ export default function Scorecard() {
             <div className="ket-luan" style={{ width: '100%' }} role="radiogroup" aria-label="Kết luận">
               {Object.entries(KET_LUAN).map(([k, v]) => <button key={k} type="button" role="radio" aria-checked={ketLuan === k} className={k + (ketLuan === k ? ' on' : '')} onClick={() => { doi.current = true; setKetLuan(k) }}>{v.ten}</button>)}
             </div>
+            {coChot && <label className="hang" style={{ gap: 10, width: '100%', fontSize: 13, color: 'rgba(255,255,255,.85)', cursor: 'pointer' }} onClick={(e) => { e.preventDefault(); setChot((x) => !x) }}>
+              <span className={'o-chon' + (chot ? ' on' : '')} style={chot ? { background: 'var(--pink)', borderColor: 'var(--pink)' } : { background: 'transparent', borderColor: 'rgba(255,255,255,.4)' }}>{chot && <Check size={13} strokeWidth={3} />}</span>
+              <span>Đây là kết quả cuối cùng — chốt <b>{ketLuan ? KET_LUAN[ketLuan].ten : 'Đạt / Không đạt'}</b> cho hồ sơ</span></label>}
             {loi && <div className="bao loi" style={{ width: '100%' }}>{loi}</div>}
             <Btn kieu="trang" co="lg" orb icon={Send} loading={dangGui} onClick={gui} className="rong">{daGui ? 'Gửi lại phiếu' : 'Gửi phiếu chấm'}</Btn>
             <p style={{ fontSize: 12, color: 'rgba(255,255,255,.6)', textAlign: 'center' }}>{daGui ? 'Phiếu đã gửi — chỉnh sửa rồi bấm Gửi lại để cập nhật.' : 'Phiếu của người khác chỉ hiện sau khi bạn gửi (chấm độc lập).'}</p>

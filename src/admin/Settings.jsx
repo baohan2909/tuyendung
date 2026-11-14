@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Copy, Download, KeyRound, Link2, Lock, Plus, QrCode, RefreshCw, Save, ShieldCheck, Trash2, UserPlus, Pencil, Sparkles } from 'lucide-react'
-import { doiMatKhau, dsTep, luuDong, rpc, xoaTep } from '../lib/api'
+import { docBang, doiMatKhau, dsTep, luuDong, rpc, themDong, xoaTep } from '../lib/api'
+import { useAsync } from '../lib/hooks'
+import { khongDau } from '../lib/format'
 import { anhQR } from '../lib/excel'
 import { APP_URL } from '../config'
 import { VAI_TRO } from '../lib/stages'
@@ -22,6 +24,8 @@ export default function Settings() {
     { v: 'tk', t: 'Tài khoản' },
     s.laQT && { v: 'ns', t: 'Nhân sự' },
     s.coSua && { v: 'nguon', t: 'Nguồn & QR' },
+    s.coSua && { v: 'ch', t: 'Cửa hàng' },
+    s.coSua && { v: 'hs', t: 'Hồ sơ nhân sự' },
     s.coSua && { v: 'form', t: 'Biểu mẫu' },
     s.coSua && { v: 'pv', t: 'Phỏng vấn' },
     s.laQT && { v: 'don', t: 'Dọn dẹp' }
@@ -34,6 +38,8 @@ export default function Settings() {
       {tab === 'tk' && <TaiKhoan />}
       {tab === 'ns' && <NhanSu />}
       {tab === 'nguon' && <Nguon />}
+      {tab === 'ch' && <CuaHang />}
+      {tab === 'hs' && <MauNhanSu />}
       {tab === 'form' && <BieuMau />}
       {tab === 'pv' && <CaiPV />}
       {tab === 'don' && <DonDep />}
@@ -335,5 +341,80 @@ function DonDep() {
         <Btn kieu="den" icon={Trash2} loading={dang} disabled={!ds?.length} onClick={don} className="day">{tienDo ? 'Đang dọn ' + tienDo : 'Dọn ngay'}</Btn>
       </div>
     </section>
+  )
+}
+
+function CuaHang() {
+  const bao = useToast()
+  const { data, reload } = useAsync(() => docBang('cua_hang', [['ten', true]]), [])
+  const [tim, setTim] = useState('')
+  const [sua, setSua] = useState(null)
+  const ds = (data || []).filter((c) => { const t = khongDau(tim).trim().split(/\s+/).filter(Boolean); return t.every((w) => khongDau(c.ten + ' ' + c.ma + ' ' + (c.khu_vuc || '') + ' ' + (c.dia_chi || '')).includes(w)) })
+  async function luu(c) { try { await luuDong('cua_hang', { ...c, cap_nhat_luc: new Date().toISOString() }, 'ma'); bao('Đã lưu cửa hàng'); setSua(null); reload(true) } catch (e) { bao(e.message, 'loi') } }
+  return (
+    <section className="card">
+      <div className="dau-the"><h2>Cửa hàng · {(data || []).filter((c) => c.hoat_dong).length} đang hoạt động</h2><Btn kieu="den" co="sm" icon={Plus} onClick={() => setSua({ ma: '', ten: '', dia_chi: '', khu_vuc: '', hoat_dong: true, nguon: 'thu_cong', moi: true })}>Thêm</Btn></div>
+      <p className="nho muted" style={{ marginTop: -8, marginBottom: 12 }}>Danh sách lấy từ hệ thống Chấm công (mã cửa hàng giữ nguyên để liên kết). Dùng khi nhận việc & điều chuyển nhân viên.</p>
+      <label className="input-tron" style={{ background: 'var(--soft)', boxShadow: 'none', marginBottom: 8 }}><input value={tim} onChange={(e) => setTim(e.target.value)} placeholder="Tìm tên, mã, khu vực, địa chỉ…" /></label>
+      {!data ? <Spinner /> : ds.slice(0, 120).map((c) => (
+        <div key={c.ma} className="dong-ns" style={{ opacity: c.hoat_dong ? 1 : 0.5 }}>
+          <span className="tag" style={{ minWidth: 78, justifyContent: 'center' }}>{c.ma}</span>
+          <div className="gian" style={{ flex: '1 1 220px' }}><b>{c.ten}</b><span className="cat" style={{ display: 'block' }}>{c.khu_vuc || '—'}{c.dia_chi ? ' · ' + c.dia_chi : ''}</span></div>
+          <Switch on={c.hoat_dong} nhan="Hoạt động" onDoi={(v) => luu({ ...c, hoat_dong: v })} />
+          <IconBtn icon={Pencil} nhan="Sửa" co="sm" kieu="mem" size={15} onClick={() => setSua(c)} />
+        </div>
+      ))}
+      {data && ds.length > 120 && <p className="nho muted" style={{ padding: 8 }}>… và {ds.length - 120} cửa hàng khác, hãy tìm cụ thể hơn.</p>}
+      {sua && (
+        <Modal mo dong={() => setSua(null)} tieuDe={sua.moi ? 'Thêm cửa hàng' : 'Sửa cửa hàng'} chan={<><Btn kieu="trong" onClick={() => setSua(null)}>Hủy</Btn><Btn kieu="den" icon={Save} onClick={() => { const { moi, ...c } = sua; if (!c.ma || !c.ten) return bao('Nhập mã và tên', 'loi'); luu(c) }}>Lưu</Btn></>}>
+          <div className="cot" style={{ gap: 10 }}>
+            <div className="luoi-2"><Field kieu="gon" nhan="Mã cửa hàng" value={sua.ma} disabled={!sua.moi} onChange={(e) => setSua((x) => ({ ...x, ma: e.target.value.toUpperCase().trim() }))} /><Field kieu="gon" nhan="Tên" value={sua.ten} onChange={(e) => setSua((x) => ({ ...x, ten: e.target.value }))} /></div>
+            <Field kieu="gon" nhan="Khu vực" value={sua.khu_vuc || ''} onChange={(e) => setSua((x) => ({ ...x, khu_vuc: e.target.value }))} />
+            <Field kieu="gon" nhan="Địa chỉ" value={sua.dia_chi || ''} onChange={(e) => setSua((x) => ({ ...x, dia_chi: e.target.value }))} />
+          </div>
+        </Modal>
+      )}
+    </section>
+  )
+}
+
+function MauNhanSu() {
+  const bao = useToast()
+  const { data: gt, reload: r1 } = useAsync(() => docBang('giay_to_mau', [['thu_tu', true]]), [])
+  const { data: moc, reload: r2 } = useAsync(() => docBang('moc_mau', [['thu_tu', true]]), [])
+  const [moiGt, setMoiGt] = useState('')
+  const [moiMoc, setMoiMoc] = useState({ ten: '', so_ngay: 7 })
+  const luu = async (bang, d, k, r) => { try { await luuDong(bang, d, k); r(true) } catch (e) { bao(e.message, 'loi') } }
+  const ma = (t) => khongDau(t).replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 30) + '_' + Date.now().toString(36).slice(-3)
+  return (
+    <div className="hai-cot">
+      <section className="card lon">
+        <div className="dau-the"><h2>Giấy tờ khi nhận việc</h2></div>
+        <p className="nho muted" style={{ marginTop: -8, marginBottom: 8 }}>Áp dụng cho nhân viên nhận việc từ nay về sau.</p>
+        {(gt || []).map((g) => (
+          <div key={g.ma} className="dong-ns" style={{ opacity: g.hoat_dong ? 1 : 0.5 }}>
+            <div className="gian"><b>{g.ten}</b><span>{g.mo_ta || ''}</span></div>
+            <label className="hang nho" style={{ gap: 6 }}><Switch on={g.bat_buoc} nhan="Bắt buộc" onDoi={(v) => luu('giay_to_mau', { ...g, bat_buoc: v }, 'ma', r1)} />Bắt buộc</label>
+            <label className="hang nho" style={{ gap: 6 }}><Switch on={g.hoat_dong} nhan="Dùng" onDoi={(v) => luu('giay_to_mau', { ...g, hoat_dong: v }, 'ma', r1)} />Dùng</label>
+          </div>
+        ))}
+        <div className="hang" style={{ marginTop: 10 }}><Field kieu="gon" nhan="Thêm giấy tờ" value={moiGt} onChange={(e) => setMoiGt(e.target.value)} /><Btn kieu="den" co="sm" icon={Plus} onClick={() => { if (moiGt.trim()) { themDong('giay_to_mau', { ma: ma(moiGt), ten: moiGt.trim(), thu_tu: (gt || []).length + 1 }).then(() => { setMoiGt(''); r1(true) }).catch((e) => bao(e.message, 'loi')) } }}>Thêm</Btn></div>
+      </section>
+      <section className="card nho-cot">
+        <div className="dau-the"><h2>Lộ trình hội nhập</h2></div>
+        {(moc || []).map((m) => (
+          <div key={m.ma} className="dong-ns" style={{ opacity: m.hoat_dong ? 1 : 0.5 }}>
+            <span className="tag">+{m.so_ngay} ngày</span>
+            <div className="gian"><b style={{ fontSize: 13.5 }}>{m.ten}</b></div>
+            <Switch on={m.hoat_dong} nhan="Dùng" onDoi={(v) => luu('moc_mau', { ...m, hoat_dong: v }, 'ma', r2)} />
+          </div>
+        ))}
+        <div className="cot" style={{ marginTop: 10, gap: 8 }}>
+          <Field kieu="gon" nhan="Mốc mới" value={moiMoc.ten} onChange={(e) => setMoiMoc((x) => ({ ...x, ten: e.target.value }))} />
+          <div className="hang"><Field kieu="gon" nhan="Sau ngày nhận việc (ngày)" value={moiMoc.so_ngay} onChange={(e) => setMoiMoc((x) => ({ ...x, so_ngay: Number(e.target.value.replace(/\D/g, '')) || 0 }))} inputMode="numeric" />
+            <Btn kieu="den" co="sm" icon={Plus} onClick={() => { if (moiMoc.ten.trim()) { themDong('moc_mau', { ma: ma(moiMoc.ten), ten: moiMoc.ten.trim(), so_ngay: moiMoc.so_ngay, thu_tu: (moc || []).length + 1 }).then(() => { setMoiMoc({ ten: '', so_ngay: 7 }); r2(true) }).catch((e) => bao(e.message, 'loi')) } }}>Thêm</Btn></div>
+        </div>
+      </section>
+    </div>
   )
 }

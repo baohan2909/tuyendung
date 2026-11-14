@@ -175,3 +175,17 @@ export function ngheHoSo(cb) {
     .subscribe()
   return () => { sb.removeChannel(kenh) }
 }
+
+// ---------- Kho giấy tờ nhân sự (nhân sự đăng nhập tải lên) ----------
+export async function taiGiayTo(path, file) {
+  if (mock) return path
+  const { error } = await sb.storage.from('nhansu').upload(path, file, { upsert: false, contentType: file.type || undefined })
+  if (error) throw boc(error)
+  return path
+}
+export async function moGiayTo(path) {
+  if (mock) return null
+  const { data, error } = await sb.storage.from('nhansu').createSignedUrl(path, 600)
+  if (error) throw boc(error)
+  return data.signedUrl
+}

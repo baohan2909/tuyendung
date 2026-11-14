@@ -8,7 +8,8 @@ import { GD, HINH_THUC, KET_LUAN } from '../lib/stages'
 import { AnhKho, Avatar, Bao, Btn, Chips, Diem, Empty, Field, IconBtn, KetLuanTag, LichTag, Lightbox, Menu, Modal, Ring, Skeleton, StageTag, Switch, useToast, useXacNhan } from '../components/ui'
 import { useStaff } from './context'
 import LichModal from './LichModal'
-import { MenuGiaiDoan, useDoiGiaiDoan } from './stageActions'
+import { HanhDongBuoc, MenuGiaiDoan, useDoiGiaiDoan } from './stageActions'
+import TruyVet from './TruyVet'
 
 const IC_HD = { nop: FileText, trang_thai: Filter, ghi_chu: StickyNote, hen_pv: CalendarPlus, lich: CalendarCheck, danh_gia: ClipboardCheck, phan_cong: UserCheck, sua: Pencil, ung_vien: MessageCircle }
 
@@ -96,9 +97,9 @@ export default function Profile() {
           <Ring pct={tbDiem != null ? tbDiem * 10 : 0} size={92}>
             <b style={{ fontSize: 26, lineHeight: 1 }}>{tbDiem != null ? fmtDiem(tbDiem) : '—'}</b><span style={{ fontSize: 10.5, opacity: 0.65 }}>{h.so_danh_gia ? h.so_danh_gia + ' phiếu' : '/ 10'}</span>
           </Ring>
-          <div className="cot" style={{ gap: 8 }}>
-            {s.coCham && <Link to={'/quan-tri/ung-vien/' + h.id + '/cham'} className="btn trang md" style={{ textDecoration: 'none' }}><ClipboardCheck size={16} />{d.phieu_cua_toi?.da_gui ? 'Xem phiếu chấm' : 'Mở phiếu chấm'}</Link>}
-            {q.sua && <MenuGiaiDoan hienTai={h.trang_thai} nut={<Btn kieu="vien-sang" co="md" icon={Filter}>Chuyển giai đoạn</Btn>} chon={(tt) => doiGD([h.id], tt, [h])} />}
+          <div className="hang wrap" style={{ gap: 8, maxWidth: 520 }}>
+            <HanhDongBuoc h={h} doiGD={doiGD} henPV={() => setMoLich({})} sang />
+            {q.sua && <MenuGiaiDoan hienTai={h.trang_thai} nut={<IconBtn icon={Filter} nhan="Chuyển giai đoạn khác" kieu="kinh" />} chon={(tt) => doiGD([h.id], tt, [h])} />}
           </div>
         </div>
       </section>
@@ -158,8 +159,9 @@ export default function Profile() {
         </div>
 
         <div className="nho-cot cot" style={{ gap: 18 }}>
+          <TruyVet id={h.id} nhip={d.hoat_dong.length} />
           <section className="card">
-            <div className="dau-the"><h2>Lịch phỏng vấn</h2>{q.sua && <Btn kieu="den" co="sm" icon={CalendarPlus} onClick={() => setMoLich({})}>Hẹn</Btn>}</div>
+            <div className="dau-the"><h2>Lịch phỏng vấn online</h2>{q.sua && <Btn kieu="den" co="sm" icon={CalendarPlus} onClick={() => setMoLich({})}>Hẹn</Btn>}</div>
             {!d.lich.length ? <p className="nho muted">Chưa có lịch phỏng vấn.</p> : (
               <div className="cot" style={{ gap: 10 }}>
                 {d.lich.map((l) => (
@@ -264,7 +266,7 @@ export default function Profile() {
   )
 }
 
-function TrinhPhat({ v }) {
+export function TrinhPhat({ v }) {
   const url = useSignedUrl(v.duong_dan)
   const bia = useSignedUrl(v.duong_dan_nho)
   const [tocDo, setTocDo] = useState(1)

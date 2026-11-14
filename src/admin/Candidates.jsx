@@ -10,7 +10,7 @@ import { AnhKho, Avatar, Btn, Chips, Diem, Empty, Field, Menu, Modal, Segment, S
 import { useStaff } from './context'
 import LichModal from './LichModal'
 import { tenNgan } from './Dashboard'
-import { MenuGiaiDoan, useDoiGiaiDoan } from './stageActions'
+import { HanhDongBuoc, MenuGiaiDoan, useDoiGiaiDoan } from './stageActions'
 
 const SAP_XEP = [{ v: 'moi_nhat', t: 'Mới nhất' }, { v: 'cu_nhat', t: 'Cũ nhất' }, { v: 'diem', t: 'Điểm cao' }, { v: 'ten', t: 'Tên A–Z' }, { v: 'tuoi', t: 'Trẻ nhất' }, { v: 'cap_nhat', t: 'Vừa cập nhật' }]
 
@@ -157,7 +157,7 @@ export default function Candidates() {
                     {s.coSua ? <button className={'o-chon' + (tatCaChon ? ' on' : '')} onClick={() => setChon(tatCaChon ? [] : ds.map((r) => r.id))} aria-label="Chọn tất cả">{tatCaChon && <Check size={13} strokeWidth={3} />}</button> : <span>#</span>}
                     <button className={loc.sap_xep === 'ten' ? 'on' : ''} onClick={() => setLoc((l) => ({ ...l, sap_xep: 'ten' }))}>Ứng viên</button>
                     <span>Vị trí</span><span>Khu vực</span><span>Video</span><span>Giai đoạn</span>
-                    <button className={loc.sap_xep === 'diem' ? 'on' : ''} onClick={() => setLoc((l) => ({ ...l, sap_xep: 'diem' }))}>Điểm</button>
+                    <button className={loc.sap_xep === 'diem' ? 'on' : ''} onClick={() => setLoc((l) => ({ ...l, sap_xep: 'diem' }))}>Điểm / duyệt</button>
                     <button className={['moi_nhat', 'cu_nhat'].includes(loc.sap_xep) ? 'on' : ''} onClick={() => setLoc((l) => ({ ...l, sap_xep: l.sap_xep === 'moi_nhat' ? 'cu_nhat' : 'moi_nhat' }))}>Nộp lúc</button>
                   </div>
                   {ds.map((r, i) => {
@@ -173,7 +173,11 @@ export default function Candidates() {
                         <span className="cat muted-2">{r.khu_vuc_mong_muon || r.cho_o}</span>
                         <span>{r.video_giay != null ? <span className="co-video"><i><Film size={10} /></i>{fmtGiay(r.video_giay)}</span> : <span className="muted">—</span>}</span>
                         <span><StageTag ma={r.trang_thai} /></span>
-                        <span><Diem v={r.diem_tb} /></span>
+                        <span onClick={(e) => e.stopPropagation()}>{s.coSua && ['moi', 'sang_loc'].includes(r.trang_thai) ? (
+                          <span className="hang" style={{ gap: 4 }}>
+                            <button className="icon-btn xs" style={{ background: 'var(--ok-bg)', color: 'var(--ok)' }} title="Qua sàng lọc" aria-label="Qua sàng lọc" onClick={() => doiGD([r.id], 'hen_pv', [r])}><Check size={14} strokeWidth={3} /></button>
+                            <button className="icon-btn xs" style={{ background: 'var(--err-bg)', color: 'var(--err)' }} title="Loại" aria-label="Loại" onClick={() => doiGD([r.id], 'khong_dat', [r])}><X size={14} strokeWidth={3} /></button>
+                          </span>) : <Diem v={r.diem_tb} />}</span>
                         <span className="nho muted">{tuongDoi(r.nop_luc)}</span>
                       </div>
                     )
@@ -249,10 +253,7 @@ function XemNhanh({ r, dong, doiGD, henPV }) {
         </dl>
         <div className="cot" style={{ gap: 8 }}>
           <Link to={'/quan-tri/ung-vien/' + r.id} className="btn den rong co-orb" style={{ justifyContent: 'space-between' }}>Mở hồ sơ đầy đủ<span className="orb sm"><ExternalLink size={15} /></span></Link>
-          {s.coSua && <div className="luoi-2">
-            <Btn co="md" icon={CalendarPlus} onClick={henPV}>Hẹn PV</Btn>
-            <MenuGiaiDoan nut={<Btn co="md" icon={Filter} className="rong">Giai đoạn</Btn>} chon={(tt) => doiGD([r.id], tt, [r])} />
-          </div>}
+          <div className="hang wrap" style={{ gap: 8 }}><HanhDongBuoc h={r} doiGD={doiGD} henPV={henPV} /></div>
           <a className="btn md vien" href={'tel:' + r.sdt}><Phone size={16} />Gọi {fmtSdt(r.sdt)}</a>
         </div>
       </div>

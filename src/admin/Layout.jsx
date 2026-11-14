@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { BarChart3, Briefcase, CalendarDays, Columns3, LayoutGrid, LogOut, Menu as MenuIc, Settings, Users, ExternalLink } from 'lucide-react'
+import { BarChart3, Briefcase, CalendarDays, Columns3, LayoutGrid, LogOut, Menu as MenuIc, Settings, Users, ExternalLink, Filter, UserCheck, History } from 'lucide-react'
 import { useStaff } from './context'
 import { VAI_TRO } from '../lib/stages'
 import { chuCai } from '../lib/format'
@@ -10,14 +10,18 @@ import Login from './Login'
 function dsMuc(s) {
   return [
     { to: '/quan-tri', ten: 'Tổng quan', ic: LayoutGrid, end: true },
-    { to: '/quan-tri/ung-vien', ten: 'Ứng viên', ic: Users, badge: s.dem?.moi },
+    s.coSua && { to: '/quan-tri/sang-loc', ten: 'Sàng lọc', ic: Filter, badge: (s.dem?.moi || 0) + (s.dem?.sang_loc || 0) },
+    { to: '/quan-tri/ung-vien', ten: 'Ứng viên', ic: Users },
+    { to: '/quan-tri/phong-van', ten: 'PV online', ic: CalendarDays, badge: s.dem?.hen_pv },
     { to: '/quan-tri/quy-trinh', ten: 'Quy trình', ic: Columns3 },
-    { to: '/quan-tri/phong-van', ten: 'Phỏng vấn', ic: CalendarDays },
+    { nhom: 'Nhân sự' },
+    s.vaiTro !== 'phong_van' && { to: '/quan-tri/nhan-vien', ten: 'Nhân viên mới', ic: UserCheck },
     { nhom: 'Quản lý' },
     s.coSua && { to: '/quan-tri/vi-tri', ten: 'Vị trí tuyển', ic: Briefcase },
     s.vaiTro !== 'phong_van' && { to: '/quan-tri/bao-cao', ten: 'Báo cáo', ic: BarChart3 },
+    s.coSua && { to: '/quan-tri/nhat-ky', ten: 'Nhật ký', ic: History },
     { to: '/quan-tri/cai-dat', ten: 'Cài đặt', ic: Settings }
-  ].filter(Boolean)
+  ].filter(Boolean).filter((m, i, a) => !m.nhom || (a[i + 1] && !a[i + 1].nhom))
 }
 
 export default function AdminLayout() {
@@ -82,7 +86,7 @@ export default function AdminLayout() {
             <m.ic size={20} strokeWidth={2.1} /><span>{m.ten}</span>{m.badge > 0 && <i className="badge">{m.badge > 99 ? '99+' : m.badge}</i>}
           </NavLink>
         ))}
-        <button type="button" onClick={() => setMoThem(true)} className={muc.slice(5).some((m) => m.to && loc.pathname.startsWith(m.to)) ? 'on' : ''}><MenuIc size={20} /><span>Thêm</span></button>
+        <button type="button" onClick={() => setMoThem(true)} className={muc.filter((m) => m.to).slice(4).some((m) => loc.pathname.startsWith(m.to)) ? 'on' : ''}><MenuIc size={20} /><span>Thêm</span></button>
       </nav>
 
       <Modal mo={moThem} dong={() => setMoThem(false)} tieuDe={s.toi.ho_ten} moTa={VAI_TRO[s.vaiTro] + ' · ' + s.toi.ma_nv}>

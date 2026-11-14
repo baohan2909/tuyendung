@@ -10,6 +10,9 @@ import Interviews from './Interviews'
 import Positions from './Positions'
 import Reports from './Reports'
 import Settings from './Settings'
+import SangLoc from './SangLoc'
+import NhatKy from './NhatKy'
+import { ChiTietNhanVien, DsNhanVien } from './NhanVien'
 import '../styles/admin.css'
 
 export default function AdminApp() {
@@ -26,6 +29,10 @@ export default function AdminApp() {
           <Route path="vi-tri" element={<Positions />} />
           <Route path="bao-cao" element={<Reports />} />
           <Route path="cai-dat" element={<Settings />} />
+          <Route path="sang-loc" element={<SangLoc />} />
+          <Route path="nhan-vien" element={<DsNhanVien />} />
+          <Route path="nhan-vien/:id" element={<ChiTietNhanVien />} />
+          <Route path="nhat-ky" element={<NhatKy />} />
           <Route path="*" element={<Navigate to="/quan-tri" replace />} />
         </Route>
       </Routes>

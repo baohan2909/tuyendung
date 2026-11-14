@@ -1,11 +1,11 @@
 // Giai đoạn hồ sơ (nội bộ) — thứ tự, nhãn, màu
 export const GIAI_DOAN = [
-  { ma: 'moi', ten: 'Mới', bg: '#FDE6F1', fg: '#A3004F', cham: '#E0157E' },
-  { ma: 'sang_loc', ten: 'Sàng lọc', bg: '#FDF3E3', fg: '#8A5410', cham: '#D98A1C' },
-  { ma: 'hen_pv', ten: 'Hẹn PV', bg: '#EAF0FD', fg: '#2E5BC9', cham: '#3B6FE0' },
-  { ma: 'da_pv', ten: 'Đã PV', bg: '#EFE8FB', fg: '#5B2A9E', cham: '#7B2CBF' },
-  { ma: 'de_xuat', ten: 'Đề xuất', bg: '#E1F3F6', fg: '#0F6375', cham: '#1590A8' },
-  { ma: 'dat', ten: 'Đạt', bg: '#E3F5EE', fg: '#0E7F63', cham: '#12A37F' },
+  { ma: 'moi', ten: 'Chờ sàng lọc', ngan: 'Mới', bg: '#FDE6F1', fg: '#A3004F', cham: '#E0157E' },
+  { ma: 'sang_loc', ten: 'Sàng lọc', bg: '#FDF3E3', fg: '#8A5410', cham: '#D98A1C', cu: true },
+  { ma: 'hen_pv', ten: 'Phỏng vấn online', ngan: 'PV online', bg: '#EAF0FD', fg: '#2E5BC9', cham: '#3B6FE0' },
+  { ma: 'da_pv', ten: 'Đã PV', bg: '#EFE8FB', fg: '#5B2A9E', cham: '#7B2CBF', cu: true },
+  { ma: 'de_xuat', ten: 'Đề xuất', bg: '#E1F3F6', fg: '#0F6375', cham: '#1590A8', cu: true },
+  { ma: 'dat', ten: 'Trúng tuyển', bg: '#E3F5EE', fg: '#0E7F63', cham: '#12A37F' },
   { ma: 'nhan_viec', ten: 'Nhận việc', bg: '#17111A', fg: '#FFFFFF', cham: '#17111A' },
   { ma: 'du_bi', ten: 'Dự bị', bg: '#EEF1F5', fg: '#475A70', cham: '#7A8CA3' },
   { ma: 'khong_dat', ten: 'Không đạt', bg: '#F4F1F5', fg: '#8C8494', cham: '#B9B2BF' },
@@ -13,8 +13,21 @@ export const GIAI_DOAN = [
 ]
 export const GD = Object.fromEntries(GIAI_DOAN.map((g) => [g.ma, g]))
 export const GD_DANG_XU_LY = ['moi', 'sang_loc', 'hen_pv', 'da_pv', 'de_xuat']
-export const GD_COT = ['moi', 'sang_loc', 'hen_pv', 'da_pv', 'de_xuat', 'dat', 'nhan_viec']
+export const GD_COT = ['moi', 'hen_pv', 'dat', 'nhan_viec']
 export const GD_KET_THUC = ['du_bi', 'khong_dat', 'rut']
+export const GD_SANG_LOC = ['moi', 'sang_loc']
+export const GD_PHONG_VAN = ['hen_pv', 'da_pv', 'de_xuat']
+export const NV_TT = {
+  thu_viec: { ten: 'Thử việc', bg: '#FDF3E3', fg: '#8A5410' },
+  chinh_thuc: { ten: 'Chính thức', bg: '#E3F5EE', fg: '#0E7F63' },
+  nghi_viec: { ten: 'Nghỉ việc', bg: '#F4F1F5', fg: '#8C8494' }
+}
+export const GT_TT = {
+  chua_nop: { ten: 'Chưa nộp', bg: '#F4F1F5', fg: '#8C8494' },
+  da_nop: { ten: 'Đã nộp', bg: '#EAF0FD', fg: '#2E5BC9' },
+  da_duyet: { ten: 'Đã duyệt', bg: '#E3F5EE', fg: '#0E7F63' },
+  can_bo_sung: { ten: 'Cần bổ sung', bg: '#FDECEC', fg: '#B93838' }
+}
 
 export const VAI_TRO = {
   quan_tri: 'Quản trị',

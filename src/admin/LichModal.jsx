@@ -32,7 +32,7 @@ export default function LichModal({ hoSo, lich, dong, xong }) {
   const [ngay, setNgay] = useState(bd ? ngayVN(bd) : congNgay(ngayVN(), 1))
   const [gio, setGio] = useState(bd ? fmtGio(bd) : '09:00')
   const [thoiLuong, setThoiLuong] = useState(lich?.thoi_luong || 30)
-  const [hinhThuc, setHinhThuc] = useState(lich?.hinh_thuc || 'truc_tiep')
+  const [hinhThuc, setHinhThuc] = useState(lich?.hinh_thuc || 'online')
   const [diaDiem, setDiaDiem] = useState(lich?.dia_diem || '')
   const [ghiChu, setGhiChu] = useState(lich?.ghi_chu || '')
   const [nguoi, setNguoi] = useState(() => lich?.nguoi?.map((n) => n.id) || (s.vaiTro !== 'xem' ? [s.toi.id] : []))

@@ -99,7 +99,7 @@ a.lich-dong:hover { background: rgba(255,255,255,.12); color: #fff; }
 .bang-uv { background: #fff; border-radius: 30px; box-shadow: var(--shadow); padding: 8px 8px 10px; min-width: 0; }
 .bang-uv .cuon { overflow-x: auto; }
 .bang-uv .luoi { min-width: 820px; }
-.bang-uv .dau, .bang-uv .dong { display: grid; grid-template-columns: 34px minmax(220px, 2.4fr) 0.9fr 1.1fr 70px 104px 58px 78px; gap: 12px; align-items: center; padding: 0 14px; }
+.bang-uv .dau, .bang-uv .dong { display: grid; grid-template-columns: 34px minmax(220px, 2.4fr) 0.9fr 1.1fr 70px 112px 74px 78px; gap: 12px; align-items: center; padding: 0 14px; }
 .bang-uv .dau { height: 44px; font-size: 11px; font-weight: 700; letter-spacing: .06em; color: var(--muted); text-transform: uppercase; }
 .bang-uv .dau button { border: none; background: none; padding: 0; font: inherit; color: inherit; letter-spacing: inherit; text-transform: inherit; display: inline-flex; align-items: center; gap: 4px; }
 .bang-uv .dau button.on { color: var(--ink); }
