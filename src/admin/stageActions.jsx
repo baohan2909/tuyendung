@@ -109,7 +109,7 @@ export function useDoiGiaiDoan({ xong, henPV }) {
 // Hộp nhận việc + phân công cửa hàng
 export function NhanViecModal({ hs, dong, xong }) {
   const bao = useToast()
-  const { data: ch } = useAsync(() => docBang('cua_hang', [['ten', true]]), [])
+  const { data: ch, reload: reloadCh } = useAsync(() => docBang('cua_hang', [['ten', true]]), [])
   const [tim, setTim] = useState('')
   const [chon, setChon] = useState(null)
   const [ngay, setNgay] = useState(hs.ngay_nhan_viec || ngayVN())
@@ -187,6 +187,23 @@ export function HanhDongBuoc({ h, doiGD, toi, sang }) {
 }
 
 // Chọn cửa hàng (tìm theo tên, mã, địa chỉ, khu vực) — dùng trong phiếu phỏng vấn
+function BoSungDiaChi({ ma, xong }) {
+  const bao = useToast()
+  const [v, setV] = useState('')
+  const [dang, setDang] = useState(false)
+  async function luu() {
+    setDang(true)
+    try { await rpc('td_cua_hang_dia_chi', { p_ma: ma, p_dia_chi: v }); bao('Đã lưu địa chỉ cửa hàng'); xong() } catch (e) { bao(e.message, 'loi') }
+    setDang(false)
+  }
+  return (
+    <div className="cot" style={{ gap: 6, padding: 10, borderRadius: 18, background: 'var(--warn-bg)' }}>
+      <span className="nho" style={{ color: 'var(--warn)', fontWeight: 700 }}>Cửa hàng chưa có địa chỉ — email trúng tuyển cần địa chỉ. Bổ sung 1 lần, dùng cho mọi lần sau.</span>
+      <div className="hang" style={{ gap: 6 }}><Field kieu="gon" className="gian" value={v} onChange={(e) => setV(e.target.value)} placeholder="Số nhà, đường, phường, tỉnh/thành" /><Btn kieu="den" co="sm" loading={dang} onClick={luu}>Lưu</Btn></div>
+    </div>
+  )
+}
+
 export function ChonCuaHang({ giaTri, onChon, goiY = [] }) {
   const { data: ch } = useAsync(() => docBang('cua_hang', [['ten', true]]), [])
   const [tim, setTim] = useState('')
@@ -200,11 +217,14 @@ export function ChonCuaHang({ giaTri, onChon, goiY = [] }) {
     return tat.filter((c) => { const x = khongDau(c.ten + ' ' + c.ma + ' ' + (c.dia_chi || '') + ' ' + (c.khu_vuc || '')); return t.every((w) => x.includes(w)) }).slice(0, 30)
   }, [ch, tim])
   if (chon && !mo) return (
-    <button type="button" className="ch-da-chon" onClick={() => setMo(true)}>
-      <span className="orb xs"><Store size={13} /></span>
-      <span className="gian"><b className="cat">{chon.ten}</b><span className="cat">{chon.ma}{chon.dia_chi ? ' · ' + chon.dia_chi : ''}</span></span>
-      <span className="nho" style={{ color: 'var(--pink-deep)', fontWeight: 700 }}>Đổi</span>
-    </button>
+    <div className="cot" style={{ gap: 8 }}>
+      <button type="button" className="ch-da-chon" onClick={() => setMo(true)}>
+        <span className="orb xs"><Store size={13} /></span>
+        <span className="gian"><b className="cat">{chon.ten}</b><span className="cat">{chon.ma}{chon.dia_chi ? ' · ' + chon.dia_chi : ' · chưa có địa chỉ'}</span></span>
+        <span className="nho" style={{ color: 'var(--pink-deep)', fontWeight: 700 }}>Đổi</span>
+      </button>
+      {!chon.dia_chi && <BoSungDiaChi ma={chon.ma} xong={() => reloadCh(true)} />}
+    </div>
   )
   return (
     <div className="cot" style={{ gap: 8 }}>
