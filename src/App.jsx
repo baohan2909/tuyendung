@@ -29,7 +29,7 @@ function TaiTrang() {
 
 export default function App() {
   return (
-    <BrowserRouter basename="/tuyendung">
+    <BrowserRouter>
       <LenDau />
       <DoiLinkCu />
       <ToastProvider>

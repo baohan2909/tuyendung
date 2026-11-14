@@ -5,5 +5,5 @@ export const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdX
 
 export const BUCKET = 'hoso'
 export const STAFF_EMAIL_DOMAIN = 'nstd.nonson.vn'
-export const APP_URL = 'https://baohan2909.github.io/tuyendung/'
+export const APP_URL = 'https://tuyendungns.nonson.vn/'
 export const BRAND = 'Nón Sơn'

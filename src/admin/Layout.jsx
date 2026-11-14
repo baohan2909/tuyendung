@@ -62,7 +62,7 @@ export default function AdminLayout() {
               <m.ic size={19} strokeWidth={2} />{m.ten}{m.badge > 0 && <span className="badge">{m.badge > 99 ? '99+' : m.badge}</span>}
             </NavLink>
           ))}
-        <a className="nav-item" href="/tuyendung/" target="_blank" rel="noreferrer"><ExternalLink size={19} />Trang ứng tuyển</a>
+        <a className="nav-item" href="/" target="_blank" rel="noreferrer"><ExternalLink size={19} />Trang ứng tuyển</a>
         </div>
         <div className="sb-user">
           <span className="av">{chuCai(s.toi.ho_ten)}</span>
@@ -96,7 +96,7 @@ export default function AdminLayout() {
           {muc.filter((m) => m.to).slice(4).map((m) => (
             <Btn key={m.to} kieu="mem" co="lg" icon={m.ic} className="rong" style={{ justifyContent: 'flex-start' }} onClick={() => { setMoThem(false); nav(m.to) }}>{m.ten}</Btn>
           ))}
-          <Btn co="lg" icon={ExternalLink} className="rong" style={{ justifyContent: 'flex-start' }} onClick={() => window.open('/tuyendung/', '_blank')}>Trang ứng tuyển</Btn>
+          <Btn co="lg" icon={ExternalLink} className="rong" style={{ justifyContent: 'flex-start' }} onClick={() => window.open('/', '_blank')}>Trang ứng tuyển</Btn>
           <Btn kieu="do" co="lg" icon={LogOut} className="rong" style={{ justifyContent: 'flex-start' }} onClick={() => { setMoThem(false); s.thoat() }}>Đăng xuất</Btn>
         </div>
       </Modal>
