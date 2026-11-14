@@ -250,8 +250,8 @@ export function XemThuModal({ thu, dong }) {
 
 // ===== Cài đặt Email =====
 const BIEN = {
-  chung: ['{ho_ten}', '{vi_tri}', '{ma_ho_so}', '{cong_ty}', '{link_tra_cuu}', '{website}'],
-  dat: ['{cua_hang}', '{dia_chi}', '{ngay}', '{thu}', '{gio}', '{khoi_nhan_viec}', '{khoi_chuan_bi}', '{chu_ky}'],
+  chung: ['{xung_ho}', '{ho_ten}', '{vi_tri}', '{ma_ho_so}', '{cong_ty}', '{link_tra_cuu}', '{website}'],
+  dat: ['{cua_hang}', '{dia_chi}', '{ngay}', '{thu}', '{ca}', '{gio}', '{khoi_nhan_viec}', '{khoi_chuan_bi}', '{chu_ky}'],
   khac: ['{chu_ky}']
 }
 

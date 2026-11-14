@@ -122,7 +122,8 @@ export default function TraCuu() {
       {ketThucTot && (kq.ngay_nhan_viec || kq.noi_lam_viec) && (
         <div className="the-nhan-viec">
           <span className="eyebrow">{kq.trang_thai === 'nhan_viec' ? 'Nơi làm việc của bạn' : 'Thông tin nhận việc'}</span>
-          {kq.ngay_nhan_viec && <div className="tnv-ngay"><Calendar size={18} /><b>{thu(kq.ngay_nhan_viec + 'T12:00:00+07:00')} {fmtNgay(kq.ngay_nhan_viec + 'T12:00:00+07:00')}</b>{kq.gio_nhan_viec && <span>lúc <b>{kq.gio_nhan_viec}</b></span>}</div>}
+          {kq.ngay_nhan_viec && <div className="tnv-ngay"><Calendar size={18} /><span>Ngày hội nhập</span><b>{thu(kq.ngay_nhan_viec + 'T12:00:00+07:00')} {fmtNgay(kq.ngay_nhan_viec + 'T12:00:00+07:00')}</b></div>}
+          {kq.gio_nhan_viec && <div className="tnv-ngay"><Clock size={18} /><span>Ca làm việc ngày đầu</span><b>{kq.gio_nhan_viec}{kq.gio_ket_thuc ? ' – ' + kq.gio_ket_thuc : ''}</b></div>}
           {kq.noi_lam_viec && <div className="tnv-noi"><MapPin size={16} /><div><b>{kq.noi_lam_viec}</b>{kq.dia_chi_nhan_viec && <span>{kq.dia_chi_nhan_viec}</span>}</div></div>}
           {kq.ban_do && <a className="nut-chi-duong" href={kq.ban_do} target="_blank" rel="noreferrer"><MapPin size={16} />Chỉ đường đến cửa hàng</a>}
           {kq.ghi_chu_nhan_viec && <p>{kq.ghi_chu_nhan_viec}</p>}
@@ -130,9 +131,11 @@ export default function TraCuu() {
       )}
       {kq.trang_thai === 'trung_tuyen' && (
         <div className="the-tac-phong">
-          <span className="ttp-dau"><Shirt size={17} /><b>Tác phong khi đến nhận việc</b></span>
+          <span className="ttp-dau"><Shirt size={17} /><b>Trang phục khi đến nhận việc</b></span>
           <ul>{dsTacPhong(kq.tac_phong).map((x) => <li key={x}><Check size={14} strokeWidth={3} />{x}</li>)}</ul>
-          <span className="nho muted">Vui lòng có mặt đúng giờ. Nếu cần đổi lịch, hãy báo trước cho bộ phận tuyển dụng.</span>
+          <span className="ttp-dau" style={{ marginTop: 6 }}><FileText size={17} /><b>Lưu ý</b></span>
+          <ul className="luu-y">{['Mang theo hồ sơ xin việc và CMND/CCCD bản gốc', 'Đưa thông tin này cho nhân viên cửa hàng để được xác nhận', 'Vui lòng có mặt trước giờ vào ca 10 phút'].map((x) => <li key={x}><Check size={14} strokeWidth={3} />{x}</li>)}</ul>
+          <span className="nho muted">Mọi thắc mắc, bạn vui lòng trả lời email Nón Sơn đã gửi hoặc liên hệ Phòng Tuyển dụng.</span>
         </div>
       )}
       {kq.trang_thai === 'chua_phu_hop' && (

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { EmailCaiDat } from './Email'
 import { banDo } from './stageActions'
-import { dsTacPhong, MAC_DINH_TIN_DAT, MAC_DINH_TIN_KHONG_DAT, TAC_PHONG_MAC_DINH } from '../lib/thongBao'
+import { dsTacPhong, MAC_DINH_TIN_DAT, MAC_DINH_TIN_KHONG_DAT, TAC_PHONG_NAM, TAC_PHONG_NU } from '../lib/thongBao'
 import { Copy, Download, KeyRound, Link2, Lock, Plus, QrCode, RefreshCw, Save, ShieldCheck, Trash2, UserPlus, Pencil, Sparkles , MapPin , Upload } from 'lucide-react'
 import { docBang, doiMatKhau, dsTep, luuDong, rpc, themDong, xoaTep } from '../lib/api'
 import { useAsync } from '../lib/hooks'
@@ -392,16 +392,18 @@ function CaiPV() {
 }
 
 function CaiKetQua() {
-  const [tp, setTp, luuTp, d1] = useCaiDat('tac_phong', TAC_PHONG_MAC_DINH)
+  const [tpNu, setTpNu, luuTpNu, d1] = useCaiDat('tac_phong_nu', TAC_PHONG_NU)
+  const [tpNam, setTpNam, luuTpNam, d4] = useCaiDat('tac_phong_nam', TAC_PHONG_NAM)
   const [md, setMd, luuMd, d2] = useCaiDat('mau_tin_dat', '')
   const [mk, setMk, luuMk, d3] = useCaiDat('mau_tin_khong_dat', '')
-  const [txt, setTxt] = useState(dsTacPhong(tp).join('\n'))
+  const [txtNu, setTxtNu] = useState(dsTacPhong(tpNu, TAC_PHONG_NU).join('\n'))
+  const [txtNam, setTxtNam] = useState(dsTacPhong(tpNam, TAC_PHONG_NAM).join('\n'))
   return (
     <div className="hai-cot" style={{ marginTop: 18 }}>
       <section className="card lon">
         <div className="dau-the"><h2>Tin báo trúng tuyển</h2></div>
         <Field kieu="gon" nhan="Nội dung" goiY="Để trống = dùng mẫu mặc định"><textarea rows={12} value={md || MAC_DINH_TIN_DAT} onChange={(e) => setMd(e.target.value)} /></Field>
-        <p className="nho muted" style={{ marginTop: 8, lineHeight: 1.7 }}>Biến: <code>{'{ten}'}</code> <code>{'{vi_tri}'}</code> <code>{'{cua_hang}'}</code> <code>{'{dia_chi}'}</code> <code>{'{gio}'}</code> <code>{'{thu}'}</code> <code>{'{ngay}'}</code> <code>{'{ghi_chu}'}</code> <code>{'{tac_phong}'}</code> <code>{'{link}'}</code></p>
+        <p className="nho muted" style={{ marginTop: 8, lineHeight: 1.7 }}>Biến: <code>{'{xung_ho}'}</code> <code>{'{ten}'}</code> <code>{'{vi_tri}'}</code> <code>{'{thu}'}</code> <code>{'{ngay}'}</code> <code>{'{ca}'}</code> <code>{'{cua_hang}'}</code> <code>{'{dia_chi}'}</code> <code>{'{ban_do}'}</code> <code>{'{tac_phong}'}</code> <code>{'{luu_y}'}</code> <code>{'{ghi_chu}'}</code> <code>{'{link}'}</code></p>
         <div className="hang" style={{ marginTop: 12, gap: 8 }}><Btn kieu="den" icon={Save} loading={d2} onClick={() => luuMd(md === MAC_DINH_TIN_DAT ? '' : md)}>Lưu mẫu</Btn><Btn kieu="trong" onClick={() => setMd('')}>Về mặc định</Btn></div>
         <div className="dau-the" style={{ marginTop: 22 }}><h2>Tin báo chưa phù hợp</h2></div>
         <Field kieu="gon" nhan="Nội dung"><textarea rows={7} value={mk || MAC_DINH_TIN_KHONG_DAT} onChange={(e) => setMk(e.target.value)} /></Field>
@@ -409,9 +411,12 @@ function CaiKetQua() {
         <div className="hang" style={{ marginTop: 12, gap: 8 }}><Btn kieu="den" icon={Save} loading={d3} onClick={() => luuMk(mk === MAC_DINH_TIN_KHONG_DAT ? '' : mk)}>Lưu mẫu</Btn><Btn kieu="trong" onClick={() => setMk('')}>Về mặc định</Btn></div>
       </section>
       <section className="card nho-cot">
-        <div className="dau-the"><h2>Tác phong khi nhận việc</h2></div>
-        <Field kieu="gon" nhan="Mỗi dòng 1 lưu ý" goiY="Hiện trên trang tra cứu và trong tin báo trúng tuyển"><textarea rows={6} value={txt} onChange={(e) => setTxt(e.target.value)} /></Field>
-        <div style={{ marginTop: 12 }}><Btn kieu="den" icon={Save} loading={d1} onClick={() => { const ds = dsDong(txt); setTp(ds); luuTp(ds) }}>Lưu tác phong</Btn></div>
+        <div className="dau-the"><h2>Trang phục khi nhận việc</h2></div>
+        <p className="nho muted" style={{ marginTop: -6, marginBottom: 10 }}>Tự chọn theo giới tính ứng viên — dùng cho email, tin Zalo và trang tra cứu.</p>
+        <Field kieu="gon" nhan="Nhân viên nữ · mỗi dòng 1 ý"><textarea rows={5} value={txtNu} onChange={(e) => setTxtNu(e.target.value)} /></Field>
+        <div style={{ marginTop: 8 }}><Btn kieu="den" co="sm" icon={Save} loading={d1} onClick={() => { const ds = dsDong(txtNu); setTpNu(ds); luuTpNu(ds) }}>Lưu (nữ)</Btn></div>
+        <Field kieu="gon" nhan="Nhân viên nam · mỗi dòng 1 ý" style={{ marginTop: 14 }}><textarea rows={4} value={txtNam} onChange={(e) => setTxtNam(e.target.value)} /></Field>
+        <div style={{ marginTop: 8 }}><Btn kieu="den" co="sm" icon={Save} loading={d4} onClick={() => { const ds = dsDong(txtNam); setTpNam(ds); luuTpNam(ds) }}>Lưu (nam)</Btn></div>
       </section>
     </div>
   )

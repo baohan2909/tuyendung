@@ -331,7 +331,7 @@ function NhanViec({ h }) {
     return <Btn kieu="trang" co="sm" icon={Copy} onClick={() => navigator.clipboard?.writeText(tin).then(() => bao('Đã sao chép tin báo chưa phù hợp'))}>Sao chép tin báo ứng viên</Btn>
   }
   if (!h.noi_lam_viec && !h.ngay_nhan_viec) return null
-  const tin = tinDat(s.dm.caiDat.mau_tin_dat, h, h, (dsCh || []).find((c) => c.ma === h.cua_hang_du_kien), s.dm.caiDat.tac_phong)
+  const tin = tinDat(s.dm.caiDat.mau_tin_dat, h, h, (dsCh || []).find((c) => c.ma === h.cua_hang_du_kien), s.dm.caiDat)
   return (
     <div className="cot" style={{ gap: 4, background: 'var(--ok-bg)', borderRadius: 22, padding: '12px 14px' }}>
       <b style={{ fontSize: 13.5, color: 'var(--ok)' }}>{h.trang_thai === 'nhan_viec' ? 'Đã nhận việc' : 'Nhận việc dự kiến'}</b>

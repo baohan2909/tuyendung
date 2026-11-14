@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Check, CheckCircle2, Hourglass, PhoneMissed, CloudOff, Copy, Lock, Mail, MessageCircle, Send, Phone, Store, ThumbsDown, UserCheck, ExternalLink } from 'lucide-react'
 import { docBang, rpc } from '../lib/api'
-import { dsTacPhong, tinDat, tinKhongDat } from '../lib/thongBao'
+import { gioiTinhHS, tinDat, tinKhongDat } from '../lib/thongBao'
 import { useAsync } from '../lib/hooks'
 import { congNgay, fmtDiem, fmtGio, fmtNgay, fmtSdt, ngayVN, tuongDoi } from '../lib/format'
 import { GD, KET_LUAN } from '../lib/stages'
@@ -38,7 +38,7 @@ export default function Scorecard() {
   const [diem, setDiem] = useState({})
   const [nhanXet, setNhanXet] = useState('')
   const [ketLuan, setKetLuan] = useState(null)
-  const [nv, setNv] = useState({ cua_hang_ma: '', ngay_nhan_viec: congNgay(ngayVN(), 1), gio_nhan_viec: '08:00', ghi_chu_nhan_viec: '' })
+  const [nv, setNv] = useState({ cua_hang_ma: '', ngay_nhan_viec: congNgay(ngayVN(), 1), gio_nhan_viec: '08:00', gio_ket_thuc: '16:00', gioi_tinh: '', ghi_chu_nhan_viec: '' })
   const [trangThaiLuu, setTrangThaiLuu] = useState(null)
   const [daGui, setDaGui] = useState(false)
   const [dangGui, setDangGui] = useState(false)
@@ -64,7 +64,8 @@ export default function Scorecard() {
     if (p) { setDiem(Object.fromEntries(Object.entries(p.diem || {}).map(([k, v]) => [k, Number(v)]))); setNhanXet(p.nhan_xet || ''); setKetLuan(p.ket_luan); setDaGui(!!p.da_gui) }
     const h = d.ho_so
     if (['dat', 'khong_dat', 'can_nhac', 'chua_lien_lac'].includes(h.trang_thai) && !p?.ket_luan) setKetLuan(h.trang_thai)
-    if (h.cua_hang_du_kien || h.ngay_nhan_viec) setNv({ cua_hang_ma: h.cua_hang_du_kien || '', ngay_nhan_viec: h.ngay_nhan_viec || congNgay(ngayVN(), 1), gio_nhan_viec: h.gio_nhan_viec ? String(h.gio_nhan_viec).slice(0, 5) : '08:00', ghi_chu_nhan_viec: h.ghi_chu_nhan_viec || '' })
+    setNv((x) => ({ ...x, gioi_tinh: gioiTinhHS(h) }))
+    if (h.cua_hang_du_kien || h.ngay_nhan_viec) setNv({ cua_hang_ma: h.cua_hang_du_kien || '', ngay_nhan_viec: h.ngay_nhan_viec || congNgay(ngayVN(), 1), gio_nhan_viec: h.gio_nhan_viec ? String(h.gio_nhan_viec).slice(0, 5) : '08:00', gio_ket_thuc: h.gio_ket_thuc ? String(h.gio_ket_thuc).slice(0, 5) : '16:00', gioi_tinh: gioiTinhHS(h), ghi_chu_nhan_viec: h.ghi_chu_nhan_viec || '' })
     daNap.current = true
   }, [d])
 
@@ -89,8 +90,9 @@ export default function Scorecard() {
     const duTieuChi = du === tieuChi.length && tieuChi.length > 0
     if (ketLuan === 'dat' && !duTieuChi) return setLoi('Còn ' + (tieuChi.length - du) + ' tiêu chí chưa chấm.')
     if (ketLuan === 'dat' && !nv.cua_hang_ma) return setLoi('Chọn cửa hàng nhận việc cho ứng viên đạt.')
-    if (ketLuan === 'dat' && !nv.ngay_nhan_viec) return setLoi('Chọn ngày nhận việc.')
-    if (ketLuan === 'dat' && !nv.gio_nhan_viec) return setLoi('Chọn giờ có mặt.')
+    if (ketLuan === 'dat' && !nv.ngay_nhan_viec) return setLoi('Chọn ngày hội nhập.')
+    if (ketLuan === 'dat' && !nv.gio_nhan_viec) return setLoi('Chọn giờ bắt đầu ca làm việc.')
+    if (ketLuan === 'dat' && !nv.gioi_tinh) return setLoi('Chọn giới tính để gửi đúng quy định trang phục.')
     clearTimeout(hen.current)
     setDangGui(true)
     try {
@@ -212,14 +214,18 @@ export default function Scorecard() {
                 <b className="pnv-tieu"><Store size={16} />Thông tin nhận việc</b>
                 <ChonCuaHang giaTri={nv.cua_hang_ma} onChon={datNv('cua_hang_ma')} goiY={[h.khu_vuc_mong_muon, String(h.cho_o || '').split(',')[0]]} />
                 <div className="luoi-2">
-                  <Field kieu="gon" nhan="Ngày nhận việc" type="date" value={nv.ngay_nhan_viec} onChange={datNv('ngay_nhan_viec')} />
-                  <Field kieu="gon" nhan="Giờ có mặt" type="time" value={nv.gio_nhan_viec} onChange={datNv('gio_nhan_viec')} />
+                  <Field kieu="gon" nhan="Ngày hội nhập" type="date" value={nv.ngay_nhan_viec} onChange={datNv('ngay_nhan_viec')} />
+                  <div className="luoi-2" style={{ gap: 6 }}>
+                    <Field kieu="gon" nhan="Ca từ" type="time" value={nv.gio_nhan_viec} onChange={datNv('gio_nhan_viec')} />
+                    <Field kieu="gon" nhan="Đến" type="time" value={nv.gio_ket_thuc} onChange={datNv('gio_ket_thuc')} />
+                  </div>
                 </div>
                 <div className="chips">
                   {[['Ngày mai', congNgay(ngayVN(), 1)], ['Ngày kia', congNgay(ngayVN(), 2)]].map(([t, v]) => <button key={t} type="button" className={'chip sm' + (nv.ngay_nhan_viec === v ? ' on' : '')} onClick={() => setNv((x) => ({ ...x, ngay_nhan_viec: v }))}>{t} · {fmtNgay(v + 'T12:00:00+07:00').slice(0, 5)}</button>)}
-                  {['08:00', '08:30', '09:00', '13:30'].map((g) => <button key={g} type="button" className={'chip sm' + (nv.gio_nhan_viec === g ? ' on' : '')} onClick={() => setNv((x) => ({ ...x, gio_nhan_viec: g }))}>{g}</button>)}
+                  {[['08:00', '16:00'], ['09:00', '17:00'], ['14:00', '22:00']].map(([a, b]) => <button key={a} type="button" className={'chip sm' + (nv.gio_nhan_viec === a && nv.gio_ket_thuc === b ? ' on' : '')} onClick={() => setNv((x) => ({ ...x, gio_nhan_viec: a, gio_ket_thuc: b }))}>Ca {a.slice(0, 2).replace(/^0/, '')}h–{b.slice(0, 2)}h</button>)}
                 </div>
-                <Field kieu="gon" nhan="Ghi chú nhận việc" value={nv.ghi_chu_nhan_viec} onChange={datNv('ghi_chu_nhan_viec')} placeholder="Gặp cửa hàng trưởng, mang CCCD, đồng phục…" maxLength={500} />
+                <div className="hang wrap" style={{ gap: 8 }}><span className="nhan-nhom" style={{ margin: 0 }}>Trang phục theo</span><Chips ds={['Nữ', 'Nam']} giaTri={nv.gioi_tinh} onChon={(v) => setNv((x) => ({ ...x, gioi_tinh: v }))} co="sm" /></div>
+                <Field kieu="gon" nhan="Ghi chú nhận việc" value={nv.ghi_chu_nhan_viec} onChange={datNv('ghi_chu_nhan_viec')} placeholder="VD: Gặp chị Lan cửa hàng trưởng khi đến" maxLength={500} />
               </div>
             )}
             {ketLuan === 'khong_dat' && (
@@ -232,7 +238,7 @@ export default function Scorecard() {
             {(ketLuan === 'khong_dat' || (ketLuan === 'dat' && nv.cua_hang_ma)) && (() => {
               const ch = (dsCh || []).find((c) => c.ma === nv.cua_hang_ma)
               const cd = s.dm.caiDat
-              const tin = ketLuan === 'dat' ? tinDat(cd.mau_tin_dat, h, nv, ch, cd.tac_phong) : tinKhongDat(cd.mau_tin_khong_dat, h)
+              const tin = ketLuan === 'dat' ? tinDat(cd.mau_tin_dat, h, nv, ch, cd) : tinKhongDat(cd.mau_tin_khong_dat, h)
               return (
                 <details className={'tin-bao ' + ketLuan} open={daChot}>
                   <summary><Send size={15} /><b>Tin báo cho ứng viên</b><span className="nho muted">{ketLuan === 'dat' ? 'Trúng tuyển · nơi làm, giờ, tác phong' : 'Chưa phù hợp · lời cảm ơn & động viên'}</span></summary>

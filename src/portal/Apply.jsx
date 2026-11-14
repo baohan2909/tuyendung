@@ -96,6 +96,7 @@ export default function Apply() {
     if (b === 0) {
       if (dongVN(f.ho_ten).length < 2) l.ho_ten = 'Vui lòng nhập họ và tên'
       if (!laSdt(f.sdt)) l.sdt = 'Số điện thoại gồm 10 số, bắt đầu bằng 0'
+      if (!f.tra_loi_them['Giới tính']) l.gioi_tinh = 'Vui lòng chọn giới tính'
       if (!f.ngay_sinh) l.ngay_sinh = 'Vui lòng chọn ngày sinh'
       else {
         const n = new Date().getFullYear() - Number(f.ngay_sinh.slice(0, 4))
@@ -262,6 +263,11 @@ export default function Apply() {
           <div className="luoi-2">
             <Field nhan="Điện thoại" batBuoc loi={loi.sdt} value={f.sdt} onChange={datE('sdt')} placeholder="09xx xxx xxx" inputMode="tel" autoComplete="tel" maxLength={14} />
             <Field nhan="Ngày sinh" batBuoc loi={loi.ngay_sinh} type="date" value={f.ngay_sinh} onChange={datE('ngay_sinh')} min="1955-01-01" max={new Date().getFullYear() - 15 + '-12-31'} />
+          </div>
+          <div>
+            <span className="nhan-nhom">Giới tính <i>*</i></span>
+            <Chips ds={['Nữ', 'Nam']} giaTri={f.tra_loi_them['Giới tính'] || ''} onChon={(v) => datTL('Giới tính', v)} />
+            {loi.gioi_tinh && <div className="loi-chu">{loi.gioi_tinh}</div>}
           </div>
           <div>
             <span className="nhan-nhom">Bạn muốn làm <i>*</i></span>
