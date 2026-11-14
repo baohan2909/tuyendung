@@ -11,8 +11,9 @@ import { useStaff } from './context'
 import LichModal from './LichModal'
 import { HanhDongBuoc, MenuGiaiDoan, useDoiGiaiDoan } from './stageActions'
 import TruyVet from './TruyVet'
+import { ThuUngVien } from './Email'
 
-const IC_HD = { nop: FileText, trang_thai: Filter, ghi_chu: StickyNote, hen_pv: CalendarPlus, lich: CalendarCheck, danh_gia: ClipboardCheck, phan_cong: UserCheck, sua: Pencil, ung_vien: MessageCircle }
+const IC_HD = { email: Mail, email_phan_hoi: MessageSquare, nop: FileText, trang_thai: Filter, ghi_chu: StickyNote, hen_pv: CalendarPlus, lich: CalendarCheck, danh_gia: ClipboardCheck, phan_cong: UserCheck, sua: Pencil, ung_vien: MessageCircle }
 
 export default function Profile() {
   const { id } = useParams()
@@ -217,6 +218,8 @@ export function HoSoChiTiet({ id, nhung, nhip, onDoi, phai }) {
               </div>
             </section>
           )}
+
+          <ThuUngVien h={h} nhip={h.trang_thai + (h.cua_hang_du_kien || '') + (h.ngay_nhan_viec || '')} />
 
           <section className="card">
             <div className="dau-the"><h2>Ghi chú & hoạt động</h2><Activity size={17} className="muted" /></div>

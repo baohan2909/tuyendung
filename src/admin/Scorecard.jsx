@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Check, CheckCircle2, CloudOff, Copy, Lock, MessageCircle, Send, Phone, Store, ThumbsDown, UserCheck, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Check, CheckCircle2, CloudOff, Copy, Lock, Mail, MessageCircle, Send, Phone, Store, ThumbsDown, UserCheck, ExternalLink } from 'lucide-react'
 import { docBang, rpc } from '../lib/api'
 import { dsTacPhong, tinDat, tinKhongDat } from '../lib/thongBao'
 import { useAsync } from '../lib/hooks'
@@ -10,6 +10,7 @@ import { Avatar, Bao, Btn, Chips, Diem, Empty, Field, IconBtn, KetLuanTag, Light
 import { useStaff } from './context'
 import { BangThongTin, KhuAnhVideo } from './Profile'
 import { ChonCuaHang, LY_DO_LOAI, NhanViecModal } from './stageActions'
+import { GuiThuModal } from './Email'
 
 export function tinhDiem(tieuChi, diem) {
   let tong = 0, max = 0, du = 0
@@ -42,6 +43,7 @@ export default function Scorecard() {
   const [loi, setLoi] = useState(null)
   const [anhMo, setAnhMo] = useState(null)
   const [moNhanViec, setMoNhanViec] = useState(false)
+  const [moThu, setMoThu] = useState(null)
   const daNap = useRef(false)
   const daBatDau = useRef(false)
   const hen = useRef(null)
@@ -95,6 +97,7 @@ export default function Scorecard() {
       await rpc('td_ket_qua_pv', { p_id: id, p: { ket_qua: ketLuan, ghi_chu: nhanXet ? nhanXet.slice(0, 300) : null, ...(ketLuan === 'dat' ? nv : {}) } })
       setDaGui(duTieuChi)
       bao('Đã hoàn tất phỏng vấn: ' + KET_LUAN[ketLuan].ten)
+      if (ketLuan === 'dat' || ketLuan === 'khong_dat') setMoThu(ketLuan)
       reload(true)
       s.taiDem()
     } catch (e) { setLoi(e.message) }
@@ -233,7 +236,8 @@ export default function Scorecard() {
                   <summary><Send size={15} /><b>Tin báo cho ứng viên</b><span className="nho muted">{ketLuan === 'dat' ? 'Trúng tuyển · nơi làm, giờ, tác phong' : 'Chưa phù hợp · lời cảm ơn & động viên'}</span></summary>
                   <pre>{tin}</pre>
                   <div className="hang wrap" style={{ gap: 6 }}>
-                    <Btn kieu="den" co="sm" icon={Copy} onClick={() => navigator.clipboard?.writeText(tin).then(() => bao('Đã sao chép tin báo'))}>Sao chép tin</Btn>
+                    {daChot && h.trang_thai === ketLuan && <Btn kieu="den" co="sm" icon={Mail} onClick={() => setMoThu(ketLuan)}>Gửi email</Btn>}
+                    <Btn kieu="trang" co="sm" icon={Copy} onClick={() => navigator.clipboard?.writeText(tin).then(() => bao('Đã sao chép tin báo'))}>Sao chép tin</Btn>
                     <Btn kieu="trang" co="sm" icon={MessageCircle} onClick={() => { navigator.clipboard?.writeText(tin); bao('Đã sao chép — dán vào Zalo'); window.open('https://zalo.me/' + h.sdt, '_blank') }}>Sao chép & mở Zalo</Btn>
                   </div>
                   <span className="nho muted">Ứng viên tra cứu bằng SĐT hoặc mã {h.ma} cũng thấy đúng nội dung này.</span>
@@ -248,6 +252,7 @@ export default function Scorecard() {
         </div>
       </div>
       {anhMo != null && <Lightbox ds={anh.map((t) => t.duong_dan)} chiSo={anhMo} dong={() => setAnhMo(null)} />}
+      {moThu && <GuiThuModal hoSoId={id} loai={moThu} ten={h.ho_ten} dong={() => setMoThu(null)} />}
       {moNhanViec && <NhanViecModal hs={h} dong={() => setMoNhanViec(false)} xong={() => { setMoNhanViec(false); reload(true); s.taiDem() }} />}
     </>
   )

@@ -303,3 +303,18 @@ h1, h2, h3, h4, p { margin: 0; }
 .chu-giai { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted-2); font-weight: 600; }
 .chu-giai span { display: inline-flex; align-items: center; gap: 6px; }
 .chu-giai i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+
+/* ===== v1.5 · Trạng thái chọn nhẹ nhàng (thay nền đen) ===== */
+:root {
+  --chon-nen: linear-gradient(135deg, #FFE4F1 0%, #F3E6FF 100%);
+  --chon-chu: #A3004F;
+  --chon-vien: inset 0 0 0 1px rgba(224,21,126,.22);
+  --nut-chinh: linear-gradient(135deg, #E0157E 0%, #A0189A 58%, #7B2CBF 100%);
+}
+.chip.on, .chip.trang.on { background: var(--chon-nen); color: var(--chon-chu); box-shadow: var(--chon-vien), 0 6px 16px rgba(224,21,126,.10); }
+.chip.on .dem { background: #fff; color: var(--chon-chu); }
+.phan-doan button.on { background: var(--chon-nen); color: var(--chon-chu); box-shadow: var(--chon-vien); }
+.o-chon.on { background: var(--nut-chinh); border-color: transparent; box-shadow: 0 3px 8px rgba(224,21,126,.3); }
+.btn.den { background: var(--nut-chinh); color: #fff; box-shadow: 0 10px 24px rgba(160,24,154,.24); }
+.btn.den:hover { color: #fff; box-shadow: 0 14px 30px rgba(160,24,154,.32); filter: brightness(1.06); }
+.diem.cao { background: var(--nut-chinh); color: #fff; }

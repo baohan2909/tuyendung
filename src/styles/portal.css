@@ -46,7 +46,7 @@
 .vi-tri button .ic { width: 46px; height: 46px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(23,17,26,.08); transition: background .2s; }
 .vi-tri button .ten { font-size: 12.5px; font-weight: 700; line-height: 1.2; text-align: center; }
 .vi-tri button .mo-ta { font-size: 10.5px; color: var(--muted); line-height: 1.25; text-align: center; margin-top: -6px; }
-.vi-tri button.on { background: var(--ink); color: #fff; box-shadow: 0 14px 30px rgba(23,17,26,.25); }
+.vi-tri button.on { background: linear-gradient(135deg, #E0157E 0%, #A0189A 58%, #7B2CBF 100%); color: #fff; box-shadow: 0 14px 30px rgba(160,24,154,.28); }
 .vi-tri button.on .ic { background: var(--orb); color: #fff; box-shadow: none; }
 .vi-tri button.on .mo-ta { color: rgba(255,255,255,.6); }
 .vi-tri.loi button { box-shadow: inset 0 0 0 1.5px var(--err); }
@@ -85,7 +85,7 @@
 /* tra cứu */
 .moc { display: flex; gap: 14px; align-items: flex-start; }
 .moc .cham { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex: none; background: var(--soft); color: #B7B0BD; position: relative; }
-.moc .cham.xong { background: var(--ink); color: #fff; }
+.moc .cham.xong { background: linear-gradient(135deg, #E0157E 0%, #7B2CBF 100%); color: #fff; }
 .moc .cham.dang { background: var(--orb); color: #fff; box-shadow: 0 8px 20px rgba(224,21,126,.35); }
 .moc .noi { flex: 1; padding: 4px 0 16px; border-bottom: 1px solid var(--line); }
 .moc:last-child .noi { border-bottom: none; }
@@ -152,3 +152,4 @@
 .the-dong-vien { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 18px; border-radius: 24px; background: linear-gradient(135deg, #FFF5F8 0%, #F7F4F9 100%); }
 .tdv-icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: #fff; color: var(--pink, #E8417A); box-shadow: 0 4px 14px rgba(232, 65, 122, .14); }
 .the-dong-vien p { margin: 0; font-size: 13.5px; line-height: 1.65; color: var(--ink); }
+.vi-tri button.on .ic { background: rgba(255,255,255,.2); }

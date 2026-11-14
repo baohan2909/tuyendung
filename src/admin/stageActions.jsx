@@ -5,8 +5,9 @@ import { docBang, rpc } from '../lib/api'
 import { useAsync } from '../lib/hooks'
 import { khongDau, ngayVN } from '../lib/format'
 import { GIAI_DOAN, GD, GD_MO, GD_SANG_LOC } from '../lib/stages'
-import { Bao, Btn, Chips, Field, Menu, Modal, Spinner, useToast } from '../components/ui'
+import { Bao, Btn, Chips, Field, Menu, Modal, Spinner, Switch, useToast } from '../components/ui'
 import { useStaff } from './context'
+import { GuiThuModal } from './Email'
 
 export const LY_DO_LOAI = ['Chưa phù hợp ngoại hình, tác phong', 'Giao tiếp chưa phù hợp', 'Khu vực quá xa', 'Không đúng độ tuổi', 'Không liên lạc được', 'Thu nhập không phù hợp', 'Ứng viên từ chối', 'Hồ sơ chưa đủ ảnh/video', 'Trùng hồ sơ']
 
@@ -37,6 +38,9 @@ export function useDoiGiaiDoan({ xong, henPV }) {
   const [lyDo, setLyDo] = useState('')
   const [dang, setDang] = useState(false)
   const [nhanViec, setNhanViec] = useState(null)
+  const [guiEmail, setGuiEmail] = useState(true)
+  const [moThu, setMoThu] = useState(null)
+  const s = useStaff()
 
   async function lam(ids, tt, rows, ghiChu) {
     setDang(true)
@@ -54,6 +58,14 @@ export function useDoiGiaiDoan({ xong, henPV }) {
         bao(n ? 'Đã chuyển sang ' + GD[tt].ten : 'Không có thay đổi')
       }
       xong && xong(ids, tt)
+      if (tt === 'khong_dat' && guiEmail) {
+        if (ids.length === 1) setMoThu({ id: ids[0], ten: rows?.[0]?.ho_ten })
+        else {
+          let ok = 0, loi = 0
+          for (const id of ids) { try { await rpc('td_thu_tao', { p_ho_so_id: id, p_loai: 'khong_dat' }); ok++ } catch (e) { loi++ } }
+          bao('Đã xếp ' + ok + ' email thông báo (gửi theo chế độ mặc định)' + (loi ? ' · ' + loi + ' hồ sơ không gửi được (thiếu email)' : ''), loi && !ok ? 'loi' : undefined)
+        }
+      }
     } catch (e) { bao(e.message, 'loi') }
     setDang(false)
     setHoi(null)
@@ -82,8 +94,12 @@ export function useDoiGiaiDoan({ xong, henPV }) {
         <div className="cot" style={{ gap: 12 }}>
           {hoi?.tt !== 'du_bi' && <Chips ds={LY_DO_LOAI} giaTri={lyDo} onChon={setLyDo} co="sm" />}
           <Field nhan="Ghi chú"><textarea rows={2} value={lyDo} onChange={(e) => setLyDo(e.target.value)} placeholder="Có thể bỏ trống" /></Field>
+          {hoi?.tt === 'khong_dat' && s.coCham && (
+            <label className="hang gui-email-loai"><Switch on={guiEmail} nhan="Gửi email" onDoi={setGuiEmail} /><span className="gian"><b>Gửi email thông báo “Chưa phù hợp”</b><small>{hoi.ids.length > 1 ? 'Tự xếp hàng theo chế độ mặc định (có thể hủy trong mục Email từng hồ sơ)' : 'Bước tiếp theo: xem lại nội dung và chọn gửi ngay / gửi sau'}</small></span></label>
+          )}
         </div>
       </Modal>
+      {moThu && <GuiThuModal hoSoId={moThu.id} loai="khong_dat" ten={moThu.ten} dong={() => setMoThu(null)} />}
       {nhanViec && <NhanViecModal hs={nhanViec} dong={() => setNhanViec(null)} xong={() => { const r = nhanViec; setNhanViec(null); xong && xong([r.id], 'nhan_viec') }} />}
     </>
   )

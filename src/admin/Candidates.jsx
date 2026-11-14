@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowUpDown, ChevronDown, Download, Film, Play, Mic, Store, Image as ImageIc, Layers, LayoutList, Search, Star, UserCheck, X, Check, ArrowRight, Maximize2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, Download, Film, Play, Mic, Store, Image as ImageIc, Layers, LayoutList, Search, Star, UserCheck, X, Check, ArrowRight, Maximize2 } from 'lucide-react'
 import { rpc } from '../lib/api'
 import { useAsync, useDebounced, useLS, useMedia, usePhim } from '../lib/hooks'
 import { congNgay, fmtGiay, fmtNgayGio, fmtSdt, fmtThoiDiem, ngayVN } from '../lib/format'
@@ -13,6 +13,17 @@ import { HoSoChiTiet, TrinhPhat } from './Profile'
 import ChonNgay, { tinhKhoang } from './ChonNgay'
 import { tenNgan } from './Dashboard'
 import { HanhDongBuoc, MenuGiaiDoan, useDoiGiaiDoan } from './stageActions'
+
+function CotSX({ nhan, khoa, sapXep, setSapXep, className = '' }) {
+  const on = khoa.includes(sapXep)
+  const tiep = khoa.length > 1 ? (sapXep === khoa[0] ? khoa[1] : khoa[0]) : khoa[0]
+  const xuong = sapXep === 'moi_nhat' || sapXep === 'diem'
+  return (
+    <button type="button" className={'cot-sx ' + className + (on ? ' on' : '')} onClick={() => setSapXep(on && khoa.length === 1 ? 'moi_nhat' : tiep)} title="Sắp xếp">
+      {nhan}{on ? (xuong ? <ArrowDown size={13} /> : <ArrowUp size={13} />) : <ArrowUpDown size={12} className="mo" />}
+    </button>
+  )
+}
 
 const SAP_XEP = [{ v: 'moi_nhat', t: 'Mới nhất' }, { v: 'cu_nhat', t: 'Cũ nhất' }, { v: 'diem', t: 'Điểm cao' }, { v: 'ten', t: 'Tên A–Z' }, { v: 'tuoi', t: 'Trẻ nhất' }, { v: 'cap_nhat', t: 'Vừa cập nhật' }]
 
@@ -228,7 +239,7 @@ export default function Candidates({ cheDo }) {
     const dangXem = banLam && xemId === r.id
     return (
       <div key={r.id} data-id={r.id} className={'dg' + (daChon ? ' chon' : '') + (dangXem ? ' dang-xem' : '')} onClick={() => mo(r)}>
-        {s.coSua && <button className={'o-chon' + (daChon ? ' on' : '')} onClick={(e) => { e.stopPropagation(); setChon((c) => (daChon ? c.filter((y) => y !== r.id) : [...c, r.id])) }} aria-label={'Chọn ' + r.ho_ten}>{daChon && <Check size={13} strokeWidth={3} />}</button>}
+        {s.coSua ? <button className={'o-chon' + (daChon ? ' on' : '')} onClick={(e) => { e.stopPropagation(); setChon((c) => (daChon ? c.filter((y) => y !== r.id) : [...c, r.id])) }} aria-label={'Chọn ' + r.ho_ten}>{daChon && <Check size={13} strokeWidth={3} />}</button> : <span />}
         <div className="dg-giua">
           <b className="cat">{r.ho_ten}{r.uu_tien && <Star size={12} className="uu-tien-sao" fill="currentColor" />}</b>
           <span className="cat">{tenNgan(r.vi_tri)} · {r.tuoi} tuổi · {r.chieu_cao}cm/{r.can_nang}kg</span>
@@ -240,14 +251,14 @@ export default function Candidates({ cheDo }) {
         </div>
         {r.video ? <NutVideo v={r.video} onClick={(e) => { e.stopPropagation(); setXemVideo({ v: r.video, ten: r.ho_ten }) }} /> : <span className="dg-vid trong" title="Chưa có video"><Film size={15} /></span>}
         <div className="dg-phai">
-          <StageTag ma={r.trang_thai} />
+          <span className="dg-gd"><StageTag ma={r.trang_thai} /></span>
           <span className="dg-gio" title={fmtNgayGio(r.nop_luc)}>{fmtThoiDiem(r.nop_luc)}</span>
-          {r.diem_tb != null && <Diem v={r.diem_tb} />}
+          <span className={'dg-diem' + (r.diem_tb == null ? ' trong' : '')}>{r.diem_tb != null ? <Diem v={r.diem_tb} /> : '—'}</span>
         </div>
         <div className="dg-nhanh" onClick={(e) => e.stopPropagation()}>
-          {s.coCham && GD_MO.includes(r.trang_thai) && <button type="button" className="nut-pv-nho" title="Phỏng vấn ngay — mở phiếu" onClick={() => nav('/quantri/ung-vien/' + r.id + '/cham')}><Mic size={14} />{['da_pv', 'de_xuat', 'du_bi'].includes(r.trang_thai) ? 'Phiếu' : 'Phỏng vấn'}</button>}
-          {s.coSua && GD_MO.includes(r.trang_thai) && <button type="button" className="icon-btn xs" style={{ background: 'var(--err-bg)', color: 'var(--err)' }} title="Loại hồ sơ" aria-label="Loại" onClick={() => doiGD([r.id], 'khong_dat', [r])}><X size={14} strokeWidth={3} /></button>}
-          {r.trang_thai === 'dat' && s.coSua && <button type="button" className="nut-pv-nho xanh" title="Xác nhận nhận việc" onClick={() => doiGD([r.id], 'nhan_viec', [r])}><Store size={14} />Nhận việc</button>}
+          {s.coCham && GD_MO.includes(r.trang_thai) && <button type="button" className="nut-pv-nho" title="Phỏng vấn ngay — mở phiếu" onClick={() => nav('/quantri/ung-vien/' + r.id + '/cham')}><Mic size={15} /><span className="chu">{['da_pv', 'de_xuat', 'du_bi'].includes(r.trang_thai) ? 'Phiếu' : 'Phỏng vấn'}</span></button>}
+          {s.coSua && GD_MO.includes(r.trang_thai) && <button type="button" className="nut-loai-nho" title="Loại hồ sơ" aria-label="Loại" onClick={() => doiGD([r.id], 'khong_dat', [r])}><X size={14} strokeWidth={3} /></button>}
+          {r.trang_thai === 'dat' && s.coSua && <button type="button" className="nut-pv-nho xanh" title="Xác nhận nhận việc" onClick={() => doiGD([r.id], 'nhan_viec', [r])}><Store size={15} /><span className="chu">Nhận việc</span></button>}
         </div>
       </div>
     )
@@ -276,10 +287,15 @@ export default function Candidates({ cheDo }) {
     </div>
   ) : (
     <div className="ds-gon">
-      <div className="ds-dau">
-        {s.coSua && <button className={'o-chon' + (tatCaChon ? ' on' : '')} onClick={() => setChon(tatCaChon ? [] : ds.map((r) => r.id))} aria-label="Chọn tất cả đã tải">{tatCaChon && <Check size={13} strokeWidth={3} />}</button>}
-        <span className="gian">Đang hiện <b>{ds.length}</b> / {L.tong}</span>
-        {banLam && <span className="nho muted">↑ ↓ để chuyển hồ sơ</span>}
+      <div className="ds-dau dg-dau">
+        {s.coSua ? <button className={'o-chon' + (tatCaChon ? ' on' : '')} onClick={() => setChon(tatCaChon ? [] : ds.map((r) => r.id))} aria-label="Chọn tất cả đã tải">{tatCaChon && <Check size={13} strokeWidth={3} />}</button> : <span />}
+        <CotSX nhan={<>Ứng viên <em>{ds.length}/{L.tong}</em></>} khoa={['ten']} sapXep={sapXep} setSapXep={setSapXep} />
+        <span className="h-anh">Ảnh</span>
+        <span className="h-vid">Video</span>
+        <span className="h-gd">{banLam ? 'Trạng thái' : 'Giai đoạn'}</span>
+        <CotSX className="h-gio" nhan="Nộp lúc" khoa={['moi_nhat', 'cu_nhat']} sapXep={sapXep} setSapXep={setSapXep} />
+        <CotSX className="h-diem" nhan="Điểm" khoa={['diem']} sapXep={sapXep} setSapXep={setSapXep} />
+        <span className="h-tt">{banLam ? '' : 'Thao tác'}</span>
       </div>
       {nhomDs.map((g) => (
         <div key={g.ten || 'tat-ca'}>

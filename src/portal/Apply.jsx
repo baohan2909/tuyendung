@@ -112,7 +112,8 @@ export default function Apply() {
       if (!f.hoc_van) l.hoc_van = 'Chọn trình độ học vấn'
       if (f.hoc_van === 'Khác' && dongVN(f.hoc_van_khac).length < 2) l.hoc_van = 'Ghi rõ trình độ của bạn'
       if (!f.dinh_huong) l.dinh_huong = 'Chọn một lựa chọn'
-      if (f.email.trim() && !/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(f.email.trim())) l.email = 'Email chưa đúng định dạng'
+      if (!f.email.trim()) l.email = 'Vui lòng nhập email để nhận kết quả tuyển dụng'
+      else if (!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(f.email.trim())) l.email = 'Email chưa đúng định dạng — ví dụ: ten@gmail.com'
     }
     if (b === 2) {
       if (!f.nguon.length) l.nguon = 'Chọn ít nhất một nguồn'
@@ -290,7 +291,7 @@ export default function Apply() {
           </div>
           <Field nhan="Chỗ ở hiện tại" batBuoc loi={loi.cho_o} value={f.cho_o} onChange={datE('cho_o')} placeholder="Phường/xã, quận/huyện, tỉnh/thành" autoComplete="street-address" />
           <Field nhan="Khu vực mong muốn làm việc" batBuoc loi={loi.khu_vuc_mong_muon} value={f.khu_vuc_mong_muon} onChange={datE('khu_vuc_mong_muon')} placeholder="VD: Gò Vấp, Quận 1, Thủ Đức…" />
-          <Field nhan="Email (không bắt buộc)" loi={loi.email} value={f.email} onChange={datE('email')} type="email" inputMode="email" placeholder="ban@gmail.com" autoComplete="email" />
+          <Field nhan="Email" batBuoc goiY="Nón Sơn gửi kết quả tuyển dụng qua email này" loi={loi.email} value={f.email} onChange={datE('email')} type="email" inputMode="email" placeholder="ban@gmail.com" autoComplete="email" />
           <div>
             <span className="nhan-nhom">Trình độ học vấn <i>*</i></span>
             <Chips ds={dsHocVan} giaTri={f.hoc_van} onChon={dat('hoc_van')} />

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { EmailCaiDat } from './Email'
 import { dsTacPhong, MAC_DINH_TIN_DAT, MAC_DINH_TIN_KHONG_DAT, TAC_PHONG_MAC_DINH } from '../lib/thongBao'
 import { Copy, Download, KeyRound, Link2, Lock, Plus, QrCode, RefreshCw, Save, ShieldCheck, Trash2, UserPlus, Pencil, Sparkles } from 'lucide-react'
 import { docBang, doiMatKhau, dsTep, luuDong, rpc, themDong, xoaTep } from '../lib/api'
@@ -29,6 +30,7 @@ export default function Settings() {
     s.coSua && { v: 'hs', t: 'Hồ sơ nhân sự' },
     s.coSua && { v: 'form', t: 'Biểu mẫu' },
     s.coSua && { v: 'pv', t: 'Phỏng vấn & kết quả' },
+    s.coSua && { v: 'email', t: 'Email' },
     s.laQT && { v: 'don', t: 'Dọn dẹp' }
   ].filter(Boolean)
   const [tab, setTab] = useState('tk')
@@ -43,6 +45,7 @@ export default function Settings() {
       {tab === 'hs' && <MauNhanSu />}
       {tab === 'form' && <BieuMau />}
       {tab === 'pv' && <CaiPV />}
+      {tab === 'email' && <EmailCaiDat />}
       {tab === 'don' && <DonDep />}
     </>
   )
