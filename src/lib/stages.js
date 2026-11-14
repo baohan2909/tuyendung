@@ -58,8 +58,8 @@ export const CONG_KHAI = {
   xet_duyet: { buoc: 2, tieu_de: ['Hồ sơ đang', 'được xét duyệt'], mo_ta: 'Nón Sơn đã nhận hồ sơ và đang xem xét. Chúng tôi sẽ liên hệ bạn sớm nhất.' },
   phong_van: { buoc: 3, tieu_de: ['Hồ sơ của bạn', 'đang phỏng vấn'], mo_ta: 'Bộ phận tuyển dụng Nón Sơn sẽ gọi điện hoặc Zalo để phỏng vấn online. Bạn để ý điện thoại nhé.' },
   cho_ket_qua: { buoc: 4, tieu_de: ['Đã phỏng vấn,', 'chờ kết quả'], mo_ta: 'Cảm ơn bạn đã tham gia phỏng vấn. Kết quả sẽ có trong thời gian sớm nhất.' },
-  trung_tuyen: { buoc: 5, tieu_de: ['Chúc mừng,', 'bạn đã trúng tuyển!'], mo_ta: 'Nón Sơn sẽ liên hệ để hướng dẫn ngày nhận việc.' },
+  trung_tuyen: { buoc: 5, tieu_de: ['Chúc mừng,', 'bạn đã trúng tuyển!'], mo_ta: 'Hãy đến đúng cửa hàng và giờ hẹn bên dưới nhé. Nón Sơn rất mong được làm việc cùng bạn.' },
   nhan_viec: { buoc: 5, tieu_de: ['Chào mừng bạn', 'đến với Nón Sơn!'], mo_ta: 'Hẹn gặp bạn tại nơi làm việc.' },
-  chua_phu_hop: { buoc: 5, tieu_de: ['Cảm ơn bạn', 'đã ứng tuyển'], mo_ta: 'Rất tiếc lần này hồ sơ chưa phù hợp. Nón Sơn sẽ lưu hồ sơ và liên hệ khi có vị trí phù hợp hơn.' },
+  chua_phu_hop: { buoc: 5, tieu_de: ['Hồ sơ', 'chưa phù hợp'], mo_ta: 'Cảm ơn bạn đã dành thời gian ứng tuyển và tham gia cùng Nón Sơn.' },
   da_rut: { buoc: 5, tieu_de: ['Hồ sơ', 'đã được rút'], mo_ta: 'Bạn có thể nộp lại hồ sơ bất cứ lúc nào.' }
 }

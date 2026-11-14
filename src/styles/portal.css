@@ -139,3 +139,16 @@
 .tnv-noi b { display: block; font-size: 15px; }
 .tnv-noi span { display: block; font-size: 12.5px; color: var(--muted-2); }
 .the-nhan-viec p { font-size: 13.5px; color: var(--ink-2); line-height: 1.5; }
+
+/* Tác phong khi nhận việc */
+.the-tac-phong { display: flex; flex-direction: column; gap: 10px; padding: 16px 18px; border-radius: 24px; background: #F7F4F9; }
+.ttp-dau { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink); }
+.ttp-dau svg { color: var(--pink-deep, #C2185B); }
+.the-tac-phong ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.the-tac-phong li { display: flex; align-items: flex-start; gap: 9px; font-size: 13.5px; line-height: 1.45; }
+.the-tac-phong li svg { flex: none; margin-top: 2px; width: 20px; height: 20px; padding: 3px; border-radius: 50%; background: #E3F5EE; color: #0E7F63; }
+
+/* Chưa phù hợp — động viên tinh tế */
+.the-dong-vien { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 18px; border-radius: 24px; background: linear-gradient(135deg, #FFF5F8 0%, #F7F4F9 100%); }
+.tdv-icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: #fff; color: var(--pink, #E8417A); box-shadow: 0 4px 14px rgba(232, 65, 122, .14); }
+.the-dong-vien p { margin: 0; font-size: 13.5px; line-height: 1.65; color: var(--ink); }

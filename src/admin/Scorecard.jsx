@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Check, CheckCircle2, CloudOff, Copy, Lock, MessageCircle, Phone, Store, ThumbsDown, UserCheck, ExternalLink } from 'lucide-react'
-import { rpc } from '../lib/api'
+import { ArrowLeft, Check, CheckCircle2, CloudOff, Copy, Lock, MessageCircle, Send, Phone, Store, ThumbsDown, UserCheck, ExternalLink } from 'lucide-react'
+import { docBang, rpc } from '../lib/api'
+import { dsTacPhong, tinDat, tinKhongDat } from '../lib/thongBao'
 import { useAsync } from '../lib/hooks'
 import { congNgay, fmtDiem, fmtGio, fmtNgay, fmtSdt, ngayVN, tuongDoi } from '../lib/format'
 import { GD, KET_LUAN } from '../lib/stages'
@@ -63,6 +64,7 @@ export default function Scorecard() {
     daNap.current = true
   }, [d])
 
+  const { data: dsCh } = useAsync(() => docBang('cua_hang', [['ten', true]]), [])
   const tieuChi = d?.tieu_chi || []
   const { diem: tong, du } = useMemo(() => tinhDiem(tieuChi, diem), [tieuChi, diem])
 
@@ -83,6 +85,8 @@ export default function Scorecard() {
     const duTieuChi = du === tieuChi.length && tieuChi.length > 0
     if (ketLuan !== 'khong_dat' && !duTieuChi) return setLoi('Còn ' + (tieuChi.length - du) + ' tiêu chí chưa chấm.')
     if (ketLuan === 'dat' && !nv.cua_hang_ma) return setLoi('Chọn cửa hàng nhận việc cho ứng viên đạt.')
+    if (ketLuan === 'dat' && !nv.ngay_nhan_viec) return setLoi('Chọn ngày nhận việc.')
+    if (ketLuan === 'dat' && !nv.gio_nhan_viec) return setLoi('Chọn giờ có mặt.')
     clearTimeout(hen.current)
     setDangGui(true)
     try {
@@ -105,7 +109,7 @@ export default function Scorecard() {
   const anh = d.tep.filter((t) => t.loai === 'anh')
   const video = d.tep.filter((t) => t.loai === 'video')
   const nguoiKhac = d.danh_gia.filter((g) => g.nguoi_cham !== s.toi.id)
-  const daChot = ['dat', 'khong_dat', 'du_bi', 'nhan_viec'].includes(h.trang_thai)
+  const daChot = ['dat', 'khong_dat', 'nhan_viec'].includes(h.trang_thai)
   const luuTxt = trangThaiLuu === 'dang' ? 'Đang lưu…' : trangThaiLuu === 'loi' ? 'Chưa lưu được' : trangThaiLuu ? 'Đã lưu ' + fmtGio(Number(trangThaiLuu.split(':')[1])) : 'Tự lưu khi chấm'
   const datNv = (k) => (e) => setNv((x) => ({ ...x, [k]: e.target ? e.target.value : e }))
 
@@ -220,6 +224,22 @@ export default function Scorecard() {
               </div>
             )}
 
+            {(ketLuan === 'khong_dat' || (ketLuan === 'dat' && nv.cua_hang_ma)) && (() => {
+              const ch = (dsCh || []).find((c) => c.ma === nv.cua_hang_ma)
+              const cd = s.dm.caiDat
+              const tin = ketLuan === 'dat' ? tinDat(cd.mau_tin_dat, h, nv, ch, cd.tac_phong) : tinKhongDat(cd.mau_tin_khong_dat, h)
+              return (
+                <details className={'tin-bao ' + ketLuan} open={daChot}>
+                  <summary><Send size={15} /><b>Tin báo cho ứng viên</b><span className="nho muted">{ketLuan === 'dat' ? 'Trúng tuyển · nơi làm, giờ, tác phong' : 'Chưa phù hợp · lời cảm ơn & động viên'}</span></summary>
+                  <pre>{tin}</pre>
+                  <div className="hang wrap" style={{ gap: 6 }}>
+                    <Btn kieu="den" co="sm" icon={Copy} onClick={() => navigator.clipboard?.writeText(tin).then(() => bao('Đã sao chép tin báo'))}>Sao chép tin</Btn>
+                    <Btn kieu="trang" co="sm" icon={MessageCircle} onClick={() => { navigator.clipboard?.writeText(tin); bao('Đã sao chép — dán vào Zalo'); window.open('https://zalo.me/' + h.sdt, '_blank') }}>Sao chép & mở Zalo</Btn>
+                  </div>
+                  <span className="nho muted">Ứng viên tra cứu bằng SĐT hoặc mã {h.ma} cũng thấy đúng nội dung này.</span>
+                </details>
+              )
+            })()}
             {loi && <Bao kieu="loi">{loi}</Bao>}
             <Btn kieu="den" co="lg" orb icon={Check} loading={dangGui} onClick={hoanTat} className="rong">{daChot ? 'Cập nhật kết quả' : 'Hoàn tất phỏng vấn'}</Btn>
             {h.trang_thai === 'dat' && s.coSua && <Btn kieu="xanh" co="md" icon={UserCheck} onClick={() => setMoNhanViec(true)} className="rong">Ứng viên đã đến — xác nhận nhận việc</Btn>}

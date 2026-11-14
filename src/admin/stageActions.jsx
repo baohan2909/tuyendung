@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Briefcase, Check, ClipboardCheck, Mic, Search, Store, ThumbsDown, UserCheck } from 'lucide-react'
 import { docBang, rpc } from '../lib/api'
 import { useAsync } from '../lib/hooks'
@@ -32,6 +32,7 @@ export function MenuGiaiDoan({ nut, chon, hienTai }) {
 //  - Trúng tuyển → Nhận việc: mở hộp phân công cửa hàng
 export function useDoiGiaiDoan({ xong, henPV }) {
   const bao = useToast()
+  const nav = useNavigate()
   const [hoi, setHoi] = useState(null)
   const [lyDo, setLyDo] = useState('')
   const [dang, setDang] = useState(false)
@@ -63,6 +64,11 @@ export function useDoiGiaiDoan({ xong, henPV }) {
     if (tt === 'nhan_viec') {
       if (ids.length > 1) return bao('Nhận việc từng người một để phân công cửa hàng', 'loi')
       return setNhanViec(rows?.[0] || { id: ids[0] })
+    }
+    if (tt === 'dat') {
+      // Đạt phải kèm cửa hàng + ngày + giờ nhận việc → chốt trong phiếu phỏng vấn
+      if (ids.length > 1) return bao('Chốt Đạt từng người trong phiếu phỏng vấn để chọn cửa hàng, ngày giờ nhận việc', 'loi')
+      return nav('/quantri/ung-vien/' + ids[0] + '/cham')
     }
     if (tt === 'khong_dat' || tt === 'du_bi') { setLyDo(''); return setHoi({ ids, tt, rows }) }
     lam(ids, tt, rows)

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { dsTacPhong, MAC_DINH_TIN_DAT, MAC_DINH_TIN_KHONG_DAT, TAC_PHONG_MAC_DINH } from '../lib/thongBao'
 import { Copy, Download, KeyRound, Link2, Lock, Plus, QrCode, RefreshCw, Save, ShieldCheck, Trash2, UserPlus, Pencil, Sparkles } from 'lucide-react'
 import { docBang, doiMatKhau, dsTep, luuDong, rpc, themDong, xoaTep } from '../lib/api'
 import { useAsync } from '../lib/hooks'
@@ -27,7 +28,7 @@ export default function Settings() {
     s.coSua && { v: 'ch', t: 'Cửa hàng' },
     s.coSua && { v: 'hs', t: 'Hồ sơ nhân sự' },
     s.coSua && { v: 'form', t: 'Biểu mẫu' },
-    s.coSua && { v: 'pv', t: 'Phỏng vấn' },
+    s.coSua && { v: 'pv', t: 'Phỏng vấn & kết quả' },
     s.laQT && { v: 'don', t: 'Dọn dẹp' }
   ].filter(Boolean)
   const [tab, setTab] = useState('tk')
@@ -293,6 +294,7 @@ function CaiPV() {
   const [mau, setMau, luuMau, dang2] = useCaiDat('mau_tin_hen', '')
   const [txt, setTxt] = useState((Array.isArray(dd) ? dd : []).join('\n'))
   return (
+    <>
     <div className="hai-cot">
       <section className="card lon">
         <div className="dau-the"><h2>Địa điểm phỏng vấn thường dùng</h2></div>
@@ -304,6 +306,34 @@ function CaiPV() {
         <Field kieu="gon" nhan="Nội dung"><textarea rows={6} value={mau} onChange={(e) => setMau(e.target.value)} /></Field>
         <p className="nho muted" style={{ marginTop: 8, lineHeight: 1.7 }}>Biến: <code>{'{ten}'}</code> <code>{'{vi_tri}'}</code> <code>{'{gio}'}</code> <code>{'{thu}'}</code> <code>{'{ngay}'}</code> <code>{'{dia_diem}'}</code> <code>{'{link}'}</code></p>
         <div style={{ marginTop: 12 }}><Btn kieu="den" icon={Save} loading={dang2} onClick={() => luuMau(mau)}>Lưu mẫu</Btn></div>
+      </section>
+    </div>
+    <CaiKetQua />
+    </>
+  )
+}
+
+function CaiKetQua() {
+  const [tp, setTp, luuTp, d1] = useCaiDat('tac_phong', TAC_PHONG_MAC_DINH)
+  const [md, setMd, luuMd, d2] = useCaiDat('mau_tin_dat', '')
+  const [mk, setMk, luuMk, d3] = useCaiDat('mau_tin_khong_dat', '')
+  const [txt, setTxt] = useState(dsTacPhong(tp).join('\n'))
+  return (
+    <div className="hai-cot" style={{ marginTop: 18 }}>
+      <section className="card lon">
+        <div className="dau-the"><h2>Tin báo trúng tuyển</h2></div>
+        <Field kieu="gon" nhan="Nội dung" goiY="Để trống = dùng mẫu mặc định"><textarea rows={12} value={md || MAC_DINH_TIN_DAT} onChange={(e) => setMd(e.target.value)} /></Field>
+        <p className="nho muted" style={{ marginTop: 8, lineHeight: 1.7 }}>Biến: <code>{'{ten}'}</code> <code>{'{vi_tri}'}</code> <code>{'{cua_hang}'}</code> <code>{'{dia_chi}'}</code> <code>{'{gio}'}</code> <code>{'{thu}'}</code> <code>{'{ngay}'}</code> <code>{'{ghi_chu}'}</code> <code>{'{tac_phong}'}</code> <code>{'{link}'}</code></p>
+        <div className="hang" style={{ marginTop: 12, gap: 8 }}><Btn kieu="den" icon={Save} loading={d2} onClick={() => luuMd(md === MAC_DINH_TIN_DAT ? '' : md)}>Lưu mẫu</Btn><Btn kieu="trong" onClick={() => setMd('')}>Về mặc định</Btn></div>
+        <div className="dau-the" style={{ marginTop: 22 }}><h2>Tin báo chưa phù hợp</h2></div>
+        <Field kieu="gon" nhan="Nội dung"><textarea rows={7} value={mk || MAC_DINH_TIN_KHONG_DAT} onChange={(e) => setMk(e.target.value)} /></Field>
+        <p className="nho muted" style={{ marginTop: 8 }}>Biến: <code>{'{ten}'}</code> <code>{'{vi_tri}'}</code> <code>{'{link}'}</code></p>
+        <div className="hang" style={{ marginTop: 12, gap: 8 }}><Btn kieu="den" icon={Save} loading={d3} onClick={() => luuMk(mk === MAC_DINH_TIN_KHONG_DAT ? '' : mk)}>Lưu mẫu</Btn><Btn kieu="trong" onClick={() => setMk('')}>Về mặc định</Btn></div>
+      </section>
+      <section className="card nho-cot">
+        <div className="dau-the"><h2>Tác phong khi nhận việc</h2></div>
+        <Field kieu="gon" nhan="Mỗi dòng 1 lưu ý" goiY="Hiện trên trang tra cứu và trong tin báo trúng tuyển"><textarea rows={6} value={txt} onChange={(e) => setTxt(e.target.value)} /></Field>
+        <div style={{ marginTop: 12 }}><Btn kieu="den" icon={Save} loading={d1} onClick={() => { const ds = dsDong(txt); setTp(ds); luuTp(ds) }}>Lưu tác phong</Btn></div>
       </section>
     </div>
   )

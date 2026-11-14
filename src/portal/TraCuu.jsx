@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { Calendar, Check, CheckCircle2, Clock, FileText, MapPin, MessageCircle, Phone, Search, Trophy, UserCheck, Video } from 'lucide-react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { Calendar, Check, CheckCircle2, Clock, FileText, Heart, MapPin, MessageCircle, Phone, Search, Shirt, Trophy, UserCheck, Video } from 'lucide-react'
 import { rpc } from '../lib/api'
 import { CONG_KHAI, HINH_THUC } from '../lib/stages'
+import { DONG_VIEN, dsTacPhong } from '../lib/thongBao'
 import { fmtGio, fmtNgay, fmtNgayGio, ngayVN, tenGoi, thu } from '../lib/format'
 import { Bao, Btn, Field, LichTag, Modal, Ring, Spinner } from '../components/ui'
 import { PortalShell } from './Shell'
@@ -120,10 +121,24 @@ export default function TraCuu() {
 
       {ketThucTot && (kq.ngay_nhan_viec || kq.noi_lam_viec) && (
         <div className="the-nhan-viec">
-          <span className="eyebrow">Thông tin nhận việc</span>
+          <span className="eyebrow">{kq.trang_thai === 'nhan_viec' ? 'Nơi làm việc của bạn' : 'Thông tin nhận việc'}</span>
           {kq.ngay_nhan_viec && <div className="tnv-ngay"><Calendar size={18} /><b>{thu(kq.ngay_nhan_viec + 'T12:00:00+07:00')} {fmtNgay(kq.ngay_nhan_viec + 'T12:00:00+07:00')}</b>{kq.gio_nhan_viec && <span>lúc <b>{kq.gio_nhan_viec}</b></span>}</div>}
           {kq.noi_lam_viec && <div className="tnv-noi"><MapPin size={16} /><div><b>{kq.noi_lam_viec}</b>{kq.dia_chi_nhan_viec && <span>{kq.dia_chi_nhan_viec}</span>}</div></div>}
           {kq.ghi_chu_nhan_viec && <p>{kq.ghi_chu_nhan_viec}</p>}
+        </div>
+      )}
+      {kq.trang_thai === 'trung_tuyen' && (
+        <div className="the-tac-phong">
+          <span className="ttp-dau"><Shirt size={17} /><b>Tác phong khi đến nhận việc</b></span>
+          <ul>{dsTacPhong(kq.tac_phong).map((x) => <li key={x}><Check size={14} strokeWidth={3} />{x}</li>)}</ul>
+          <span className="nho muted">Vui lòng có mặt đúng giờ. Nếu cần đổi lịch, hãy báo trước cho bộ phận tuyển dụng.</span>
+        </div>
+      )}
+      {kq.trang_thai === 'chua_phu_hop' && (
+        <div className="the-dong-vien">
+          <span className="tdv-icon"><Heart size={18} /></span>
+          <p>{DONG_VIEN}</p>
+          <Link to="/" className="btn vien md">Xem các vị trí đang tuyển</Link>
         </div>
       )}
 
