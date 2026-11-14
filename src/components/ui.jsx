@@ -59,7 +59,8 @@ export function Field({ nhan, batBuoc, loi, goiY, kieu, className = '', children
     <div>
       <label className={['field', kieu, loi ? 'loi' : '', className].join(' ')}>
         <span className="nhan">{nhan}{batBuoc && <i>*</i>}</span>
-        {children || <input {...p} />}
+        {children || <input {...p} className={[p.className, p.type === 'date' && !p.value ? 'trong' : ''].filter(Boolean).join(' ') || undefined} />}
+        {!children && p.type === 'date' && !p.value && <span className="date-goi">dd/mm/yyyy</span>}
         {goiY && <div className="goi-y">{goiY}</div>}
       </label>
       {loi && typeof loi === 'string' && <div className="loi-chu">{loi}</div>}
