@@ -452,7 +452,7 @@ a.lich-dong:hover { background: rgba(255,255,255,.12); color: #fff; }
 .tieu-chi.gon .ten > span { font-size: 12px; }
 .tieu-chi.gon .cham-diem button { width: 38px; height: 38px; font-size: 14px; }
 .pv-kq { display: flex; flex-direction: column; gap: 14px; }
-.kq-chon { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.kq-chon { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .kq-chon button { height: 52px; border-radius: 18px; border: 2px solid var(--line-2); background: #fff; font: inherit; font-weight: 800; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--ink-2); cursor: pointer; transition: all .18s var(--ease); }
 .kq-chon button:hover { border-color: var(--ink); }
 .kq-chon .kq-dat.on { background: var(--ok); border-color: var(--ok); color: #fff; box-shadow: 0 10px 22px rgba(18,163,127,.3); }

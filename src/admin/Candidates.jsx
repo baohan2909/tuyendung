@@ -113,8 +113,7 @@ const keyNhom = (r, nhom) => {
 const TAB_PV = [
   { v: '', t: 'Cần phỏng vấn', ds: ['moi', 'sang_loc', 'hen_pv'] },
   { v: 'dang_pv', t: 'Đang phỏng vấn', ds: ['hen_pv'] },
-  { v: 'cho_chot', t: 'Đã chấm · chờ chốt', ds: ['da_pv', 'de_xuat'] },
-  { v: 'du_bi', t: 'Dự bị', ds: ['du_bi'] },
+  { v: 'cho_chot', t: 'Đã chấm · chờ chốt', ds: ['da_pv', 'de_xuat', 'du_bi'] },
   { v: 'dat', t: 'Trúng tuyển · chờ nhận việc', ds: ['dat'] }
 ]
 
@@ -354,7 +353,7 @@ export default function Candidates({ cheDo }) {
           ))}
         </div>
         <div className="qt-ket">
-          {['khong_dat', 'du_bi', 'rut'].map((m) => (
+          {['khong_dat', 'rut', ...(dem.du_bi ? ['du_bi'] : [])].map((m) => (
             <button key={m} role="tab" aria-selected={gd === m} className={'qt-ket-o' + (gd === m ? ' on' : '')} onClick={() => datGD(gd === m ? '' : m)}>
               <i style={{ background: GD[m].cham }} />{GD[m].ten}<b>{dem[m] || 0}</b>
             </button>
