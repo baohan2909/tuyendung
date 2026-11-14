@@ -673,3 +673,5 @@ a.lich-dong:hover { background: rgba(255,255,255,.12); color: #fff; }
 .kq-chon .kq-can_nhac.on { background: linear-gradient(135deg, #F2A93B 0%, #D98A1C 100%); border-color: #D98A1C; color: #fff; box-shadow: 0 10px 22px rgba(217,138,28,.28); }
 .kq-chon .kq-chua_lien_lac.on { background: linear-gradient(135deg, #7383E8 0%, #4F5FCB 100%); border-color: #5B6CDB; color: #fff; box-shadow: 0 10px 22px rgba(91,108,219,.28); }
 .kq-chon button { font-size: 13.5px; }
+.link-ban-do { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; color: var(--ok); text-decoration: none; padding: 2px 4px; }
+.link-ban-do:hover { text-decoration: underline; }

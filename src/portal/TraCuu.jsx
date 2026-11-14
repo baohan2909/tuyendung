@@ -124,6 +124,7 @@ export default function TraCuu() {
           <span className="eyebrow">{kq.trang_thai === 'nhan_viec' ? 'Nơi làm việc của bạn' : 'Thông tin nhận việc'}</span>
           {kq.ngay_nhan_viec && <div className="tnv-ngay"><Calendar size={18} /><b>{thu(kq.ngay_nhan_viec + 'T12:00:00+07:00')} {fmtNgay(kq.ngay_nhan_viec + 'T12:00:00+07:00')}</b>{kq.gio_nhan_viec && <span>lúc <b>{kq.gio_nhan_viec}</b></span>}</div>}
           {kq.noi_lam_viec && <div className="tnv-noi"><MapPin size={16} /><div><b>{kq.noi_lam_viec}</b>{kq.dia_chi_nhan_viec && <span>{kq.dia_chi_nhan_viec}</span>}</div></div>}
+          {kq.ban_do && <a className="nut-chi-duong" href={kq.ban_do} target="_blank" rel="noreferrer"><MapPin size={16} />Chỉ đường đến cửa hàng</a>}
           {kq.ghi_chu_nhan_viec && <p>{kq.ghi_chu_nhan_viec}</p>}
         </div>
       )}

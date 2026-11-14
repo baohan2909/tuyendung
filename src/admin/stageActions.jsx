@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Briefcase, Check, ClipboardCheck, Mic, Search, Store, ThumbsDown, UserCheck } from 'lucide-react'
+import { Briefcase, MapPin, Check, ClipboardCheck, Mic, Search, Store, ThumbsDown, UserCheck } from 'lucide-react'
 import { docBang, rpc } from '../lib/api'
 import { useAsync } from '../lib/hooks'
 import { khongDau, ngayVN } from '../lib/format'
@@ -187,6 +187,8 @@ export function HanhDongBuoc({ h, doiGD, toi, sang }) {
 }
 
 // Chọn cửa hàng (tìm theo tên, mã, địa chỉ, khu vực) — dùng trong phiếu phỏng vấn
+export const banDo = (c) => (c?.lat != null && c?.lng != null ? 'https://www.google.com/maps/search/?api=1&query=' + c.lat + ',' + c.lng : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(c?.dia_chi || ''))
+
 function BoSungDiaChi({ ma, xong }) {
   const bao = useToast()
   const [v, setV] = useState('')
@@ -223,6 +225,7 @@ export function ChonCuaHang({ giaTri, onChon, goiY = [] }) {
         <span className="gian"><b className="cat">{chon.ten}</b><span className="cat">{chon.ma}{chon.dia_chi ? ' · ' + chon.dia_chi : ' · chưa có địa chỉ'}</span></span>
         <span className="nho" style={{ color: 'var(--pink-deep)', fontWeight: 700 }}>Đổi</span>
       </button>
+      {(chon.lat || chon.dia_chi) && <a className="link-ban-do" href={banDo(chon)} target="_blank" rel="noreferrer"><MapPin size={14} />Xem vị trí cửa hàng trên bản đồ</a>}
       {!chon.dia_chi && <BoSungDiaChi ma={chon.ma} xong={() => reloadCh(true)} />}
     </div>
   )

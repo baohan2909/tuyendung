@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { EmailCaiDat } from './Email'
+import { banDo } from './stageActions'
 import { dsTacPhong, MAC_DINH_TIN_DAT, MAC_DINH_TIN_KHONG_DAT, TAC_PHONG_MAC_DINH } from '../lib/thongBao'
-import { Copy, Download, KeyRound, Link2, Lock, Plus, QrCode, RefreshCw, Save, ShieldCheck, Trash2, UserPlus, Pencil, Sparkles } from 'lucide-react'
+import { Copy, Download, KeyRound, Link2, Lock, Plus, QrCode, RefreshCw, Save, ShieldCheck, Trash2, UserPlus, Pencil, Sparkles , MapPin } from 'lucide-react'
 import { docBang, doiMatKhau, dsTep, luuDong, rpc, themDong, xoaTep } from '../lib/api'
 import { useAsync } from '../lib/hooks'
 import { khongDau } from '../lib/format'
@@ -393,6 +394,7 @@ function CuaHang() {
         <div key={c.ma} className="dong-ns" style={{ opacity: c.hoat_dong ? 1 : 0.5 }}>
           <span className="tag" style={{ minWidth: 78, justifyContent: 'center' }}>{c.ma}</span>
           <div className="gian" style={{ flex: '1 1 220px' }}><b>{c.ten}</b><span className="cat" style={{ display: 'block' }}>{c.khu_vuc || '—'}{c.dia_chi ? ' · ' + c.dia_chi : ''}</span></div>
+          {(c.lat != null || c.dia_chi) && <a className="icon-btn sm mem" href={banDo(c)} target="_blank" rel="noreferrer" aria-label="Mở bản đồ" title={c.lat != null ? 'Định vị ' + c.lat + ', ' + c.lng : 'Theo địa chỉ'}><MapPin size={15} color={c.lat != null ? 'var(--ok)' : undefined} /></a>}
           <Switch on={c.hoat_dong} nhan="Hoạt động" onDoi={(v) => luu({ ...c, hoat_dong: v })} />
           <IconBtn icon={Pencil} nhan="Sửa" co="sm" kieu="mem" size={15} onClick={() => setSua(c)} />
         </div>
@@ -404,6 +406,11 @@ function CuaHang() {
             <div className="luoi-2"><Field kieu="gon" nhan="Mã cửa hàng" value={sua.ma} disabled={!sua.moi} onChange={(e) => setSua((x) => ({ ...x, ma: e.target.value.toUpperCase().trim() }))} /><Field kieu="gon" nhan="Tên" value={sua.ten} onChange={(e) => setSua((x) => ({ ...x, ten: e.target.value }))} /></div>
             <Field kieu="gon" nhan="Khu vực" value={sua.khu_vuc || ''} onChange={(e) => setSua((x) => ({ ...x, khu_vuc: e.target.value }))} />
             <Field kieu="gon" nhan="Địa chỉ" value={sua.dia_chi || ''} onChange={(e) => setSua((x) => ({ ...x, dia_chi: e.target.value }))} />
+            <div className="luoi-2">
+              <Field kieu="gon" nhan="Vĩ độ (lat)" inputMode="decimal" value={sua.lat ?? ''} onChange={(e) => setSua((x) => ({ ...x, lat: e.target.value === '' ? null : Number(e.target.value.replace(',', '.')) }))} placeholder="10.7867384" />
+              <Field kieu="gon" nhan="Kinh độ (lng)" inputMode="decimal" value={sua.lng ?? ''} onChange={(e) => setSua((x) => ({ ...x, lng: e.target.value === '' ? null : Number(e.target.value.replace(',', '.')) }))} placeholder="106.6934778" />
+            </div>
+            <span className="nho muted">Mẹo: mở Google Maps, nhấn giữ đúng vị trí cửa hàng → sao chép 2 số tọa độ dán vào đây.</span>
           </div>
         </Modal>
       )}

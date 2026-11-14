@@ -153,3 +153,4 @@
 .tdv-icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: #fff; color: var(--pink, #E8417A); box-shadow: 0 4px 14px rgba(232, 65, 122, .14); }
 .the-dong-vien p { margin: 0; font-size: 13.5px; line-height: 1.65; color: var(--ink); }
 .vi-tri button.on .ic { background: rgba(255,255,255,.2); }
+.nut-chi-duong { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 46px; padding: 0 18px; border-radius: 999px; background: linear-gradient(135deg, #12A37F 0%, #0E7F63 100%); color: #fff; font-weight: 700; font-size: 14px; text-decoration: none; box-shadow: 0 10px 22px rgba(14,127,99,.25); align-self: flex-start; }
