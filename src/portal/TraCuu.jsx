@@ -134,8 +134,7 @@ export default function TraCuu() {
           <span className="ttp-dau"><Shirt size={17} /><b>Trang phục khi đến nhận việc</b></span>
           <ul>{dsTacPhong(kq.tac_phong).map((x) => <li key={x}><Check size={14} strokeWidth={3} />{x}</li>)}</ul>
           <span className="ttp-dau" style={{ marginTop: 6 }}><FileText size={17} /><b>Lưu ý</b></span>
-          <ul className="luu-y">{['Mang theo hồ sơ xin việc và CMND/CCCD bản gốc', 'Đưa thông tin này cho nhân viên cửa hàng để được xác nhận', 'Vui lòng có mặt trước giờ vào ca 10 phút'].map((x) => <li key={x}><Check size={14} strokeWidth={3} />{x}</li>)}</ul>
-          <span className="nho muted">Mọi thắc mắc, bạn vui lòng trả lời email Nón Sơn đã gửi hoặc liên hệ Phòng Tuyển dụng.</span>
+          <ul className="luu-y">{['Mang theo hồ sơ xin việc và CCCD bản gốc', 'Đưa thông tin này cho nhân viên cửa hàng để được xác nhận'].map((x) => <li key={x}><Check size={14} strokeWidth={3} />{x}</li>)}</ul>
         </div>
       )}
       {kq.trang_thai === 'chua_phu_hop' && (

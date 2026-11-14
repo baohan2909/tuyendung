@@ -14,7 +14,7 @@ export const TAC_PHONG_NAM = [
 ]
 export const TAC_PHONG_MAC_DINH = TAC_PHONG_NU
 export const LUU_Y_NHAN_VIEC = [
-  'Mang theo hồ sơ xin việc và CMND/CCCD bản gốc',
+  'Mang theo hồ sơ xin việc và CCCD bản gốc',
   'Vui lòng đưa tin nhắn này cho nhân viên cửa hàng để được xác nhận thông tin',
   'Mọi thắc mắc, bạn vui lòng để lại tin nhắn để Phòng Tuyển dụng hồi âm sớm nhất'
 ]
