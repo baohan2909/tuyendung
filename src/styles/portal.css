@@ -14,10 +14,11 @@
 .hero-chu .d3 { font-weight: 800; letter-spacing: -.015em; line-height: 1.12; padding-bottom: .06em;
   background: linear-gradient(92deg, #FF5FA8 0%, #FF8CC0 45%, #FFD1E6 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .bong-tron { position: absolute; border-radius: 50%; pointer-events: none; }
-.bong-tron.b1 { width: 300px; height: 300px; right: -120px; top: -90px;
-  background: linear-gradient(150deg, rgba(255,255,255,.12) 0%, rgba(255,255,255,.05) 100%); }
-.bong-tron.b2 { width: 170px; height: 170px; right: 70px; top: -30px;
-  background: linear-gradient(150deg, rgba(255,140,192,.20) 0%, rgba(255,140,192,.07) 100%); }
+.bong-tron.b1 { background: linear-gradient(150deg, rgba(255,255,255,.13) 0%, rgba(255,255,255,.04) 100%); }
+.bong-tron.b2 { background: linear-gradient(150deg, rgba(255,140,192,.24) 0%, rgba(255,140,192,.08) 100%); }
+.chi-dt.b1 { width: 240px; height: 240px; right: -96px; top: -120px; }
+.chi-dt.b2 { width: 120px; height: 120px; right: 112px; top: 40px; background: linear-gradient(150deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,.05) 100%); }
+.bong-cum { display: none; }
 .portal-ten { font-weight: 800; font-size: 13px; letter-spacing: .32em; color: #fff; text-decoration: none; }
 .hero .eyebrow { margin-bottom: 14px; }
 .hero .loi-chao { margin-top: 14px; font-size: 14px; color: rgba(255,255,255,.7); max-width: 380px; line-height: 1.55; }
@@ -106,8 +107,11 @@
   .hero-chu span { white-space: nowrap; }
   .hero-chu .d1 { font-size: .36em; margin-bottom: .45em; }
   .hero .eyebrow { margin-bottom: 22px; }
-  .bong-tron.b1 { width: 540px; height: 540px; left: 24vw; right: auto; top: -200px; }
-  .bong-tron.b2 { width: 280px; height: 280px; left: calc(24vw - 110px); right: auto; top: -10px; }
+  .chi-dt { display: none; }
+  .bong-cum { display: block; position: absolute; top: 0; right: 0; width: 360px; height: 300px; pointer-events: none; z-index: 0; }
+  .bong-cum .b1 { width: 300px; height: 300px; right: -30px; top: -120px; }
+  .bong-cum .b2 { width: 150px; height: 150px; right: 210px; top: 66px; }
+  .portal-dau, .hero { position: relative; z-index: 1; }
   .hero .loi-chao { font-size: 16px; max-width: 460px; }
   .hero-uu-diem { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 28px; }
   .hero-uu-diem span { height: 40px; padding: 0 16px; border-radius: 999px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); font-size: 13px; font-weight: 600; color: rgba(255,255,255,.85); display: inline-flex; align-items: center; gap: 8px; backdrop-filter: blur(12px); }

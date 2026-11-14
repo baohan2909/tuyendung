@@ -10,12 +10,13 @@ export function PortalShell({ hero, buoc, loiChao, children, sheetRef, phai, xon
       <div className="portal-nen" aria-hidden="true">
         <div className="glow hong" style={{ width: 340, height: 340, left: -110, top: -130, opacity: 0.85 }} />
         <div className="glow tim" style={{ width: 260, height: 260, right: -90, top: 30, opacity: 0.55, filter: 'blur(80px)' }} />
-        <div className="bong-tron b1" />
-        <div className="bong-tron b2" />
+        <div className="bong-tron b1 chi-dt" />
+        <div className="bong-tron b2 chi-dt" />
         <div className="glow hong hien-lon" style={{ width: 420, height: 420, left: '30%', bottom: -220, opacity: 0.35, filter: 'blur(110px)' }} />
       </div>
       <div className="portal-khung">
         <div className="portal-trai">
+          <div className="bong-cum" aria-hidden="true"><span className="bong-tron b1" /><span className="bong-tron b2" /></div>
           <header className="portal-dau">
             <Link to="/" className="portal-ten" aria-label="Trang ứng tuyển">NÓN SƠN</Link>
             {phai || (traCuu
