@@ -57,7 +57,7 @@ export default function TraCuu() {
 
   if (!kq) {
     return (
-      <PortalShell hero={['Theo dõi', 'hồ sơ của bạn', 'mọi lúc.']} loiChao="Nhập mã hồ sơ (nhận được khi nộp) và số điện thoại để xem tiến độ, lịch phỏng vấn và kết quả.">
+      <PortalShell hero={['Theo dõi', 'hồ sơ của bạn', 'mọi lúc']} loiChao="Nhập mã hồ sơ (nhận được khi nộp) và số điện thoại để xem tiến độ, lịch phỏng vấn và kết quả.">
         <div>
           <h2 className="buoc-ten">Tra cứu hồ sơ</h2>
         </div>

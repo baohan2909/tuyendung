@@ -16,8 +16,8 @@ const TRONG = {
   thu_nhap_mong_muon: '', nguon: [], nguon_khac: '', sdt_gioi_thieu: '', tra_loi_them: {}
 }
 const BUOC = [
-  { ten: 'Bạn là ai?', moTa: 'Thông tin cơ bản để Nón Sơn liên hệ với bạn.', hero: ['Bắt đầu', 'hành trình mới', 'cùng Nón Sơn.'] },
-  { ten: 'Kể thêm về bạn', moTa: 'Giúp chúng tôi sắp xếp vị trí và khu vực phù hợp.', hero: ['Kể thêm', 'về bạn', 'một chút nhé.'] },
+  { ten: 'Bạn là ai?', moTa: 'Thông tin cơ bản để Nón Sơn liên hệ với bạn.', hero: ['Bắt đầu', 'hành trình mới', 'cùng Nón Sơn'] },
+  { ten: 'Kể thêm về bạn', moTa: 'Giúp chúng tôi sắp xếp vị trí và khu vực phù hợp.', hero: ['Kể thêm', 'về bạn', 'một chút nhé'] },
   { ten: 'Kinh nghiệm & mong muốn', moTa: 'Không có kinh nghiệm cũng không sao — hãy chia sẻ thật lòng.', hero: ['Điều bạn', 'mong muốn', 'là gì?'] },
   { ten: 'Ảnh & video giới thiệu', moTa: 'Ảnh rõ mặt và một video ngắn giới thiệu bản thân.', hero: ['Cho chúng tôi', 'thấy bạn', 'tự tin nhé!'] }
 ]
@@ -240,7 +240,7 @@ export default function Apply() {
 
   // ---------- giao diện ----------
   if (ketQua) return <HoanTat kq={ketQua} />
-  if (loiCfg) return <PortalShell hero={['Xin lỗi,', 'có trục trặc', 'nhỏ.']}><Bao kieu="loi">{loiCfg}</Bao><Btn kieu="den" onClick={() => window.location.reload()} icon={RotateCcw}>Tải lại trang</Btn></PortalShell>
+  if (loiCfg) return <PortalShell hero={['Xin lỗi', 'có trục trặc', 'nhỏ']}><Bao kieu="loi">{loiCfg}</Bao><Btn kieu="den" onClick={() => window.location.reload()} icon={RotateCcw}>Tải lại trang</Btn></PortalShell>
   if (!cfg) return <PortalShell hero={BUOC[0].hero} dangTai><div className="dang-tai-trang"><Spinner size={28} /></div></PortalShell>
   if (form.dang_mo === false) return <PortalShell hero={['Tạm ngừng', 'nhận hồ sơ', 'trực tuyến']}><Bao kieu="vang">Hiện Nón Sơn tạm ngừng nhận hồ sơ trực tuyến. Bạn có thể ghé cửa hàng gần nhất hoặc quay lại sau nhé.</Bao></PortalShell>
 
@@ -382,7 +382,7 @@ export default function Apply() {
 
       <div className="chan-form">
         {buoc > 0 ? <button type="button" className="nut-lui" onClick={lui} aria-label="Quay lại"><ArrowLeft size={20} /></button> : (
-          <span className="ghi"><Clock size={13} style={{ verticalAlign: -2, marginRight: 5 }} />Không cần đăng nhập · khoảng 3 phút</span>
+          <span className="ghi"><Clock size={13} style={{ verticalAlign: -2, marginRight: 5 }} />Chỉ khoảng 3 phút</span>
         )}
         {buoc > 0 && <span className="ghi">{buoc === 3 ? (anhXong + '/' + Math.max(minAnh, anh.length) + ' ảnh · ' + (video?.trangThai === 'xong' ? '1/1 video' : '0/1 video')) : 'Bước ' + (buoc + 1) + ' / 4'}</span>}
         {buoc < 3
@@ -435,7 +435,7 @@ function HoanTat({ kq }) {
   const [daChep, setDaChep] = useState(false)
   const chep = () => { navigator.clipboard?.writeText(kq.ma).then(() => { setDaChep(true); setTimeout(() => setDaChep(false), 1800) }) }
   return (
-    <PortalShell hero={['Gửi hồ sơ', 'thành công!', 'Cảm ơn ' + tenGoi(kq.ten) + '.']} xong>
+    <PortalShell hero={['Gửi hồ sơ', 'thành công!', 'Cảm ơn ' + tenGoi(kq.ten)]} xong>
       <div className="cot" style={{ alignItems: 'center', textAlign: 'center', gap: 12, paddingTop: 6 }}>
         <span className="dau-tich"><Check size={34} color="#fff" strokeWidth={3} /></span>
         <h2 style={{ fontSize: 22, fontWeight: 800 }}>Nón Sơn đã nhận hồ sơ</h2>
