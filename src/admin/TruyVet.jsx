@@ -13,7 +13,7 @@ export default function TruyVet({ id, nhip }) {
   if (!t) return null
   const buoc = [
     { ic: FileText, ten: 'Nộp hồ sơ', ai: 'Ứng viên', khi: t.nop_luc, xong: true },
-    { ic: Filter, ten: 'Sàng lọc hồ sơ', ai: t.sang_loc?.nguoi, khi: t.sang_loc?.luc, xong: !!t.sang_loc?.nguoi,
+    { ic: Filter, ten: 'Xem hồ sơ · bắt đầu phỏng vấn', ai: t.sang_loc?.nguoi, khi: t.sang_loc?.luc, xong: !!t.sang_loc?.nguoi,
       kq: t.sang_loc?.ket_qua === 'qua' ? ['Qua', 'var(--ok)'] : t.sang_loc?.ket_qua === 'khong_qua' ? ['Không qua', 'var(--err)'] : null },
     ...((t.phong_van || []).length ? t.phong_van.map((p) => ({ ic: ClipboardCheck, ten: 'Phỏng vấn · chấm ' + fmtDiem(p.diem) + '/10', ai: p.nguoi, khi: p.luc, xong: true,
       kq: p.ket_luan ? [KET_LUAN[p.ket_luan]?.ten, p.ket_luan === 'dat' ? 'var(--ok)' : p.ket_luan === 'khong_dat' ? 'var(--err)' : 'var(--muted-2)'] : null }))

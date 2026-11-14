@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
+import { useLS } from '../lib/hooks'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { BarChart3, Briefcase, CalendarDays, Columns3, LayoutGrid, LogOut, Menu as MenuIc, Settings, Users, ExternalLink, Filter, UserCheck, History } from 'lucide-react'
+import { BarChart3, Briefcase, CalendarDays, Columns3, LayoutGrid, LogOut, Menu as MenuIc, Settings, Users, ExternalLink, Zap, UserCheck, History, PanelLeftClose, PanelLeftOpen, Mic } from 'lucide-react'
 import { useStaff } from './context'
 import { VAI_TRO } from '../lib/stages'
 import { chuCai } from '../lib/format'
@@ -10,9 +11,9 @@ import Login from './Login'
 function dsMuc(s) {
   return [
     { to: '/quantri', ten: 'Tổng quan', ic: LayoutGrid, end: true },
-    s.coSua && { to: '/quantri/sang-loc', ten: 'Sàng lọc', ic: Filter, badge: (s.dem?.moi || 0) + (s.dem?.sang_loc || 0) },
+    s.coSua && { to: '/quantri/sang-loc', ten: 'Xem nhanh', ic: Zap, badge: (s.dem?.moi || 0) + (s.dem?.sang_loc || 0) },
     { to: '/quantri/ung-vien', ten: 'Ứng viên', ic: Users },
-    { to: '/quantri/phong-van', ten: 'Phỏng vấn', ic: CalendarDays, badge: s.dem?.hen_pv },
+    { to: '/quantri/phong-van', ten: 'Phỏng vấn', ic: Mic, badge: s.dem?.hen_pv },
     { to: '/quantri/quy-trinh', ten: 'Quy trình', ic: Columns3 },
     { nhom: 'Nhân sự' },
     s.vaiTro !== 'phong_van' && { to: '/quantri/nhan-vien', ten: 'Nhân viên mới', ic: UserCheck },
@@ -27,6 +28,7 @@ function dsMuc(s) {
 export default function AdminLayout() {
   const s = useStaff()
   const [moThem, setMoThem] = useState(false)
+  const [gon, setGon] = useLS('ns-td-menu-gon', false)
   const loc = useLocation()
   const nav = useNavigate()
   useEffect(() => { setMoThem(false) }, [loc.pathname])
@@ -51,23 +53,25 @@ export default function AdminLayout() {
 
   return (
     <div className="admin">
-      <nav className="sidebar" aria-label="Menu chính">
+      <nav className={'sidebar' + (gon ? ' gon' : '')} aria-label="Menu chính">
         <div className="glow hong" style={{ width: 220, height: 220, left: -90, bottom: -60, opacity: 0.45 }} />
-        <div className="sb-brand"><span className="orb"><NonIcon size={20} /></span><div><b>NS TUYỂN DỤNG</b><span>Nón Sơn</span></div></div>
+        <div className="sb-brand"><span className="orb"><NonIcon size={20} /></span><div className="an-gon"><b>NS TUYỂN DỤNG</b><span>Nón Sơn</span></div>
+          <button type="button" className="sb-gon" onClick={() => setGon(!gon)} aria-label={gon ? 'Mở rộng menu' : 'Thu gọn menu'} title={gon ? 'Mở rộng menu' : 'Thu gọn menu'}>{gon ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}</button>
+        </div>
         <div className="sb-cuon">
         {muc.map((m, i) => m.nhom
           ? <div key={i} className="nav-nhom">{m.nhom}</div>
           : (
-            <NavLink key={m.to} to={m.to} end={m.end} className={({ isActive }) => 'nav-item' + (isActive ? ' on' : '')}>
-              <m.ic size={19} strokeWidth={2} />{m.ten}{m.badge > 0 && <span className="badge">{m.badge > 99 ? '99+' : m.badge}</span>}
+            <NavLink key={m.to} to={m.to} end={m.end} title={gon ? m.ten : undefined} className={({ isActive }) => 'nav-item' + (isActive ? ' on' : '')}>
+              <m.ic size={19} strokeWidth={2} /><span className="an-gon">{m.ten}</span>{m.badge > 0 && <span className="badge">{m.badge > 99 ? '99+' : m.badge}</span>}
             </NavLink>
           ))}
-        <a className="nav-item" href="/" target="_blank" rel="noreferrer"><ExternalLink size={19} />Trang ứng tuyển</a>
+        <a className="nav-item" href="/" target="_blank" rel="noreferrer" title={gon ? 'Trang ứng tuyển' : undefined}><ExternalLink size={19} /><span className="an-gon">Trang ứng tuyển</span></a>
         </div>
         <div className="sb-user">
           <span className="av">{chuCai(s.toi.ho_ten)}</span>
-          <div className="gian"><b className="cat">{s.toi.ho_ten}</b><span>{VAI_TRO[s.vaiTro]} · {s.toi.ma_nv}</span></div>
-          <button className="icon-btn xs kinh" onClick={s.thoat} aria-label="Đăng xuất" title="Đăng xuất"><LogOut size={15} /></button>
+          <div className="gian an-gon"><b className="cat">{s.toi.ho_ten}</b><span>{VAI_TRO[s.vaiTro]} · {s.toi.ma_nv}</span></div>
+          <button className="icon-btn xs kinh an-gon" onClick={s.thoat} aria-label="Đăng xuất" title="Đăng xuất"><LogOut size={15} /></button>
         </div>
       </nav>
 

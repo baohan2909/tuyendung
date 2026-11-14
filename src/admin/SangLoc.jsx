@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { AlertTriangle, ExternalLink, Film, Phone, SkipForward, Sparkles, ThumbsDown, ThumbsUp } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { AlertTriangle, ExternalLink, Film, Mic, Phone, SkipForward, Sparkles, ThumbsDown } from 'lucide-react'
 import { rpc } from '../lib/api'
 import { useAsync, usePhim } from '../lib/hooks'
 import { fmtNgayGio, fmtSdt, tuongDoi } from '../lib/format'
@@ -13,6 +13,7 @@ const LY_DO = ['Hồ sơ chưa đủ ảnh/video', 'Chưa phù hợp ngoại hì
 // Sàng lọc nhanh: xem lần lượt từng hồ sơ chờ sàng lọc, quyết định bằng 1 chạm (← loại · → qua)
 export default function SangLoc() {
   const s = useStaff()
+  const nav = useNavigate()
   const bao = useToast()
   const { data, loading, reload } = useAsync(() => rpc('td_ds_ho_so', { p: { trang_thai: ['moi', 'sang_loc'], sap_xep: 'cu_nhat', so_dong: 200 } }), [])
   const [bo, setBo] = useState([])
@@ -37,10 +38,11 @@ export default function SangLoc() {
   async function quyet(kq) {
     if (!r || dang || !s.coSua) return
     if (kq === 'khong_qua' && !loai) { setLoai(true); return }
+    if (kq === 'qua') { nav('/quantri/ung-vien/' + r.id + '/cham'); return }
     setDang(true)
     try {
-      await rpc('td_sang_loc', { p_ids: [r.id], p_ket_qua: kq, p_ghi_chu: kq === 'khong_qua' ? lyDo : null })
-      bao(kq === 'qua' ? r.ho_ten + ': qua sàng lọc → Phỏng vấn' : r.ho_ten + ': không qua', kq === 'qua' ? 'ok' : 'hong')
+      await rpc('td_ket_qua_pv', { p_id: r.id, p: { ket_qua: 'khong_dat', ghi_chu: lyDo || null } })
+      bao(r.ho_ten + ': đã loại', 'hong')
       setBo((b) => [...b, r.id]); setDaXu((n) => n + 1); s.taiDem()
     } catch (e) { bao(e.message, 'loi') }
     setDang(false)
@@ -61,15 +63,15 @@ export default function SangLoc() {
     <>
       <header className="trang-dau">
         <div className="tieu">
-          <span className="eyebrow">Bước 1 · Sàng lọc hồ sơ</span>
-          <h1><b>{data ? ds.length : '…'}</b> hồ sơ chờ sàng lọc{daXu ? <span className="nho muted" style={{ fontSize: 14, marginLeft: 10 }}>· đã xử lý {daXu}</span> : null}</h1>
-          <p className="phu">Xem ảnh, video rồi quyết định: <b>→</b> qua (chuyển phỏng vấn) · <b>←</b> loại · <b>Space</b> bỏ qua</p>
+          <span className="eyebrow">Xem nhanh hồ sơ mới</span>
+          <h1><b>{data ? ds.length : '…'}</b> hồ sơ chờ xử lý{daXu ? <span className="nho muted" style={{ fontSize: 14, marginLeft: 10 }}>· đã xử lý {daXu}</span> : null}</h1>
+          <p className="phu">Xem ảnh, video rồi quyết định: <b>→</b> phỏng vấn ngay · <b>←</b> loại · <b>Space</b> để sau</p>
         </div>
         <Btn kieu="trang" co="md" onClick={() => { setBo([]); setI(0); reload() }}>Làm mới</Btn>
       </header>
 
       {loading && !data ? <Skeleton h={520} style={{ borderRadius: 30 }} /> : !r ? (
-        <div className="card"><Empty icon={Sparkles} tieuDe="Đã sàng lọc hết!">Không còn hồ sơ nào chờ sàng lọc. Hồ sơ mới sẽ tự hiện ở đây.</Empty></div>
+        <div className="card"><Empty icon={Sparkles} tieuDe="Đã xử lý hết!">Không còn hồ sơ nào chờ xử lý. Hồ sơ mới sẽ tự hiện ở đây.</Empty></div>
       ) : (
         <>
           <div className="loc-cuon" aria-label="Hàng đợi">
@@ -113,7 +115,7 @@ export default function SangLoc() {
               {s.coSua ? (
                 <div className="luoi-2">
                   <Btn kieu="do" co="lg" icon={ThumbsDown} loading={dang && loai} onClick={() => quyet('khong_qua')}>{loai ? 'Xác nhận loại' : 'Loại'}</Btn>
-                  <Btn kieu="den" co="lg" icon={ThumbsUp} loading={dang && !loai} onClick={() => quyet('qua')}>Qua</Btn>
+                  <Btn kieu="den" co="lg" icon={Mic} onClick={() => quyet('qua')}>Phỏng vấn</Btn>
                 </div>
               ) : <p className="nho muted">Vai trò của bạn chỉ xem.</p>}
               <div className="hang" style={{ marginTop: 10, justifyContent: 'space-between' }}>

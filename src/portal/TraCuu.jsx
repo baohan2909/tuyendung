@@ -14,40 +14,45 @@ const CHANG = [
   { ten: 'Chờ kết quả', ic: Clock },
   { ten: 'Kết quả', ic: Trophy }
 ]
-const chuanMa = (s) => String(s || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20)
+const chuanQ = (s) => String(s || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20)
 
 export default function TraCuu() {
   const [qs] = useSearchParams()
-  const [ma, setMa] = useState(chuanMa(qs.get('ma')))
-  const [sdt, setSdt] = useState((qs.get('sdt') || '').replace(/\D/g, ''))
+  const [q, setQ] = useState(chuanQ(qs.get('ma') || qs.get('sdt') || ''))
+  const [ds, setDs] = useState(null)
   const [kq, setKq] = useState(null)
   const [dang, setDang] = useState(false)
   const [loi, setLoi] = useState(null)
   const [doiLich, setDoiLich] = useState(false)
   const [ghiChu, setGhiChu] = useState('')
+  const [sdtXacNhan, setSdtXacNhan] = useState('')
   const [dangGui, setDangGui] = useState(false)
   const [daGui, setDaGui] = useState(null)
 
   async function tra(e) {
     e && e.preventDefault()
     setLoi(null)
-    if (!/^NS\d{6}-[A-Z0-9]{5}$/.test(ma)) return setLoi('Mã hồ sơ có dạng NS261113-ABCDE')
-    if (!/^0\d{9}$/.test(sdt)) return setLoi('Nhập số điện thoại đã dùng khi nộp hồ sơ')
+    const x = q.trim()
+    const laMa = /^NS\d{6}-[A-Z0-9]{5}$/.test(x)
+    const laSdt = /^(0|84)\d{9}$/.test(x)
+    if (!laMa && !laSdt) return setLoi('Nhập số điện thoại (VD 0909123456) hoặc mã hồ sơ (VD NS261113-ABCDE)')
     setDang(true)
     try {
-      const r = await rpc('td_tra_cuu', { p_ma: ma, p_sdt: sdt })
-      if (!r) setLoi('Không tìm thấy hồ sơ. Kiểm tra lại mã và số điện thoại.')
-      setKq(r)
+      const r = await rpc('td_tra_cuu_nhanh', { p_q: x })
+      if (!r?.length) { setLoi('Không tìm thấy hồ sơ nộp trong 30 ngày gần đây. Kiểm tra lại số điện thoại hoặc mã hồ sơ.'); setDs(null); setKq(null) }
+      else if (r.length === 1) { setDs(r); setKq(r[0]) } else { setDs(r); setKq(null) }
     } catch (e2) { setLoi(e2.message) }
     setDang(false)
   }
-  useEffect(() => { if (ma && sdt) tra() // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (q) tra() // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function phanHoi(loai) {
+    const sdt = kq.k || sdtXacNhan.replace(/\D/g, '')
+    if (!/^0\d{9}$/.test(sdt)) { setLoi('Nhập số điện thoại đã dùng khi nộp hồ sơ để xác nhận'); return }
     setDangGui(true)
     try {
-      const r = await rpc('td_phan_hoi_lich', { p_ma: ma, p_sdt: sdt, p_lich_id: kq.lich.id, p_phan_hoi: loai, p_ghi_chu: loai === 'xin_doi' ? ghiChu : null })
+      const r = await rpc('td_phan_hoi_lich', { p_ma: kq.ma, p_sdt: sdt, p_lich_id: kq.lich.id, p_phan_hoi: loai, p_ghi_chu: loai === 'xin_doi' ? ghiChu : null })
       setKq((x) => ({ ...x, lich: { ...x.lich, trang_thai: r.trang_thai } }))
       setDaGui(loai)
       setDoiLich(false)
@@ -55,18 +60,37 @@ export default function TraCuu() {
     setDangGui(false)
   }
 
+  if (!kq && ds && ds.length > 1) {
+    return (
+      <PortalShell hero={['Chọn', 'hồ sơ cần xem']} loiChao="Số điện thoại này có nhiều hồ sơ trong 30 ngày gần đây.">
+        <div><h2 className="buoc-ten">{ds.length} hồ sơ</h2></div>
+        <div className="cot" style={{ gap: 10 }}>
+          {ds.map((x) => {
+            const c = CONG_KHAI[x.trang_thai] || CONG_KHAI.xet_duyet
+            return (
+              <button key={x.ma} type="button" className="the-chon-hs" onClick={() => setKq(x)}>
+                <span className="gian"><b>{x.vi_tri}</b><span>{x.ma} · nộp {fmtNgayGio(x.nop_luc)}</span></span>
+                <span className="tag" style={{ background: 'var(--pink-bg)', color: 'var(--pink-deep)' }}>{c.tieu_de.join(' ')}</span>
+              </button>
+            )
+          })}
+        </div>
+        <div className="chan-form"><span className="ghi" /><Btn kieu="vien" co="md" icon={Search} onClick={() => { setDs(null); setKq(null) }}>Tra cứu khác</Btn></div>
+      </PortalShell>
+    )
+  }
+
   if (!kq) {
     return (
-      <PortalShell hero={['Theo dõi', 'hồ sơ của bạn', 'mọi lúc']} loiChao="Nhập mã hồ sơ (nhận được khi nộp) và số điện thoại để xem tiến độ, lịch phỏng vấn và kết quả.">
+      <PortalShell hero={['Theo dõi', 'hồ sơ của bạn', 'mọi lúc']} loiChao="Chỉ cần nhập số điện thoại HOẶC mã hồ sơ để xem tiến độ và kết quả (hồ sơ nộp trong 30 ngày gần đây).">
         <div>
           <h2 className="buoc-ten">Tra cứu hồ sơ</h2>
         </div>
         <form className="form-cot" onSubmit={tra}>
-          <Field nhan="Mã hồ sơ" value={ma} onChange={(e) => setMa(chuanMa(e.target.value))} placeholder="NS261113-ABCDE" autoCapitalize="characters" spellCheck={false} style={{ letterSpacing: '.06em' }} />
-          <Field nhan="Số điện thoại" value={sdt} onChange={(e) => setSdt(e.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="09xx xxx xxx" inputMode="tel" />
+          <Field nhan="Số điện thoại hoặc mã hồ sơ" value={q} onChange={(e) => setQ(chuanQ(e.target.value))} placeholder="0909 123 456 · hoặc NS261113-ABCDE" autoCapitalize="characters" spellCheck={false} autoFocus />
           {loi && <Bao kieu="loi">{loi}</Bao>}
           <div className="chan-form">
-            <span className="ghi">Quên mã? Liên hệ cửa hàng Nón Sơn gần nhất để được hỗ trợ.</span>
+            <span className="ghi">Không cần cả hai — một trong hai là đủ.</span>
             <button type="submit" className="btn den lg co-orb" disabled={dang}>Tra cứu<span className="orb">{dang ? <Spinner size={16} /> : <Search size={17} strokeWidth={2.6} />}</span></button>
           </div>
         </form>
@@ -95,7 +119,12 @@ export default function TraCuu() {
       <p className="muted" style={{ fontSize: 13.5, lineHeight: 1.55 }}>{ck.mo_ta}</p>
 
       {ketThucTot && (kq.ngay_nhan_viec || kq.noi_lam_viec) && (
-        <Bao kieu="ok">Nhận việc{kq.ngay_nhan_viec ? ' ngày ' + fmtNgay(kq.ngay_nhan_viec + 'T00:00:00+07:00') : ''}{kq.noi_lam_viec ? ' tại ' + kq.noi_lam_viec : ''}.</Bao>
+        <div className="the-nhan-viec">
+          <span className="eyebrow">Thông tin nhận việc</span>
+          {kq.ngay_nhan_viec && <div className="tnv-ngay"><Calendar size={18} /><b>{thu(kq.ngay_nhan_viec + 'T12:00:00+07:00')} {fmtNgay(kq.ngay_nhan_viec + 'T12:00:00+07:00')}</b>{kq.gio_nhan_viec && <span>lúc <b>{kq.gio_nhan_viec}</b></span>}</div>}
+          {kq.noi_lam_viec && <div className="tnv-noi"><MapPin size={16} /><div><b>{kq.noi_lam_viec}</b>{kq.dia_chi_nhan_viec && <span>{kq.dia_chi_nhan_viec}</span>}</div></div>}
+          {kq.ghi_chu_nhan_viec && <p>{kq.ghi_chu_nhan_viec}</p>}
+        </div>
       )}
 
       {l && (kq.trang_thai === 'phong_van' || lichCon) && (
@@ -111,6 +140,7 @@ export default function TraCuu() {
           </div>
           {l.dia_diem && <div className="hang" style={{ marginTop: 14, fontSize: 13, color: 'rgba(255,255,255,.85)', alignItems: 'flex-start' }}>{l.hinh_thuc === 'online' ? <Video size={15} /> : l.hinh_thuc === 'dien_thoai' ? <Phone size={15} /> : <MapPin size={15} style={{ flex: 'none', marginTop: 2 }} />}<span style={{ wordBreak: 'break-word' }}>{l.dia_diem}</span></div>}
           {l.ghi_chu && <div style={{ marginTop: 8, fontSize: 12.5, color: 'rgba(255,255,255,.65)', whiteSpace: 'pre-line' }}>{l.ghi_chu}</div>}
+          {lichCon && !kq.k && <Field kieu="gon" nhan="SĐT để xác nhận lịch" value={sdtXacNhan} onChange={(e) => setSdtXacNhan(e.target.value.replace(/\D/g, '').slice(0, 10))} inputMode="tel" placeholder="09xx xxx xxx" style={{ marginTop: 12 }} />}
           {lichCon && (
             <div className="hang" style={{ marginTop: 16, gap: 8 }}>
               {l.trang_thai !== 'da_xac_nhan'
@@ -145,7 +175,7 @@ export default function TraCuu() {
       {loi && <Bao kieu="loi">{loi}</Bao>}
       <div className="chan-form">
         <span className="ghi">Vị trí: <b style={{ color: 'var(--ink)' }}>{kq.vi_tri}</b></span>
-        <Btn kieu="vien" co="md" icon={Search} onClick={() => { setKq(null); setDaGui(null) }}>Tra mã khác</Btn>
+        <Btn kieu="vien" co="md" icon={Search} onClick={() => { setKq(null); setDs(null); setDaGui(null) }}>Tra cứu khác</Btn>
       </div>
 
       <Modal mo={doiLich} dong={() => setDoiLich(false)} tieuDe="Xin đổi lịch phỏng vấn" moTa="Cho Nón Sơn biết thời gian bạn có thể tham gia."

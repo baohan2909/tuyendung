@@ -1,7 +1,7 @@
 // Giai đoạn hồ sơ (nội bộ) — thứ tự, nhãn, màu
 export const GIAI_DOAN = [
-  { ma: 'moi', ten: 'Chờ sàng lọc', ngan: 'Mới', bg: '#FDE6F1', fg: '#A3004F', cham: '#E0157E' },
-  { ma: 'sang_loc', ten: 'Sàng lọc', bg: '#FDF3E3', fg: '#8A5410', cham: '#D98A1C', cu: true },
+  { ma: 'moi', ten: 'Chờ xử lý', ngan: 'Chờ xử lý', bg: '#FDE6F1', fg: '#A3004F', cham: '#E0157E' },
+  { ma: 'sang_loc', ten: 'Đã xem hồ sơ', bg: '#FDF3E3', fg: '#8A5410', cham: '#D98A1C', cu: true },
   { ma: 'hen_pv', ten: 'Phỏng vấn', ngan: 'Phỏng vấn', bg: '#EAF0FD', fg: '#2E5BC9', cham: '#3B6FE0' },
   { ma: 'da_pv', ten: 'Đã PV', bg: '#EFE8FB', fg: '#5B2A9E', cham: '#7B2CBF', cu: true },
   { ma: 'de_xuat', ten: 'Đề xuất', bg: '#E1F3F6', fg: '#0F6375', cham: '#1590A8', cu: true },
@@ -16,6 +16,8 @@ export const GD_DANG_XU_LY = ['moi', 'sang_loc', 'hen_pv', 'da_pv', 'de_xuat']
 export const GD_COT = ['moi', 'hen_pv', 'dat', 'nhan_viec']
 export const GD_KET_THUC = ['du_bi', 'khong_dat', 'rut']
 export const GD_SANG_LOC = ['moi', 'sang_loc']
+// Còn mở: có thể bấm Phỏng vấn / Loại
+export const GD_MO = ['moi', 'sang_loc', 'hen_pv', 'da_pv', 'de_xuat', 'du_bi']
 export const GD_PHONG_VAN = ['hen_pv', 'da_pv', 'de_xuat']
 export const NV_TT = {
   thu_viec: { ten: 'Thử việc', bg: '#FDF3E3', fg: '#8A5410' },
@@ -54,7 +56,7 @@ export const KET_LUAN = {
 // Trạng thái công khai cho ứng viên
 export const CONG_KHAI = {
   xet_duyet: { buoc: 2, tieu_de: ['Hồ sơ đang', 'được xét duyệt'], mo_ta: 'Nón Sơn đã nhận hồ sơ và đang xem xét. Chúng tôi sẽ liên hệ bạn sớm nhất.' },
-  phong_van: { buoc: 3, tieu_de: ['Bạn đã có', 'lịch phỏng vấn'], mo_ta: 'Vui lòng xác nhận tham gia hoặc báo đổi lịch nếu bạn bận.' },
+  phong_van: { buoc: 3, tieu_de: ['Hồ sơ của bạn', 'đang phỏng vấn'], mo_ta: 'Bộ phận tuyển dụng Nón Sơn sẽ gọi điện hoặc Zalo để phỏng vấn online. Bạn để ý điện thoại nhé.' },
   cho_ket_qua: { buoc: 4, tieu_de: ['Đã phỏng vấn,', 'chờ kết quả'], mo_ta: 'Cảm ơn bạn đã tham gia phỏng vấn. Kết quả sẽ có trong thời gian sớm nhất.' },
   trung_tuyen: { buoc: 5, tieu_de: ['Chúc mừng,', 'bạn đã trúng tuyển!'], mo_ta: 'Nón Sơn sẽ liên hệ để hướng dẫn ngày nhận việc.' },
   nhan_viec: { buoc: 5, tieu_de: ['Chào mừng bạn', 'đến với Nón Sơn!'], mo_ta: 'Hẹn gặp bạn tại nơi làm việc.' },

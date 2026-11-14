@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowUpDown, ChevronDown, Download, Film, Play, Image as ImageIc, Layers, LayoutList, Search, Star, UserCheck, X, Check, ArrowRight, Maximize2 } from 'lucide-react'
+import { ArrowUpDown, ChevronDown, Download, Film, Play, Mic, Store, Image as ImageIc, Layers, LayoutList, Search, Star, UserCheck, X, Check, ArrowRight, Maximize2 } from 'lucide-react'
 import { rpc } from '../lib/api'
 import { useAsync, useDebounced, useLS, useMedia, usePhim } from '../lib/hooks'
 import { congNgay, fmtGiay, fmtNgayGio, fmtSdt, fmtThoiDiem, ngayVN } from '../lib/format'
-import { GIAI_DOAN, GD } from '../lib/stages'
+import { GIAI_DOAN, GD, GD_MO } from '../lib/stages'
 import { xuatExcel } from '../lib/excel'
 import { AnhKho, AnhNho, Avatar, Btn, Diem, Empty, Field, IconBtn, Menu, Segment, Skeleton, StageTag, useToast } from '../components/ui'
 import { useStaff } from './context'
@@ -110,7 +110,16 @@ const keyNhom = (r, nhom) => {
   return ''
 }
 
-export default function Candidates() {
+const TAB_PV = [
+  { v: '', t: 'Cần phỏng vấn', ds: ['moi', 'sang_loc', 'hen_pv'] },
+  { v: 'dang_pv', t: 'Đang phỏng vấn', ds: ['hen_pv'] },
+  { v: 'cho_chot', t: 'Đã chấm · chờ chốt', ds: ['da_pv', 'de_xuat'] },
+  { v: 'du_bi', t: 'Dự bị', ds: ['du_bi'] },
+  { v: 'dat', t: 'Trúng tuyển · chờ nhận việc', ds: ['dat'] }
+]
+
+export default function Candidates({ cheDo }) {
+  const pv = cheDo === 'pv'
   const s = useStaff()
   const nav = useNavigate()
   const bao = useToast()
@@ -137,17 +146,17 @@ export default function Candidates() {
   const khoangNgay = useMemo(() => tinhKhoang(loc.khoang), [JSON.stringify(loc.khoang)]) // eslint-disable-line react-hooks/exhaustive-deps
   const [tuoiTu, tuoiDen] = loc.tuoi ? loc.tuoi.split('-').map(Number) : [null, null]
   const p = useMemo(() => ({
-    tim: timTre.trim() || null, trang_thai: gd ? (gd === 'dang_xu_ly' ? ['moi', 'sang_loc', 'hen_pv', 'da_pv', 'de_xuat'] : [gd]) : null,
+    tim: timTre.trim() || null, trang_thai: pv ? (TAB_PV.find((x) => x.v === gd) || TAB_PV[0]).ds : gd ? (gd === 'dang_xu_ly' ? ['moi', 'sang_loc', 'hen_pv', 'da_pv', 'de_xuat'] : [gd]) : null,
     vi_tri_id: loc.vi_tri_id || null, khu_vuc: loc.khu_vuc || null, tuoi_tu: tuoiTu, tuoi_den: tuoiDen, danh_gia: loc.danh_gia || null,
     hoc_van: loc.hoc_van || null, ma_nguon: loc.ma_nguon || null, phu_trach: loc.phu_trach || null, uu_tien: loc.uu_tien ? true : null,
     co_video: loc.co_video === 'co' ? true : loc.co_video === 'khong' ? false : null, tu: khoangNgay[0], den: khoangNgay[1], sap_xep: sapXep
-  }), [timTre, gd, loc, khoangNgay, sapXep, tuoiTu, tuoiDen])
+  }), [timTre, gd, loc, khoangNgay, sapXep, tuoiTu, tuoiDen, pv])
   const L = useDanhSach(p, s.nhip)
   const ds = L.dong
   const dem = L.dem
   const tongTatCa = Object.values(dem).reduce((a, b) => a + b, 0)
   const dangXuLy = ['moi', 'sang_loc', 'hen_pv', 'da_pv', 'de_xuat'].reduce((a, k) => a + (dem[k] || 0), 0)
-  const banLam = rongLon && kieu === 'bang'
+  const banLam = rongLon && kieu === 'bang' && !pv
 
   useEffect(() => { setChon([]) }, [JSON.stringify(p)])
   useEffect(() => { try { sessionStorage.setItem('ns-td-thu-tu', JSON.stringify(ds.map((r) => r.id))) } catch (e) { /* bỏ qua */ } }, [ds])
@@ -167,6 +176,7 @@ export default function Candidates() {
 
   const datGD = (v) => { const q = new URLSearchParams(qs); if (v) q.set('gd', v); else q.delete('gd'); q.delete('tim'); setQs(q, { replace: true }) }
   const mo = (r) => {
+    if (pv) return nav('/quantri/ung-vien/' + r.id + (GD_MO.includes(r.trang_thai) || r.trang_thai === 'dat' ? '/cham' : ''))
     if (banLam) return setXemId(r.id)
     if (rongLon) return setMoTo(r.id)
     nav('/quantri/ung-vien/' + r.id)
@@ -220,25 +230,25 @@ export default function Candidates() {
     return (
       <div key={r.id} data-id={r.id} className={'dg' + (daChon ? ' chon' : '') + (dangXem ? ' dang-xem' : '')} onClick={() => mo(r)}>
         {s.coSua && <button className={'o-chon' + (daChon ? ' on' : '')} onClick={(e) => { e.stopPropagation(); setChon((c) => (daChon ? c.filter((y) => y !== r.id) : [...c, r.id])) }} aria-label={'Chọn ' + r.ho_ten}>{daChon && <Check size={13} strokeWidth={3} />}</button>}
-        <div className="dg-anh" onClick={(e) => e.stopPropagation()}>
-          {(r.anh_ds?.length ? r.anh_ds : r.anh ? [r.anh] : []).slice(0, 2).map((a, k) => <AnhNho key={k} path={a} alt={r.ho_ten + ' ' + (k + 1)} onClick={() => mo(r)} />)}
-          {!(r.anh_ds?.length || r.anh) && <Avatar ten={r.ho_ten} co="lg" />}
-        </div>
         <div className="dg-giua">
           <b className="cat">{r.ho_ten}{r.uu_tien && <Star size={12} className="uu-tien-sao" fill="currentColor" />}</b>
           <span className="cat">{tenNgan(r.vi_tri)} · {r.tuoi} tuổi · {r.chieu_cao}cm/{r.can_nang}kg</span>
           <span className="cat dg-kv">{r.khu_vuc_mong_muon || r.cho_o || '—'}</span>
         </div>
+        <div className="dg-anh" onClick={(e) => e.stopPropagation()}>
+          {(r.anh_ds?.length ? r.anh_ds : r.anh ? [r.anh] : []).slice(0, 2).map((a, k) => <AnhNho key={k} path={a} alt={r.ho_ten + ' ' + (k + 1)} onClick={() => mo(r)} />)}
+          {!(r.anh_ds?.length || r.anh) && <Avatar ten={r.ho_ten} co="lg" />}
+        </div>
         {r.video ? <NutVideo v={r.video} onClick={(e) => { e.stopPropagation(); setXemVideo({ v: r.video, ten: r.ho_ten }) }} /> : <span className="dg-vid trong" title="Chưa có video"><Film size={15} /></span>}
         <div className="dg-phai">
           <StageTag ma={r.trang_thai} />
           <span className="dg-gio" title={fmtNgayGio(r.nop_luc)}>{fmtThoiDiem(r.nop_luc)}</span>
-          {s.coSua && ['moi', 'sang_loc'].includes(r.trang_thai) ? (
-            <span className="dg-nhanh" onClick={(e) => e.stopPropagation()}>
-              <button className="icon-btn xs" style={{ background: 'var(--ok-bg)', color: 'var(--ok)' }} title="Qua sàng lọc → Phỏng vấn" aria-label="Qua sàng lọc" onClick={() => doiGD([r.id], 'hen_pv', [r])}><Check size={14} strokeWidth={3} /></button>
-              <button className="icon-btn xs" style={{ background: 'var(--err-bg)', color: 'var(--err)' }} title="Không qua sàng lọc" aria-label="Loại" onClick={() => doiGD([r.id], 'khong_dat', [r])}><X size={14} strokeWidth={3} /></button>
-            </span>
-          ) : r.diem_tb != null ? <Diem v={r.diem_tb} /> : null}
+          {r.diem_tb != null && <Diem v={r.diem_tb} />}
+        </div>
+        <div className="dg-nhanh" onClick={(e) => e.stopPropagation()}>
+          {s.coCham && GD_MO.includes(r.trang_thai) && <button type="button" className="nut-pv-nho" title="Phỏng vấn ngay — mở phiếu" onClick={() => nav('/quantri/ung-vien/' + r.id + '/cham')}><Mic size={14} />{['da_pv', 'de_xuat', 'du_bi'].includes(r.trang_thai) ? 'Phiếu' : 'Phỏng vấn'}</button>}
+          {s.coSua && GD_MO.includes(r.trang_thai) && <button type="button" className="icon-btn xs" style={{ background: 'var(--err-bg)', color: 'var(--err)' }} title="Loại hồ sơ" aria-label="Loại" onClick={() => doiGD([r.id], 'khong_dat', [r])}><X size={14} strokeWidth={3} /></button>}
+          {r.trang_thai === 'dat' && s.coSua && <button type="button" className="nut-pv-nho xanh" title="Xác nhận nhận việc" onClick={() => doiGD([r.id], 'nhan_viec', [r])}><Store size={14} />Nhận việc</button>}
         </div>
       </div>
     )
@@ -285,8 +295,8 @@ export default function Candidates() {
     <>
       <header className="trang-dau">
         <div className="tieu">
-          <span className="eyebrow">Ứng viên</span>
-          <h1><span><b>{L.tong}</b> hồ sơ</span><span className="dem-phu"><i />{gd ? (gd === 'dang_xu_ly' ? 'Đang xử lý' : GD[gd]?.ten) : (dem.moi || 0) + ' chờ sàng lọc'}</span></h1>
+          <span className="eyebrow">{pv ? 'Phỏng vấn' : 'Ứng viên'}</span>
+          <h1><span><b>{L.tong}</b> {pv ? (TAB_PV.find((x) => x.v === gd) || TAB_PV[0]).t.toLowerCase() : 'hồ sơ'}</span>{pv ? <Link to="/quantri/phong-van/lich" className="dem-phu" style={{ textDecoration: 'none', background: 'var(--soft)', color: 'var(--ink-2)' }}>Lịch hẹn (tùy chọn) →</Link> : <><span className="dem-phu"><i />{gd ? (gd === 'dang_xu_ly' ? 'Đang xử lý' : GD[gd]?.ten) : (dem.moi || 0) + ' chờ xử lý'}</span></>}</h1>
         </div>
         <Segment trang ds={[{ v: 'bang', t: 'Danh sách', icon: LayoutList }, { v: 'the', t: 'Thẻ ảnh', icon: ImageIc }]} giaTri={kieu} onChon={setKieu} />
         {s.vaiTro !== 'phong_van' && <Btn kieu="den" orb="trai" icon={Download} loading={dangXuat} onClick={() => xuat(false)}>Xuất Excel</Btn>}
@@ -320,6 +330,15 @@ export default function Candidates() {
         {soLoc > 0 && <button type="button" className="nl-xoa" onClick={() => setLoc(LOC_TRONG)}><X size={14} />Xóa {soLoc} bộ lọc</button>}
       </div>
 
+      {pv ? (
+        <div className="loc-cuon" role="tablist" aria-label="Nhóm phỏng vấn">
+          {TAB_PV.map((t) => (
+            <button key={t.v} role="tab" aria-selected={gd === t.v} className={'chip trang' + (gd === t.v ? ' on' : '')} onClick={() => datGD(t.v)}>
+              {t.t}<span className="dem">{t.ds.reduce((a, k) => a + (dem[k] || 0), 0)}</span>
+            </button>
+          ))}
+        </div>
+      ) : (
       <div className="quy-trinh-loc" role="tablist" aria-label="Quy trình tuyển dụng">
         <div className="qt-trai">
           <button role="tab" aria-selected={gd === ''} className={'qt-nho' + (gd === '' ? ' on' : '')} onClick={() => datGD('')}><span>Tất cả</span><b>{tongTatCa}</b></button>
@@ -342,6 +361,7 @@ export default function Candidates() {
           ))}
         </div>
       </div>
+      )}
 
       <div className={banLam ? 'ban-lam' : ''}>
         <div className={banLam ? 'ban-trai' : ''}>

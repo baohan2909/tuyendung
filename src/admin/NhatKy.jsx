@@ -13,7 +13,7 @@ const HD = { insert: 'Tạo', update: 'Sửa', delete: 'Xóa' }
 const COT = {
   trang_thai: 'Trạng thái', nguoi_phu_trach: 'Phụ trách', uu_tien: 'Ưu tiên', the_gan: 'Thẻ', ho_ten: 'Họ tên', sdt: 'SĐT', email: 'Email', ngay_sinh: 'Ngày sinh',
   chieu_cao: 'Chiều cao', can_nang: 'Cân nặng', cho_o: 'Chỗ ở', khu_vuc_mong_muon: 'Khu vực mong muốn', vi_tri_id: 'Vị trí', ly_do_loai: 'Lý do không đạt',
-  ngay_nhan_viec: 'Ngày nhận việc', noi_lam_viec: 'Nơi làm việc', nguoi_sang_loc: 'Người sàng lọc', sang_loc_luc: 'Lúc sàng lọc', nguoi_chot: 'Người chốt KQ',
+  ngay_nhan_viec: 'Ngày nhận việc', noi_lam_viec: 'Nơi làm việc', nguoi_sang_loc: 'Người mở phỏng vấn', sang_loc_luc: 'Lúc mở phỏng vấn', nguoi_chot: 'Người chốt KQ',
   chot_luc: 'Lúc chốt', diem_tb: 'Điểm TB', so_danh_gia: 'Số phiếu', bat_dau: 'Giờ PV', hinh_thuc: 'Hình thức', dia_diem: 'Địa điểm/link', cua_hang_ma: 'Cửa hàng',
   tu_ngay: 'Từ ngày', den_ngay: 'Đến ngày', ly_do: 'Lý do', ma_nv: 'Mã NV', vai_tro: 'Vai trò', hoat_dong: 'Hoạt động', diem_tong: 'Điểm', ket_luan: 'Kết luận',
   nhan_xet: 'Nhận xét', da_gui: 'Đã gửi', hoan_thanh: 'Hoàn thành', duong_dan: 'Tệp', ghi_chu: 'Ghi chú', ngay_chinh_thuc: 'Ngày chính thức', ngay_nghi: 'Ngày nghỉ',

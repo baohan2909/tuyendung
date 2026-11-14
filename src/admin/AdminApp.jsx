@@ -21,11 +21,12 @@ export default function AdminApp() {
       <Routes>
         <Route element={<AdminLayout />}>
           <Route index element={<Dashboard />} />
-          <Route path="ung-vien" element={<Candidates />} />
+          <Route path="ung-vien" element={<Candidates key="uv" />} />
           <Route path="ung-vien/:id" element={<Profile />} />
           <Route path="ung-vien/:id/cham" element={<Scorecard />} />
           <Route path="quy-trinh" element={<Pipeline />} />
-          <Route path="phong-van" element={<Interviews />} />
+          <Route path="phong-van" element={<Candidates cheDo="pv" key="pv" />} />
+          <Route path="phong-van/lich" element={<Interviews />} />
           <Route path="vi-tri" element={<Positions />} />
           <Route path="bao-cao" element={<Reports />} />
           <Route path="cai-dat" element={<Settings />} />

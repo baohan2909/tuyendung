@@ -73,7 +73,7 @@ export default function Reports() {
     try {
       await xuatExcel('NS-bao-cao-tuyen-dung-' + tu + '_' + den + '.xlsx', [
         { ten: 'Tổng quan', cot: [{ k: 'a', ten: 'Chỉ số', w: 28 }, { k: 'b', ten: 'Giá trị', w: 12 }], dong: [
-          { a: 'Khoảng thời gian', b: tu + ' → ' + den }, { a: 'Hồ sơ nộp', b: t.nop }, { a: 'Qua sàng lọc', b: t.sang_loc }, { a: 'Hẹn phỏng vấn', b: t.hen_pv },
+          { a: 'Khoảng thời gian', b: tu + ' → ' + den }, { a: 'Hồ sơ nộp', b: t.nop }, { a: 'Đã xem hồ sơ', b: t.sang_loc }, { a: 'Vào phỏng vấn', b: t.hen_pv },
           { a: 'Đã phỏng vấn', b: t.da_pv }, { a: 'Đạt', b: t.dat }, { a: 'Nhận việc', b: t.nhan_viec }, { a: 'Không đạt', b: t.khong_dat }, { a: 'Dự bị', b: t.du_bi },
           { a: 'Đang xử lý', b: t.dang_xu_ly }, { a: 'TB ngày nộp → phỏng vấn', b: d.thoi_gian?.nop_den_pv }, { a: 'TB ngày nộp → đạt', b: d.thoi_gian?.nop_den_dat }] },
         { ten: 'Theo vị trí', cot: [{ k: 'ten', ten: 'Vị trí', w: 26 }, { k: 'nop', ten: 'Nộp' }, { k: 'hen_pv', ten: 'Hẹn PV' }, { k: 'da_pv', ten: 'Đã PV' }, { k: 'dat', ten: 'Đạt' }, { k: 'nhan_viec', ten: 'Nhận việc' }, { k: 'diem_tb', ten: 'Điểm TB' }], dong: d.vi_tri },

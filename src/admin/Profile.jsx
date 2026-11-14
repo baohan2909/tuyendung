@@ -104,7 +104,7 @@ export function HoSoChiTiet({ id, nhung, nhip, onDoi, phai }) {
             <b style={{ fontSize: 26, lineHeight: 1 }}>{tbDiem != null ? fmtDiem(tbDiem) : '—'}</b><span style={{ fontSize: 10.5, opacity: 0.65 }}>{h.so_danh_gia ? h.so_danh_gia + ' phiếu' : '/ 10'}</span>
           </Ring>
           <div className="hang wrap" style={{ gap: 8, maxWidth: 520 }}>
-            <HanhDongBuoc h={h} doiGD={doiGD} henPV={() => setMoLich({})} sang />
+            <HanhDongBuoc h={h} doiGD={doiGD} sang />
             {q.sua && <MenuGiaiDoan hienTai={h.trang_thai} nut={<IconBtn icon={Filter} nhan="Chuyển giai đoạn khác" kieu="kinh" />} chon={(tt) => doiGD([h.id], tt, [h])} />}
           </div>
         </div>
@@ -116,7 +116,6 @@ export function HoSoChiTiet({ id, nhung, nhip, onDoi, phai }) {
         <a className="btn trang md" href={'sms:' + h.sdt}><MessageSquare size={16} />SMS</a>
         {h.email && <a className="btn trang md" href={'mailto:' + h.email}><Mail size={16} />Email</a>}
         <Btn kieu="trang" co="md" icon={Copy} onClick={() => navigator.clipboard?.writeText(h.sdt).then(() => bao('Đã sao chép SĐT'))}>Sao chép</Btn>
-        {q.sua && <Btn kieu="den" co="md" icon={CalendarPlus} onClick={() => setMoLich({})}>Hẹn phỏng vấn</Btn>}
         {!nhung && <span className="day hang" style={{ gap: 6 }}>
           <IconBtn icon={ChevronLeft} nhan="Hồ sơ trước (←)" disabled={!truoc} onClick={() => nav('/quantri/ung-vien/' + truoc)} />
           {vt >= 0 && <span className="nho muted so">{vt + 1}/{thuTu.length}</span>}
@@ -133,31 +132,13 @@ export function HoSoChiTiet({ id, nhung, nhip, onDoi, phai }) {
           <KhuAnhVideo anh={anh} video={video} moAnh={setAnhMo} />
           <section className="card">
             <div className="dau-the"><h2>Thông tin ứng tuyển</h2>{q.sua && <Btn kieu="trong" co="sm" icon={Edit3} onClick={() => setMoSua(true)}>Sửa</Btn>}</div>
-            <dl className="cap-tl">
-              <dt>Vị trí ứng tuyển</dt><dd>{h.vi_tri}</dd>
-              <dt>Điện thoại</dt><dd><a href={'tel:' + h.sdt}>{fmtSdt(h.sdt)}</a></dd>
-              <dt>Email</dt><dd>{h.email || '—'}</dd>
-              <dt>Ngày sinh</dt><dd>{h.ngay_sinh ? fmtNgay(h.ngay_sinh + 'T12:00:00+07:00') + ' (' + h.tuoi + ' tuổi)' : '—'}</dd>
-              <dt>Chiều cao · cân nặng</dt><dd>{h.chieu_cao} cm · {h.can_nang} kg</dd>
-              <dt>Chỗ ở hiện tại</dt><dd>{h.cho_o || '—'}</dd>
-              <dt>Khu vực mong muốn</dt><dd>{h.khu_vuc_mong_muon || '—'}</dd>
-              <dt>Trình độ học vấn</dt><dd>{h.hoc_van || '—'}</dd>
-              <dt>Ổn định / linh hoạt</dt><dd>{h.dinh_huong || '—'}</dd>
-              <dt>Thu nhập mong muốn</dt><dd>{h.thu_nhap_mong_muon || '—'}</dd>
-              <dt>Kinh nghiệm</dt><dd>{h.kinh_nghiem || '—'}</dd>
-              <dt>Ấn tượng về Nón Sơn</dt><dd>{h.an_tuong || '—'}</dd>
-              {tl.map(([k, v]) => <Fragment key={k}><dt>{k}</dt><dd>{String(v)}</dd></Fragment>)}
-              <dt>Nguồn thông tin</dt><dd>{(h.nguon || []).join('\n') || '—'}</dd>
-              <dt>Kênh / mã QR</dt><dd>{h.nguon_ten || h.ma_nguon || '—'}</dd>
-              <dt>SĐT người giới thiệu</dt><dd>{h.sdt_gioi_thieu ? <a href={'tel:' + h.sdt_gioi_thieu}>{fmtSdt(h.sdt_gioi_thieu)}</a> : '—'}</dd>
-              <dt>Thiết bị nộp</dt><dd className="muted" style={{ fontWeight: 500 }}>{h.thiet_bi || '—'}</dd>
-            </dl>
+            <BangThongTin h={h} />
           </section>
         </div>
 
         <div className="nho-cot cot" style={{ gap: 18 }}>
           <TruyVet id={h.id} nhip={d.hoat_dong.length} />
-          <section className="card">
+          {d.lich.length > 0 && <section className="card">
             <div className="dau-the"><h2>Lịch phỏng vấn</h2>{q.sua && <Btn kieu="den" co="sm" icon={CalendarPlus} onClick={() => setMoLich({})}>Hẹn</Btn>}</div>
             {!d.lich.length ? <p className="nho muted">Chưa có lịch phỏng vấn.</p> : (
               <div className="cot" style={{ gap: 10 }}>
@@ -181,7 +162,7 @@ export function HoSoChiTiet({ id, nhung, nhip, onDoi, phai }) {
                 ))}
               </div>
             )}
-          </section>
+          </section>}
 
           <section className="card">
             <div className="dau-the"><h2>Đánh giá phỏng vấn</h2>{tbDiem != null && <Diem v={tbDiem} />}</div>
@@ -204,14 +185,8 @@ export function HoSoChiTiet({ id, nhung, nhip, onDoi, phai }) {
 
           {q.sua && (
             <section className="card">
-              <div className="dau-the"><h2>Nội bộ</h2></div>
+              <div className="dau-the"><h2>Quản lý hồ sơ</h2></div>
               <div className="cot" style={{ gap: 14 }}>
-                <label className="field gon"><span className="nhan">Người phụ trách</span>
-                  <select value={h.nguoi_phu_trach || ''} onChange={(e) => capNhat({ nguoi_phu_trach: e.target.value || null }, 'Đã cập nhật phụ trách')}>
-                    <option value="">— Chưa phân công —</option>
-                    {s.dm.nhanSu.filter((n) => n.hoat_dong || n.id === h.nguoi_phu_trach).map((n) => <option key={n.id} value={n.id}>{n.ho_ten}</option>)}
-                  </select>
-                </label>
                 <div className="hang"><Star size={17} className="uu-tien-sao" /><span className="gian" style={{ fontWeight: 600, fontSize: 14 }}>Đánh dấu ưu tiên</span><Switch on={h.uu_tien} nhan="Ưu tiên" onDoi={(v) => capNhat({ uu_tien: v })} /></div>
                 <div>
                   <span className="nhan-nhom">Thẻ</span>
@@ -222,7 +197,20 @@ export function HoSoChiTiet({ id, nhung, nhip, onDoi, phai }) {
                     </form>
                   </div>
                 </div>
-                {['dat', 'nhan_viec', 'de_xuat'].includes(h.trang_thai) && <NhanViec h={h} luu={(p) => capNhat(p, 'Đã lưu thông tin nhận việc')} />}
+                {['dat', 'nhan_viec', 'de_xuat'].includes(h.trang_thai) && <NhanViec h={h} />}
+                <details className="mo-rong">
+                  <summary>Người xử lý & lịch hẹn <span className="muted nho">(khi có nhiều người tuyển dụng)</span></summary>
+                  <div className="cot" style={{ gap: 12, paddingTop: 12 }}>
+                    <label className="field gon"><span className="nhan">Người phụ trách hồ sơ</span>
+                      <select value={h.nguoi_phu_trach || ''} onChange={(e) => capNhat({ nguoi_phu_trach: e.target.value || null }, 'Đã cập nhật người phụ trách')}>
+                        <option value="">— Chưa có —</option>
+                        {s.dm.nhanSu.filter((n) => n.hoat_dong || n.id === h.nguoi_phu_trach).map((n) => <option key={n.id} value={n.id}>{n.ho_ten}</option>)}
+                      </select>
+                    </label>
+                    <p className="nho muted" style={{ lineHeight: 1.5 }}>Người bấm “Phỏng vấn” đầu tiên được tự gán. Dùng để lọc “Của tôi” và cho tài khoản vai trò Phỏng vấn thấy hồ sơ được giao.</p>
+                    <Btn kieu="trang" co="sm" icon={CalendarPlus} onClick={() => setMoLich({})} style={{ alignSelf: 'flex-start' }}>Hẹn lịch phỏng vấn (tùy chọn)</Btn>
+                  </div>
+                </details>
                 {h.ly_do_loai && <Bao kieu="vang">Lý do không đạt: {h.ly_do_loai}</Bao>}
                 {s.laQT && <Btn kieu="do" co="sm" icon={Trash2} onClick={xoaHan} style={{ alignSelf: 'flex-start' }}>Xóa vĩnh viễn hồ sơ</Btn>}
               </div>
@@ -260,6 +248,31 @@ export function HoSoChiTiet({ id, nhung, nhip, onDoi, phai }) {
       {moSua && <SuaUngVien h={h} dong={() => setMoSua(false)} xong={() => { setMoSua(false); reload(true) }} />}
       {giaoDienGD}
     </>
+  )
+}
+
+export function BangThongTin({ h, gon }) {
+  const tl = h.tra_loi_them && typeof h.tra_loi_them === 'object' ? Object.entries(h.tra_loi_them).filter(([, v]) => v) : []
+  return (
+    <dl className={'cap-tl' + (gon ? ' gon' : '')}>
+      <dt>Vị trí ứng tuyển</dt><dd>{h.vi_tri}</dd>
+      <dt>Điện thoại</dt><dd><a href={'tel:' + h.sdt}>{fmtSdt(h.sdt)}</a></dd>
+      {!gon && <><dt>Email</dt><dd>{h.email || '—'}</dd></>}
+      <dt>Ngày sinh</dt><dd>{h.ngay_sinh ? fmtNgay(h.ngay_sinh + 'T12:00:00+07:00') + ' (' + h.tuoi + ' tuổi)' : '—'}</dd>
+      <dt>Chiều cao · cân nặng</dt><dd>{h.chieu_cao} cm · {h.can_nang} kg</dd>
+      <dt>Chỗ ở hiện tại</dt><dd>{h.cho_o || '—'}</dd>
+      <dt>Khu vực mong muốn</dt><dd>{h.khu_vuc_mong_muon || '—'}</dd>
+      <dt>Trình độ học vấn</dt><dd>{h.hoc_van || '—'}</dd>
+      <dt>Ổn định / linh hoạt</dt><dd>{h.dinh_huong || '—'}</dd>
+      <dt>Thu nhập mong muốn</dt><dd>{h.thu_nhap_mong_muon || '—'}</dd>
+      <dt>Kinh nghiệm</dt><dd>{h.kinh_nghiem || '—'}</dd>
+      <dt>Ấn tượng về Nón Sơn</dt><dd>{h.an_tuong || '—'}</dd>
+      {tl.map(([k, v]) => <Fragment key={k}><dt>{k}</dt><dd>{String(v)}</dd></Fragment>)}
+      <dt>Nguồn thông tin</dt><dd>{(h.nguon || []).join('\n') || '—'}</dd>
+      {!gon && <><dt>Kênh / mã QR</dt><dd>{h.nguon_ten || h.ma_nguon || '—'}</dd></>}
+      <dt>SĐT người giới thiệu</dt><dd>{h.sdt_gioi_thieu ? <a href={'tel:' + h.sdt_gioi_thieu}>{fmtSdt(h.sdt_gioi_thieu)}</a> : '—'}</dd>
+      {!gon && <><dt>Thiết bị nộp</dt><dd className="muted" style={{ fontWeight: 500 }}>{h.thiet_bi || '—'}</dd></>}
+    </dl>
   )
 }
 
@@ -305,18 +318,13 @@ export function TrinhPhat({ v, tuChay }) {
   )
 }
 
-function NhanViec({ h, luu }) {
-  const [ngay, setNgay] = useState(h.ngay_nhan_viec || '')
-  const [noi, setNoi] = useState(h.noi_lam_viec || '')
-  const doi = ngay !== (h.ngay_nhan_viec || '') || noi !== (h.noi_lam_viec || '')
+function NhanViec({ h }) {
+  if (!h.noi_lam_viec && !h.ngay_nhan_viec) return null
   return (
-    <div className="cot" style={{ gap: 8, background: 'var(--ok-bg)', borderRadius: 22, padding: 12 }}>
-      <b style={{ fontSize: 13.5, color: 'var(--ok)' }}>Thông tin nhận việc</b>
-      <div className="luoi-2">
-        <Field kieu="gon" nhan="Ngày nhận việc" type="date" value={ngay} onChange={(e) => setNgay(e.target.value)} />
-        <Field kieu="gon" nhan="Nơi làm việc" value={noi} onChange={(e) => setNoi(e.target.value)} placeholder="Cửa hàng…" />
-      </div>
-      {doi && <Btn kieu="den" co="sm" onClick={() => luu({ ngay_nhan_viec: ngay || null, noi_lam_viec: noi })} style={{ alignSelf: 'flex-start' }}>Lưu</Btn>}
+    <div className="cot" style={{ gap: 4, background: 'var(--ok-bg)', borderRadius: 22, padding: '12px 14px' }}>
+      <b style={{ fontSize: 13.5, color: 'var(--ok)' }}>{h.trang_thai === 'nhan_viec' ? 'Đã nhận việc' : 'Nhận việc dự kiến'}</b>
+      <span style={{ fontSize: 14, fontWeight: 700 }}>{h.noi_lam_viec || 'Chưa chọn cửa hàng'}</span>
+      <span className="nho muted-2">{h.ngay_nhan_viec ? fmtNgay(h.ngay_nhan_viec + 'T12:00:00+07:00') : 'Chưa có ngày'}{h.gio_nhan_viec ? ' · lúc ' + String(h.gio_nhan_viec).slice(0, 5) : ''}{h.ghi_chu_nhan_viec ? ' · ' + h.ghi_chu_nhan_viec : ''}</span>
     </div>
   )
 }
