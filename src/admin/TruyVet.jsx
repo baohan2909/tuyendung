@@ -15,9 +15,9 @@ export default function TruyVet({ id, nhip }) {
     { ic: FileText, ten: 'Nộp hồ sơ', ai: 'Ứng viên', khi: t.nop_luc, xong: true },
     { ic: Filter, ten: 'Sàng lọc hồ sơ', ai: t.sang_loc?.nguoi, khi: t.sang_loc?.luc, xong: !!t.sang_loc?.nguoi,
       kq: t.sang_loc?.ket_qua === 'qua' ? ['Qua', 'var(--ok)'] : t.sang_loc?.ket_qua === 'khong_qua' ? ['Không qua', 'var(--err)'] : null },
-    ...((t.phong_van || []).length ? t.phong_van.map((p) => ({ ic: ClipboardCheck, ten: 'Phỏng vấn online · chấm ' + fmtDiem(p.diem) + '/10', ai: p.nguoi, khi: p.luc, xong: true,
+    ...((t.phong_van || []).length ? t.phong_van.map((p) => ({ ic: ClipboardCheck, ten: 'Phỏng vấn · chấm ' + fmtDiem(p.diem) + '/10', ai: p.nguoi, khi: p.luc, xong: true,
       kq: p.ket_luan ? [KET_LUAN[p.ket_luan]?.ten, p.ket_luan === 'dat' ? 'var(--ok)' : p.ket_luan === 'khong_dat' ? 'var(--err)' : 'var(--muted-2)'] : null }))
-      : [{ ic: ClipboardCheck, ten: 'Phỏng vấn online', xong: false }]),
+      : [{ ic: ClipboardCheck, ten: 'Phỏng vấn', xong: false }]),
     { ic: Gavel, ten: 'Chốt kết quả', ai: t.chot?.nguoi, khi: t.chot?.luc, xong: !!t.chot?.nguoi,
       kq: t.chot?.ket_qua ? [GD[t.chot.ket_qua]?.ten, t.chot.ket_qua === 'khong_dat' ? 'var(--err)' : 'var(--ok)'] : null },
     { ic: Store, ten: t.nhan_vien ? 'Nhận việc · ' + (t.nhan_vien.cua_hang || '') : 'Nhận việc & phân công', ai: t.nhan_vien?.nguoi, khi: t.nhan_vien?.luc, xong: !!t.nhan_vien,

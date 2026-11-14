@@ -2,7 +2,7 @@
 export const GIAI_DOAN = [
   { ma: 'moi', ten: 'Chờ sàng lọc', ngan: 'Mới', bg: '#FDE6F1', fg: '#A3004F', cham: '#E0157E' },
   { ma: 'sang_loc', ten: 'Sàng lọc', bg: '#FDF3E3', fg: '#8A5410', cham: '#D98A1C', cu: true },
-  { ma: 'hen_pv', ten: 'Phỏng vấn online', ngan: 'PV online', bg: '#EAF0FD', fg: '#2E5BC9', cham: '#3B6FE0' },
+  { ma: 'hen_pv', ten: 'Phỏng vấn', ngan: 'Phỏng vấn', bg: '#EAF0FD', fg: '#2E5BC9', cham: '#3B6FE0' },
   { ma: 'da_pv', ten: 'Đã PV', bg: '#EFE8FB', fg: '#5B2A9E', cham: '#7B2CBF', cu: true },
   { ma: 'de_xuat', ten: 'Đề xuất', bg: '#E1F3F6', fg: '#0F6375', cham: '#1590A8', cu: true },
   { ma: 'dat', ten: 'Trúng tuyển', bg: '#E3F5EE', fg: '#0E7F63', cham: '#12A37F' },

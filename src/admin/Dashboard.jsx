@@ -11,7 +11,7 @@ import LichModal from './LichModal'
 
 export const tenNgan = (t) => { const x = String(t || '').replace(/^Cộng tác viên.*/i, 'CTV').replace(/^Nhân viên /i, ''); return x.charAt(0).toUpperCase() + x.slice(1) }
 const MAU_PHEU = ['#F3C6DA', '#EC9CC0', '#E26FA2', '#D6006C', '#A3004F', '#17111A']
-const BUOC_PHEU = [['nop', 'Nộp hồ sơ'], ['hen_pv', 'Qua sàng lọc'], ['da_pv', 'Đã PV online'], ['dat', 'Trúng tuyển'], ['nhan_viec', 'Nhận việc']]
+const BUOC_PHEU = [['nop', 'Nộp hồ sơ'], ['hen_pv', 'Qua sàng lọc'], ['da_pv', 'Đã phỏng vấn'], ['dat', 'Trúng tuyển'], ['nhan_viec', 'Nhận việc']]
 
 function Kpi({ to, nhan, so, delta, kieuDelta = 'len', ghi, cham, nen }) {
   const Goc = to ? Link : 'div'
@@ -63,7 +63,7 @@ export default function Dashboard() {
           <Kpi to="/quantri/ung-vien" nhan="Hồ sơ mới · 7 ngày" so={k.moi_7n} cham="#D6006C" nen="#FDEBF3"
             delta={doiTuan == null ? null : (doiTuan > 0 ? '+' : doiTuan < 0 ? '−' : '') + Math.abs(doiTuan) + '%'} kieuDelta={doiTuan > 0 ? 'len' : doiTuan < 0 ? 'xuong' : 'trung'} ghi={'So với 7 ngày trước (' + (k.moi_7n_truoc || 0) + ')'} />
           <Kpi to="/quantri/sang-loc" nhan="Chờ sàng lọc" so={k.cho_xu_ly} cham="#D98A1C" nen="#FDF3E3" delta={(k.moi_hom_nay || 0) + ' hôm nay'} kieuDelta="trung" ghi="Hồ sơ ở giai đoạn Mới" />
-          <Kpi to="/quantri/phong-van" nhan="PV online tuần này" so={k.pv_tuan} cham="#3B6FE0" nen="#EAF0FD" delta={(k.pv_hom_nay || 0) + ' hôm nay'} kieuDelta="trung" ghi="Lịch đã hẹn trong tuần" />
+          <Kpi to="/quantri/phong-van" nhan="Phỏng vấn tuần này" so={k.pv_tuan} cham="#3B6FE0" nen="#EAF0FD" delta={(k.pv_hom_nay || 0) + ' hôm nay'} kieuDelta="trung" ghi="Lịch đã hẹn trong tuần" />
           {s.vaiTro === 'phong_van'
             ? <Kpi to="/quantri/phong-van" nhan="Chờ bạn chấm điểm" so={k.cho_cham} cham="#7B2CBF" nen="#EFE8FB" ghi="Phỏng vấn đã diễn ra, chưa gửi phiếu" />
             : <Kpi to="/quantri/ung-vien?gd=nhan_viec" nhan="Nhận việc · tháng" so={k.nhan_viec_thang} cham="#12A37F" nen="#E6F6F0" delta={(k.dat_thang || 0) + ' đạt'} kieuDelta="len" ghi="Ứng viên đã nhận việc trong tháng" />}

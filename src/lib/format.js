@@ -112,3 +112,10 @@ export function mauAv(s) {
   for (const c of String(s || '')) h = (h * 31 + c.charCodeAt(0)) >>> 0
   return MAU_AV[h % MAU_AV.length]
 }
+
+// Thời điểm cụ thể (không phải "x phút trước"): 09:12 · 14/11 — khác năm thì thêm năm
+export function fmtThoiDiem(x) {
+  if (!x) return '—'
+  const s = ngayVN(x)
+  return fmtGio(x) + ' · ' + s.slice(8, 10) + '/' + s.slice(5, 7) + (s.slice(0, 4) !== ngayVN().slice(0, 4) ? '/' + s.slice(2, 4) : '')
+}

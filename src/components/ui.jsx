@@ -139,6 +139,21 @@ export function Avatar({ ten, path, co = '', className = '', phong }) {
   )
 }
 
+// Ảnh nhỏ — rê chuột để phóng to ngay cạnh (không cần bấm)
+export function AnhNho({ path, alt = '', className = '', onClick }) {
+  const url = useSignedUrl(path)
+  const [vt, setVt] = useState(null)
+  return (
+    <span className={'anh-nho ' + className} onMouseEnter={url ? (e) => setVt(e.currentTarget.getBoundingClientRect()) : undefined} onMouseLeave={() => setVt(null)} onClick={onClick}>
+      {url ? <img src={url} alt={alt} loading="lazy" /> : null}
+      {vt && createPortal(
+        <div className="anh-phong" style={{ left: vt.right + 254 + 14 > window.innerWidth ? Math.max(8, vt.left - 254) : vt.right + 14, top: Math.max(12, Math.min(vt.top + vt.height / 2 - 150, window.innerHeight - 312)) }}>
+          <img src={url} alt={alt} />
+        </div>, document.body)}
+    </span>
+  )
+}
+
 export function Ring({ pct, size = 92, day = 8, mau = 'var(--pink-3)', nen = 'rgba(255,255,255,.14)', trong = '#241520', children }) {
   const p = Math.max(0, Math.min(100, pct || 0))
   return (

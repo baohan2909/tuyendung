@@ -1,14 +1,16 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowUpDown, CalendarPlus, Download, ExternalLink, Film, Filter, Image as ImageIc, LayoutList, Phone, Search, SlidersHorizontal, Star, UserCheck, X, Check, ArrowRight } from 'lucide-react'
+import { ArrowUpDown, ChevronDown, Download, Film, Play, Image as ImageIc, Layers, LayoutList, Search, Star, UserCheck, X, Check, ArrowRight, Maximize2 } from 'lucide-react'
 import { rpc } from '../lib/api'
-import { useAsync, useDebounced, useLS, usePhim } from '../lib/hooks'
-import { fmtGiay, fmtNgayGio, fmtSdt, tuongDoi } from '../lib/format'
+import { useAsync, useDebounced, useLS, useMedia, usePhim } from '../lib/hooks'
+import { congNgay, fmtGiay, fmtNgayGio, fmtSdt, fmtThoiDiem, ngayVN } from '../lib/format'
 import { GIAI_DOAN, GD } from '../lib/stages'
 import { xuatExcel } from '../lib/excel'
-import { AnhKho, Avatar, Btn, Chips, Diem, Empty, Field, Lightbox, Menu, Modal, Segment, Skeleton, StageTag, useToast } from '../components/ui'
+import { AnhKho, AnhNho, Avatar, Btn, Diem, Empty, Field, IconBtn, Menu, Segment, Skeleton, StageTag, useToast } from '../components/ui'
 import { useStaff } from './context'
 import LichModal from './LichModal'
+import { HoSoChiTiet, TrinhPhat } from './Profile'
+import ChonNgay, { tinhKhoang } from './ChonNgay'
 import { tenNgan } from './Dashboard'
 import { HanhDongBuoc, MenuGiaiDoan, useDoiGiaiDoan } from './stageActions'
 
@@ -27,54 +29,163 @@ export const COT_EXCEL = [
   { k: 'ly_do_loai', ten: 'Lý do không đạt', w: 24 }, { k: 'ngay_nhan_viec', ten: 'Ngày nhận việc', w: 12 }, { k: 'noi_lam_viec', ten: 'Nơi làm việc', w: 20 }
 ]
 
+
+const LOC_TRONG = { vi_tri_id: '', khu_vuc: '', tuoi: '', danh_gia: '', hoc_van: '', ma_nguon: '', phu_trach: '', ngay: '', khoang: { v: '' }, co_video: '', uu_tien: false }
+const TUOI = [{ v: '', t: 'Mọi độ tuổi' }, { v: '18-22', t: '18 – 22 tuổi' }, { v: '23-27', t: '23 – 27 tuổi' }, { v: '28-35', t: '28 – 35 tuổi' }, { v: '36-99', t: 'Trên 35 tuổi' }]
+const DANH_GIA = [{ v: '', t: 'Tất cả' }, { v: 'chua', t: 'Chưa chấm điểm' }, { v: 'da', t: 'Đã chấm điểm' }, { v: 'cao', t: 'Điểm từ 7 trở lên' }, { v: 'thap', t: 'Điểm dưới 5' }]
+const VIDEO = [{ v: '', t: 'Tất cả' }, { v: 'co', t: 'Có video' }, { v: 'khong', t: 'Chưa có video' }]
+const NHOM = [{ v: '', t: 'Không nhóm' }, { v: 'gd', t: 'Theo giai đoạn' }, { v: 'vi_tri', t: 'Theo vị trí' }, { v: 'khu_vuc', t: 'Theo khu vực' }, { v: 'ngay', t: 'Theo ngày nộp' }]
+const MOI_TRANG = 60
+
+// Một nút lọc dạng viên thuốc: chưa chọn = trắng, đã chọn = đen kèm giá trị + nút bỏ
+function NutLoc({ nhan, giaTri, ds, chon, rong = 230, children, tim }) {
+  const [q, setQ] = useState('')
+  const coGiaTri = giaTri !== '' && giaTri != null
+  const hien = coGiaTri ? (ds?.find((x) => String(x.v) === String(giaTri))?.t ?? giaTri) : nhan
+  const loc = tim && q ? ds.filter((x) => x.v === '' || x.t.toLowerCase().includes(q.toLowerCase())) : ds
+  return (
+    <span className={'nut-loc' + (coGiaTri ? ' on' : '')}>
+      <Menu canh="trai" rong={rong} nut={<button type="button" className="nl-chinh">{coGiaTri && <i className="nl-nhan">{nhan}</i>}<span className="cat">{hien}</span>{!coGiaTri && <ChevronDown size={14} />}</button>}>
+        {(dong) => <>
+          {tim && <div style={{ padding: '4px 4px 8px' }}><input autoFocus className="o-tim-menu" placeholder="Tìm…" value={q} onChange={(e) => setQ(e.target.value)} /></div>}
+          <div style={{ maxHeight: 320, overflowY: 'auto' }}>
+            {(loc || []).map((x) => (
+              <button key={String(x.v)} className={String(giaTri) === String(x.v) ? 'on' : ''} onClick={() => { chon(x.v); dong() }}>
+                <span className="gian cat">{x.t}</span>{x.n != null && <span className="nho muted so">{x.n}</span>}{String(giaTri) === String(x.v) && <Check size={15} />}
+              </button>
+            ))}
+          </div>
+          {children && children(dong)}
+        </>}
+      </Menu>
+      {coGiaTri && <button type="button" className="nl-bo" onClick={() => chon('')} aria-label={'Bỏ lọc ' + nhan}><X size={13} strokeWidth={2.6} /></button>}
+    </span>
+  )
+}
+
+// Tải danh sách theo trang (cuộn tới đâu tải tới đó) — chịu được hàng nghìn hồ sơ
+function useDanhSach(p, nhip) {
+  const [st, setSt] = useState({ dong: [], tong: 0, dem: {}, dangTai: true, het: false })
+  const khoa = JSON.stringify(p)
+  const lan = useRef(0)
+  const soDaTai = useRef(0)
+  const tai = useCallback(async (kieu) => {
+    const id = ++lan.current
+    const them = kieu === 'them'
+    const bo_qua = them ? soDaTai.current : 0
+    const so_dong = kieu === 'lam_moi' ? Math.max(MOI_TRANG, soDaTai.current) : MOI_TRANG
+    if (kieu !== 'lam_moi') setSt((x) => ({ ...x, dangTai: true }))
+    try {
+      const r = await rpc('td_ds_ho_so', { p: { ...p, bo_qua, so_dong } })
+      if (id !== lan.current) return
+      setSt((x) => {
+        const dong = them ? [...x.dong, ...r.dong] : r.dong
+        soDaTai.current = dong.length
+        return { dong, tong: r.tong, dem: r.dem || {}, dangTai: false, het: dong.length >= r.tong }
+      })
+    } catch (e) { if (id === lan.current) setSt((x) => ({ ...x, dangTai: false, loi: e })) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [khoa])
+  useEffect(() => { soDaTai.current = 0; tai('dau') }, [tai])
+  useEffect(() => { if (nhip) tai('lam_moi') }, [nhip]) // eslint-disable-line react-hooks/exhaustive-deps
+  const sua = useCallback((f) => setSt((x) => ({ ...x, dong: f(x.dong) })), [])
+  return { ...st, taiThem: () => !st.het && !st.dangTai && tai('them'), lamMoi: () => tai('lam_moi'), sua }
+}
+
+function NutVideo({ v, onClick }) {
+  return (
+    <button type="button" className="dg-vid" onClick={onClick} title="Bấm để xem video" aria-label="Xem video">
+      {v.duong_dan_nho ? <AnhKho path={v.duong_dan_nho} alt="" /> : null}
+      <span className="dv-play"><Play size={13} fill="currentColor" /></span>
+      {v.thoi_luong != null && <span className="dv-tg">{fmtGiay(v.thoi_luong)}</span>}
+    </button>
+  )
+}
+
+const keyNhom = (r, nhom) => {
+  if (nhom === 'gd') return GD[r.trang_thai]?.ten || r.trang_thai
+  if (nhom === 'vi_tri') return r.vi_tri || '—'
+  if (nhom === 'khu_vuc') return (r.khu_vuc_mong_muon || 'Chưa ghi khu vực').trim().replace(/\s+/g, ' ').replace(/(^|\s)\S/g, (c) => c.toUpperCase())
+  if (nhom === 'ngay') { const s = ngayVN(r.nop_luc); return s === ngayVN() ? 'Hôm nay' : s === congNgay(ngayVN(), -1) ? 'Hôm qua' : s.slice(8, 10) + '/' + s.slice(5, 7) + '/' + s.slice(0, 4) }
+  return ''
+}
+
 export default function Candidates() {
   const s = useStaff()
   const nav = useNavigate()
   const bao = useToast()
+  const rongLon = useMedia('(min-width: 1280px)')
   const [qs, setQs] = useSearchParams()
   const [kieu, setKieu] = useLS('ns-td-kieu-xem', 'bang')
   const [tim, setTim] = useState(qs.get('tim') || '')
   const timTre = useDebounced(tim, 300)
   const gd = qs.get('gd') || ''
-  const [loc, setLoc] = useLS('ns-td-loc', { vi_tri_id: '', ma_nguon: '', phu_trach: '', uu_tien: false, tu: '', den: '', sap_xep: 'moi_nhat' })
-  const [soDong, setSoDong] = useState(50)
+  const [loc, setLoc] = useLS('ns-td-loc-v2', LOC_TRONG)
+  const [sapXep, setSapXep] = useLS('ns-td-sap-xep', 'moi_nhat')
+  const [nhom, setNhom] = useLS('ns-td-nhom', '')
   const [chon, setChon] = useState([])
-  const [xem, setXem] = useState(null)
-  const [hl, setHl] = useState(-1)
-  const [moLoc, setMoLoc] = useState(false)
+  const [xemId, setXemId] = useState(qs.get('xem') || null)
+  const [moTo, setMoTo] = useState(null)
+  const [xemVideo, setXemVideo] = useState(null)
   const [henCho, setHenCho] = useState(null)
   const [dangXuat, setDangXuat] = useState(false)
+  const [nhipCT, setNhipCT] = useState(0)
   const timRef = useRef(null)
+  const chanRef = useRef(null)
+  const { data: goiY } = useAsync(() => rpc('td_goi_y_loc').catch(() => ({ khu_vuc: [], hoc_van: [] })), [])
 
+  const khoangNgay = useMemo(() => tinhKhoang(loc.khoang), [JSON.stringify(loc.khoang)]) // eslint-disable-line react-hooks/exhaustive-deps
+  const [tuoiTu, tuoiDen] = loc.tuoi ? loc.tuoi.split('-').map(Number) : [null, null]
   const p = useMemo(() => ({
     tim: timTre.trim() || null, trang_thai: gd ? (gd === 'dang_xu_ly' ? ['moi', 'sang_loc', 'hen_pv', 'da_pv', 'de_xuat'] : [gd]) : null,
-    vi_tri_id: loc.vi_tri_id || null, ma_nguon: loc.ma_nguon || null, phu_trach: loc.phu_trach || null, uu_tien: loc.uu_tien ? true : null,
-    tu: loc.tu || null, den: loc.den || null, sap_xep: loc.sap_xep, so_dong: soDong
-  }), [timTre, gd, loc, soDong])
-  const { data, loading, reload, setData } = useAsync(() => rpc('td_ds_ho_so', { p }), [JSON.stringify(p), s.nhip])
-  const ds = data?.dong || []
-  const dem = data?.dem || {}
+    vi_tri_id: loc.vi_tri_id || null, khu_vuc: loc.khu_vuc || null, tuoi_tu: tuoiTu, tuoi_den: tuoiDen, danh_gia: loc.danh_gia || null,
+    hoc_van: loc.hoc_van || null, ma_nguon: loc.ma_nguon || null, phu_trach: loc.phu_trach || null, uu_tien: loc.uu_tien ? true : null,
+    co_video: loc.co_video === 'co' ? true : loc.co_video === 'khong' ? false : null, tu: khoangNgay[0], den: khoangNgay[1], sap_xep: sapXep
+  }), [timTre, gd, loc, khoangNgay, sapXep, tuoiTu, tuoiDen])
+  const L = useDanhSach(p, s.nhip)
+  const ds = L.dong
+  const dem = L.dem
   const tongTatCa = Object.values(dem).reduce((a, b) => a + b, 0)
   const dangXuLy = ['moi', 'sang_loc', 'hen_pv', 'da_pv', 'de_xuat'].reduce((a, k) => a + (dem[k] || 0), 0)
+  const banLam = rongLon && kieu === 'bang'
 
-  useEffect(() => { setSoDong(50); setChon([]) }, [timTre, gd, JSON.stringify(loc)])
+  useEffect(() => { setChon([]) }, [JSON.stringify(p)])
   useEffect(() => { try { sessionStorage.setItem('ns-td-thu-tu', JSON.stringify(ds.map((r) => r.id))) } catch (e) { /* bỏ qua */ } }, [ds])
-  useEffect(() => { if (xem && !ds.find((r) => r.id === xem.id)) setXem(null) }, [ds])
+  // Bàn làm việc: luôn có 1 hồ sơ đang xem (mặc định hồ sơ đầu tiên)
+  useEffect(() => { if (banLam && ds.length && (!xemId || !ds.some((r) => r.id === xemId))) setXemId(ds[0].id) }, [banLam, ds, xemId])
+  useEffect(() => { const q = new URLSearchParams(qs); if (banLam && xemId) q.set('xem', xemId); else q.delete('xem'); if (q.toString() !== qs.toString()) setQs(q, { replace: true }) }, [xemId, banLam]) // eslint-disable-line react-hooks/exhaustive-deps
+  // Cuộn tới cuối danh sách thì tải thêm
+  useEffect(() => {
+    const el = chanRef.current
+    if (!el) return
+    const ob = new IntersectionObserver((e) => { if (e[0].isIntersecting) L.taiThem() }, { rootMargin: '400px' })
+    ob.observe(el)
+    return () => ob.disconnect()
+  })
 
-  const [doiGD, giaoDienGD] = useDoiGiaiDoan({ xong: (ids, tt) => { setData((d) => d && ({ ...d, dong: d.dong.map((r) => (ids.includes(r.id) ? { ...r, trang_thai: tt } : r)) })); setChon([]); reload(true); s.taiDem() }, henPV: (r) => setHenCho(r) })
+  const [doiGD, giaoDienGD] = useDoiGiaiDoan({ xong: (ids, tt) => { L.sua((d) => d.map((r) => (ids.includes(r.id) ? { ...r, trang_thai: tt } : r))); setChon([]); L.lamMoi(); s.taiDem(); setNhipCT((n) => n + 1) }, henPV: (r) => setHenCho(r) })
 
   const datGD = (v) => { const q = new URLSearchParams(qs); if (v) q.set('gd', v); else q.delete('gd'); q.delete('tim'); setQs(q, { replace: true }) }
-  const mo = (r) => (window.innerWidth >= 1280 ? setXem(r) : nav('/quantri/ung-vien/' + r.id))
-  usePhim(['/'], (e) => { e.preventDefault(); timRef.current?.focus() })
-  usePhim(['j', 'k', 'Enter', 'x', 'o'], (e) => {
+  const mo = (r) => {
+    if (banLam) return setXemId(r.id)
+    if (rongLon) return setMoTo(r.id)
+    nav('/quantri/ung-vien/' + r.id)
+  }
+  const viTriXem = ds.findIndex((r) => r.id === xemId)
+  const dichChuyen = (b) => {
     if (!ds.length) return
-    if (e.key === 'j') setHl((i) => Math.min(ds.length - 1, i + 1))
-    if (e.key === 'k') setHl((i) => Math.max(0, i - 1))
-    if (e.key === 'Enter' && ds[hl]) mo(ds[hl])
-    if (e.key === 'o' && ds[hl]) nav('/quantri/ung-vien/' + ds[hl].id)
-    if (e.key === 'x' && ds[hl] && s.coSua) setChon((c) => (c.includes(ds[hl].id) ? c.filter((y) => y !== ds[hl].id) : [...c, ds[hl].id]))
-  })
-  useEffect(() => { if (hl >= 0) document.querySelector('[data-hang="' + hl + '"]')?.scrollIntoView({ block: 'nearest' }) }, [hl])
+    const i = Math.max(0, Math.min(ds.length - 1, (viTriXem < 0 ? -1 : viTriXem) + b))
+    if (banLam) setXemId(ds[i].id)
+    document.querySelector('[data-id="' + ds[i].id + '"]')?.scrollIntoView({ block: 'nearest' })
+    if (i >= ds.length - 5) L.taiThem()
+  }
+  usePhim(['/'], (e) => { e.preventDefault(); timRef.current?.focus() })
+  usePhim(['Escape'], () => setXemVideo(null), !!xemVideo)
+  usePhim(['ArrowDown', 'ArrowUp', 'j', 'k', 'x'], (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'j') { e.preventDefault(); dichChuyen(1) }
+    if (e.key === 'ArrowUp' || e.key === 'k') { e.preventDefault(); dichChuyen(-1) }
+    if (e.key === 'x' && xemId && s.coSua) setChon((c) => (c.includes(xemId) ? c.filter((y) => y !== xemId) : [...c, xemId]))
+  }, banLam && !moTo && !henCho && !xemVideo)
 
   async function xuat(chiChon) {
     setDangXuat(true)
@@ -87,110 +198,162 @@ export default function Candidates() {
     setDangXuat(false)
   }
 
-  const soLoc = [loc.vi_tri_id, loc.ma_nguon, loc.phu_trach, loc.uu_tien, loc.tu, loc.den].filter(Boolean).length
-  const chipGD = [
-    { v: '', t: 'Tất cả', dem: tongTatCa },
-    { v: 'dang_xu_ly', t: 'Đang xử lý', dem: dangXuLy },
-    ...GIAI_DOAN.map((g) => ({ v: g.ma, t: g.ten, dem: dem[g.ma] || 0 }))
-  ]
+  const datLoc = (k) => (v) => setLoc((l) => ({ ...l, [k]: v }))
+  const soLoc = ['vi_tri_id', 'khu_vuc', 'tuoi', 'danh_gia', 'hoc_van', 'ma_nguon', 'phu_trach', 'co_video', 'uu_tien'].filter((k) => loc[k]).length + (loc.khoang?.v ? 1 : 0)
   const tatCaChon = ds.length > 0 && ds.every((r) => chon.includes(r.id))
+
+  // Gom nhóm (theo dữ liệu đã tải)
+  const nhomDs = useMemo(() => {
+    if (!nhom) return [{ ten: '', ds }]
+    const m = new Map()
+    const thuTuGD = Object.fromEntries(GIAI_DOAN.map((g, i) => [g.ten, i]))
+    ds.forEach((r) => { const k = keyNhom(r, nhom); if (!m.has(k)) m.set(k, []); m.get(k).push(r) })
+    let arr = [...m.entries()].map(([ten, d]) => ({ ten, ds: d }))
+    if (nhom === 'gd') arr.sort((a, b) => (thuTuGD[a.ten] ?? 99) - (thuTuGD[b.ten] ?? 99))
+    if (nhom === 'vi_tri' || nhom === 'khu_vuc') arr.sort((a, b) => b.ds.length - a.ds.length)
+    return arr
+  }, [ds, nhom])
+
+  const dongUV = (r) => {
+    const daChon = chon.includes(r.id)
+    const dangXem = banLam && xemId === r.id
+    return (
+      <div key={r.id} data-id={r.id} className={'dg' + (daChon ? ' chon' : '') + (dangXem ? ' dang-xem' : '')} onClick={() => mo(r)}>
+        {s.coSua && <button className={'o-chon' + (daChon ? ' on' : '')} onClick={(e) => { e.stopPropagation(); setChon((c) => (daChon ? c.filter((y) => y !== r.id) : [...c, r.id])) }} aria-label={'Chọn ' + r.ho_ten}>{daChon && <Check size={13} strokeWidth={3} />}</button>}
+        <div className="dg-anh" onClick={(e) => e.stopPropagation()}>
+          {(r.anh_ds?.length ? r.anh_ds : r.anh ? [r.anh] : []).slice(0, 2).map((a, k) => <AnhNho key={k} path={a} alt={r.ho_ten + ' ' + (k + 1)} onClick={() => mo(r)} />)}
+          {!(r.anh_ds?.length || r.anh) && <Avatar ten={r.ho_ten} co="lg" />}
+        </div>
+        <div className="dg-giua">
+          <b className="cat">{r.ho_ten}{r.uu_tien && <Star size={12} className="uu-tien-sao" fill="currentColor" />}</b>
+          <span className="cat">{tenNgan(r.vi_tri)} · {r.tuoi} tuổi · {r.chieu_cao}cm/{r.can_nang}kg</span>
+          <span className="cat dg-kv">{r.khu_vuc_mong_muon || r.cho_o || '—'}</span>
+        </div>
+        {r.video ? <NutVideo v={r.video} onClick={(e) => { e.stopPropagation(); setXemVideo({ v: r.video, ten: r.ho_ten }) }} /> : <span className="dg-vid trong" title="Chưa có video"><Film size={15} /></span>}
+        <div className="dg-phai">
+          <StageTag ma={r.trang_thai} />
+          <span className="dg-gio" title={fmtNgayGio(r.nop_luc)}>{fmtThoiDiem(r.nop_luc)}</span>
+          {s.coSua && ['moi', 'sang_loc'].includes(r.trang_thai) ? (
+            <span className="dg-nhanh" onClick={(e) => e.stopPropagation()}>
+              <button className="icon-btn xs" style={{ background: 'var(--ok-bg)', color: 'var(--ok)' }} title="Qua sàng lọc → Phỏng vấn" aria-label="Qua sàng lọc" onClick={() => doiGD([r.id], 'hen_pv', [r])}><Check size={14} strokeWidth={3} /></button>
+              <button className="icon-btn xs" style={{ background: 'var(--err-bg)', color: 'var(--err)' }} title="Không qua sàng lọc" aria-label="Loại" onClick={() => doiGD([r.id], 'khong_dat', [r])}><X size={14} strokeWidth={3} /></button>
+            </span>
+          ) : r.diem_tb != null ? <Diem v={r.diem_tb} /> : null}
+        </div>
+      </div>
+    )
+  }
+
+  const danhSach = L.dangTai && !ds.length ? (
+    <div className="ds-gon" style={{ padding: 14 }}><div className="cot">{[0, 1, 2, 3, 4, 5].map((i) => <Skeleton key={i} h={70} />)}</div></div>
+  ) : !ds.length ? (
+    <div className="card"><Empty icon={Search} tieuDe="Không có hồ sơ phù hợp">Thử đổi từ khóa hoặc bỏ bớt bộ lọc.</Empty></div>
+  ) : kieu === 'the' ? (
+    <div className="luoi-the">
+      {ds.map((r) => (
+        <div key={r.id} className="the-uv" data-id={r.id} onClick={() => mo(r)}>
+          <div className="anh">
+            {r.anh ? <AnhKho path={r.anh} alt={r.ho_ten} /> : <div className="hang" style={{ height: '100%', justifyContent: 'center' }}><Avatar ten={r.ho_ten} co="xl" /></div>}
+            <div className="tren"><StageTag ma={r.trang_thai} />{r.diem_tb != null && <Diem v={r.diem_tb} />}</div>
+            <div className="duoi"><b className="cat" style={{ display: 'block' }}>{r.ho_ten} {r.uu_tien && <Star size={13} fill="#F5A524" color="#F5A524" />}</b><span>{r.tuoi} tuổi · {r.chieu_cao}cm · {r.khu_vuc_mong_muon || r.cho_o}</span></div>
+          </div>
+          <div className="chan">
+            <span className="nho cat gian" style={{ fontWeight: 600, color: 'var(--ink-2)' }}>{tenNgan(r.vi_tri)}</span>
+            {r.video_giay != null && <span className="tag"><Film size={12} />{fmtGiay(r.video_giay)}</span>}
+            <span className="nho muted">{fmtThoiDiem(r.nop_luc)}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <div className="ds-gon">
+      <div className="ds-dau">
+        {s.coSua && <button className={'o-chon' + (tatCaChon ? ' on' : '')} onClick={() => setChon(tatCaChon ? [] : ds.map((r) => r.id))} aria-label="Chọn tất cả đã tải">{tatCaChon && <Check size={13} strokeWidth={3} />}</button>}
+        <span className="gian">Đang hiện <b>{ds.length}</b> / {L.tong}</span>
+        {banLam && <span className="nho muted">↑ ↓ để chuyển hồ sơ</span>}
+      </div>
+      {nhomDs.map((g) => (
+        <div key={g.ten || 'tat-ca'}>
+          {g.ten && <div className="ds-nhom"><span>{g.ten}</span><i>{g.ds.length}</i></div>}
+          {g.ds.map(dongUV)}
+        </div>
+      ))}
+    </div>
+  )
 
   return (
     <>
       <header className="trang-dau">
         <div className="tieu">
           <span className="eyebrow">Ứng viên</span>
-          <h1><span><b>{data ? data.tong : '…'}</b> hồ sơ</span><span className="dem-phu"><i />{gd ? (gd === 'dang_xu_ly' ? 'Đang xử lý' : GD[gd]?.ten) : (dem.moi || 0) + ' chờ sàng lọc'}</span></h1>
+          <h1><span><b>{L.tong}</b> hồ sơ</span><span className="dem-phu"><i />{gd ? (gd === 'dang_xu_ly' ? 'Đang xử lý' : GD[gd]?.ten) : (dem.moi || 0) + ' chờ sàng lọc'}</span></h1>
         </div>
-        <Segment trang ds={[{ v: 'bang', t: 'Bảng', icon: LayoutList }, { v: 'the', t: 'Thẻ ảnh', icon: ImageIc }]} giaTri={kieu} onChon={setKieu} />
+        <Segment trang ds={[{ v: 'bang', t: 'Danh sách', icon: LayoutList }, { v: 'the', t: 'Thẻ ảnh', icon: ImageIc }]} giaTri={kieu} onChon={setKieu} />
         {s.vaiTro !== 'phong_van' && <Btn kieu="den" orb="trai" icon={Download} loading={dangXuat} onClick={() => xuat(false)}>Xuất Excel</Btn>}
       </header>
 
       <div className="loc-hang">
         <label className="input-tron">
           <Search size={17} />
-          <input ref={timRef} aria-label="Tìm ứng viên" placeholder="Tên, SĐT, mã hồ sơ, địa chỉ…" value={tim} onChange={(e) => setTim(e.target.value)} />
+          <input ref={timRef} aria-label="Tìm ứng viên" placeholder="Tên, SĐT, mã hồ sơ, địa chỉ, khu vực…" value={tim} onChange={(e) => setTim(e.target.value)} />
           {tim ? <button className="icon-btn xs mem" onClick={() => setTim('')} aria-label="Xóa tìm"><X size={13} /></button> : <kbd>/</kbd>}
         </label>
-        <Btn kieu={soLoc ? 'den' : 'trang'} co="md" icon={SlidersHorizontal} onClick={() => setMoLoc(true)}>Bộ lọc{soLoc ? ' · ' + soLoc : ''}</Btn>
-        <Menu canh="trai" rong={200} nut={<Btn kieu="trang" co="md" icon={ArrowUpDown}>{SAP_XEP.find((x) => x.v === loc.sap_xep)?.t}</Btn>}>
-          {(dong) => SAP_XEP.map((x) => <button key={x.v} className={loc.sap_xep === x.v ? 'on' : ''} onClick={() => { setLoc((l) => ({ ...l, sap_xep: x.v })); dong() }}>{x.t}{loc.sap_xep === x.v && <Check size={15} style={{ marginLeft: 'auto' }} />}</button>)}
+        <Menu canh="trai" rong={210} nut={<Btn kieu="trang" co="md" icon={ArrowUpDown}>{SAP_XEP.find((x) => x.v === sapXep)?.t}</Btn>}>
+          {(dong) => SAP_XEP.map((x) => <button key={x.v} className={sapXep === x.v ? 'on' : ''} onClick={() => { setSapXep(x.v); dong() }}>{x.t}{sapXep === x.v && <Check size={15} style={{ marginLeft: 'auto' }} />}</button>)}
         </Menu>
-        {soLoc > 0 && <Btn kieu="trong" co="md" icon={X} onClick={() => setLoc((l) => ({ vi_tri_id: '', ma_nguon: '', phu_trach: '', uu_tien: false, tu: '', den: '', sap_xep: l.sap_xep }))}>Xóa lọc</Btn>}
-      </div>
-      <div className="loc-cuon" role="tablist" aria-label="Giai đoạn">
-        {chipGD.map((c) => (
-          <button key={c.v} role="tab" aria-selected={gd === c.v} className={'chip trang sm' + (gd === c.v ? ' on' : '')} onClick={() => datGD(c.v)}>
-            {c.v && GD[c.v] && <span className="tag cham" style={{ width: 8, height: 8, padding: 0, borderRadius: '50%', background: GD[c.v].cham }} />}{c.t}<span className="dem">{c.dem}</span>
-          </button>
-        ))}
+        <Menu canh="trai" rong={210} nut={<Btn kieu={nhom ? 'den' : 'trang'} co="md" icon={Layers}>{nhom ? NHOM.find((x) => x.v === nhom)?.t : 'Nhóm'}</Btn>}>
+          {(dong) => NHOM.map((x) => <button key={x.v} className={nhom === x.v ? 'on' : ''} onClick={() => { setNhom(x.v); dong() }}>{x.t}{nhom === x.v && <Check size={15} style={{ marginLeft: 'auto' }} />}</button>)}
+        </Menu>
       </div>
 
-      <div className="hang" style={{ alignItems: 'flex-start', gap: 18 }}>
-        <div className="gian">
-          {loading && !data ? (
-            <div className="bang-uv" style={{ padding: 18 }}><div className="cot">{[0, 1, 2, 3, 4, 5].map((i) => <Skeleton key={i} h={50} />)}</div></div>
-          ) : !ds.length ? (
-            <div className="card"><Empty icon={Search} tieuDe="Không có hồ sơ phù hợp">Thử đổi từ khóa hoặc bộ lọc.</Empty></div>
-          ) : kieu === 'the' ? (
-            <div className="luoi-the">
-              {ds.map((r, i) => (
-                <div key={r.id} className="the-uv" data-hang={i} onClick={() => mo(r)} style={hl === i ? { boxShadow: '0 0 0 3px var(--pink)' } : null}>
-                  <div className="anh">
-                    {r.anh ? <AnhKho path={r.anh} alt={r.ho_ten} /> : <div className="hang" style={{ height: '100%', justifyContent: 'center' }}><Avatar ten={r.ho_ten} co="xl" /></div>}
-                    <div className="tren"><StageTag ma={r.trang_thai} />{r.diem_tb != null && <Diem v={r.diem_tb} />}</div>
-                    <div className="duoi"><b className="cat" style={{ display: 'block' }}>{r.ho_ten} {r.uu_tien && <Star size={13} fill="#F5A524" color="#F5A524" />}</b><span>{r.tuoi} tuổi · {r.chieu_cao}cm · {r.khu_vuc_mong_muon || r.cho_o}</span></div>
-                  </div>
-                  <div className="chan">
-                    <span className="nho cat gian" style={{ fontWeight: 600, color: 'var(--ink-2)' }}>{r.vi_tri}</span>
-                    {r.video_giay != null && <span className="tag"><Film size={12} />{fmtGiay(r.video_giay)}</span>}
-                    <span className="nho muted">{tuongDoi(r.nop_luc)}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="bang-uv">
-              <div className="cuon cuon-mong">
-                <div className="luoi">
-                  <div className="dau">
-                    {s.coSua ? <button className={'o-chon' + (tatCaChon ? ' on' : '')} onClick={() => setChon(tatCaChon ? [] : ds.map((r) => r.id))} aria-label="Chọn tất cả">{tatCaChon && <Check size={13} strokeWidth={3} />}</button> : <span>#</span>}
-                    <button className={loc.sap_xep === 'ten' ? 'on' : ''} onClick={() => setLoc((l) => ({ ...l, sap_xep: 'ten' }))}>Ứng viên</button>
-                    <span>Vị trí</span><span>Khu vực</span><span>Video</span><span>Giai đoạn</span>
-                    <button className={loc.sap_xep === 'diem' ? 'on' : ''} onClick={() => setLoc((l) => ({ ...l, sap_xep: 'diem' }))}>Điểm / duyệt</button>
-                    <button className={['moi_nhat', 'cu_nhat'].includes(loc.sap_xep) ? 'on' : ''} onClick={() => setLoc((l) => ({ ...l, sap_xep: l.sap_xep === 'moi_nhat' ? 'cu_nhat' : 'moi_nhat' }))}>Nộp lúc</button>
-                  </div>
-                  {ds.map((r, i) => {
-                    const daChon = chon.includes(r.id)
-                    return (
-                      <div key={r.id} data-hang={i} className={'dong' + (daChon ? ' chon' : '') + (xem?.id === r.id || hl === i ? ' dang-xem' : '')} onClick={() => { setHl(i); mo(r) }}>
-                        {s.coSua ? <button className={'o-chon' + (daChon ? ' on' : '')} onClick={(e) => { e.stopPropagation(); setChon((c) => (daChon ? c.filter((y) => y !== r.id) : [...c, r.id])) }} aria-label={'Chọn ' + r.ho_ten}>{daChon && <Check size={13} strokeWidth={3} />}</button> : <span className="nho muted">{i + 1}</span>}
-                        <div className="ten-uv">
-                          <Avatar ten={r.ho_ten} path={r.anh} phong />
-                          <div className="gian"><b className="cat">{r.ho_ten} {r.uu_tien && <Star size={12} className="uu-tien-sao" fill="currentColor" />}</b><span className="cat"><i className="chi-dt">{tenNgan(r.vi_tri)} · </i>{r.tuoi} tuổi · {r.chieu_cao}cm/{r.can_nang}kg · {fmtSdt(r.sdt)}</span></div>
-                        </div>
-                        <span className="cat">{tenNgan(r.vi_tri)}</span>
-                        <span className="cat muted-2">{r.khu_vuc_mong_muon || r.cho_o}</span>
-                        <span>{r.video_giay != null ? <span className="co-video"><i><Film size={10} /></i>{fmtGiay(r.video_giay)}</span> : <span className="muted">—</span>}</span>
-                        <span><StageTag ma={r.trang_thai} /></span>
-                        <span onClick={(e) => e.stopPropagation()}>{s.coSua && ['moi', 'sang_loc'].includes(r.trang_thai) ? (
-                          <span className="hang" style={{ gap: 4 }}>
-                            <button className="icon-btn xs" style={{ background: 'var(--ok-bg)', color: 'var(--ok)' }} title="Qua sàng lọc" aria-label="Qua sàng lọc" onClick={() => doiGD([r.id], 'hen_pv', [r])}><Check size={14} strokeWidth={3} /></button>
-                            <button className="icon-btn xs" style={{ background: 'var(--err-bg)', color: 'var(--err)' }} title="Loại" aria-label="Loại" onClick={() => doiGD([r.id], 'khong_dat', [r])}><X size={14} strokeWidth={3} /></button>
-                          </span>) : <Diem v={r.diem_tb} />}</span>
-                        <span className="nho muted">{tuongDoi(r.nop_luc)}</span>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            </div>
-          )}
-          {data && ds.length < data.tong && (
-            <div className="chan-bang"><Btn kieu="trang" co="md" loading={loading} onClick={() => setSoDong((n) => n + 50)}>Xem thêm ({data.tong - ds.length})</Btn></div>
-          )}
+      <div className="loc-cuon thanh-loc" aria-label="Bộ lọc">
+        <NutLoc nhan="Vị trí" giaTri={loc.vi_tri_id} chon={datLoc('vi_tri_id')} ds={[{ v: '', t: 'Tất cả vị trí' }, ...s.dm.viTri.map((v) => ({ v: String(v.id), t: v.ten }))]} />
+        <NutLoc nhan="Khu vực" giaTri={loc.khu_vuc} chon={datLoc('khu_vuc')} tim rong={260} ds={[{ v: '', t: 'Mọi khu vực' }, ...(goiY?.khu_vuc || []).map((k) => ({ v: k.ten, t: k.ten, n: k.n }))]} />
+        <NutLoc nhan="Tuổi" giaTri={loc.tuoi} chon={datLoc('tuoi')} ds={TUOI} />
+        <NutLoc nhan="Đánh giá" giaTri={loc.danh_gia} chon={datLoc('danh_gia')} ds={DANH_GIA} />
+        <ChonNgay giaTri={loc.khoang} onDoi={(v) => setLoc((l) => ({ ...l, khoang: v }))} />
+        <NutLoc nhan="Video" giaTri={loc.co_video} chon={datLoc('co_video')} ds={VIDEO} />
+        <NutLoc nhan="Học vấn" giaTri={loc.hoc_van} chon={datLoc('hoc_van')} ds={[{ v: '', t: 'Mọi trình độ' }, ...(goiY?.hoc_van || []).map((k) => ({ v: k.ten, t: k.ten, n: k.n }))]} />
+        <NutLoc nhan="Kênh" giaTri={loc.ma_nguon} chon={datLoc('ma_nguon')} rong={260} ds={[{ v: '', t: 'Mọi kênh / mã QR' }, ...s.dm.nguon.map((n) => ({ v: n.ma, t: n.ten }))]} />
+        <NutLoc nhan="Phụ trách" giaTri={loc.phu_trach} chon={datLoc('phu_trach')} ds={[{ v: '', t: 'Tất cả' }, { v: 'toi', t: 'Của tôi' }, { v: 'chua', t: 'Chưa phân công' }, ...s.dm.nhanSu.filter((n) => n.hoat_dong).map((n) => ({ v: n.id, t: n.ho_ten }))]} />
+        <button type="button" className={'nut-loc nl-don' + (loc.uu_tien ? ' on' : '')} onClick={() => setLoc((l) => ({ ...l, uu_tien: !l.uu_tien }))}><Star size={14} fill={loc.uu_tien ? 'currentColor' : 'none'} />Ưu tiên</button>
+        {soLoc > 0 && <button type="button" className="nl-xoa" onClick={() => setLoc(LOC_TRONG)}><X size={14} />Xóa {soLoc} bộ lọc</button>}
+      </div>
+
+      <div className="quy-trinh-loc" role="tablist" aria-label="Quy trình tuyển dụng">
+        <div className="qt-trai">
+          <button role="tab" aria-selected={gd === ''} className={'qt-nho' + (gd === '' ? ' on' : '')} onClick={() => datGD('')}><span>Tất cả</span><b>{tongTatCa}</b></button>
+          <button role="tab" aria-selected={gd === 'dang_xu_ly'} className={'qt-nho' + (gd === 'dang_xu_ly' ? ' on' : '')} onClick={() => datGD('dang_xu_ly')}><span>Đang xử lý</span><b>{dangXuLy}</b></button>
         </div>
-        {xem && <XemNhanh r={ds.find((x) => x.id === xem.id) || xem} dong={() => setXem(null)} doiGD={doiGD} henPV={() => setHenCho(xem)} />}
+        <div className="qt-buoc">
+          {['moi', 'hen_pv', 'dat', 'nhan_viec'].map((m, i) => (
+            <button key={m} role="tab" aria-selected={gd === m} className={'qt-o' + (gd === m ? ' on' : '') + (i === 0 ? ' dau' : '')} style={{ '--mau': GD[m].cham }} onClick={() => datGD(gd === m ? '' : m)}>
+              <span className="qt-so">{i + 1}</span>
+              <span className="qt-ten"><i>Bước {i + 1}</i>{GD[m].ten}</span>
+              <b className="qt-dem">{dem[m] || 0}</b>
+            </button>
+          ))}
+        </div>
+        <div className="qt-ket">
+          {['khong_dat', 'du_bi', 'rut'].map((m) => (
+            <button key={m} role="tab" aria-selected={gd === m} className={'qt-ket-o' + (gd === m ? ' on' : '')} onClick={() => datGD(gd === m ? '' : m)}>
+              <i style={{ background: GD[m].cham }} />{GD[m].ten}<b>{dem[m] || 0}</b>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className={banLam ? 'ban-lam' : ''}>
+        <div className={banLam ? 'ban-trai' : ''}>
+          {danhSach}
+          <div ref={chanRef} className="chan-bang">{L.dangTai && ds.length > 0 ? <span className="nho muted">Đang tải thêm…</span> : !L.het && ds.length > 0 ? <Btn kieu="trang" co="sm" onClick={L.taiThem}>Tải thêm ({L.tong - ds.length})</Btn> : ds.length > 0 ? <span className="nho muted">Đã hiện hết {L.tong} hồ sơ</span> : null}</div>
+        </div>
+        {banLam && (
+          <div className="ban-phai">
+            {xemId ? <HoSoChiTiet key={xemId} id={xemId} nhung nhip={nhipCT} onDoi={() => { L.lamMoi(); s.taiDem() }}
+              phai={<IconBtn icon={Maximize2} nhan="Mở trang riêng" kieu="kinh" onClick={() => nav('/quantri/ung-vien/' + xemId)} />} /> : <div className="card"><Empty icon={Search} tieuDe="Chọn một ứng viên ở danh sách" /></div>}
+          </div>
+        )}
       </div>
 
       {chon.length > 0 && (
@@ -201,7 +364,7 @@ export default function Candidates() {
             {(dong) => <>
               <div className="tieu">Người phụ trách</div>
               {s.dm.nhanSu.filter((n) => n.hoat_dong).map((n) => (
-                <button key={n.id} onClick={async () => { dong(); try { for (const id of chon) await rpc('td_cap_nhat_ho_so', { p_id: id, p: { nguoi_phu_trach: n.id } }); bao('Đã phân công ' + chon.length + ' hồ sơ cho ' + n.ho_ten); setChon([]); reload(true) } catch (e) { bao(e.message, 'loi') } }}>{n.ho_ten}</button>
+                <button key={n.id} onClick={async () => { dong(); try { for (const id of chon) await rpc('td_cap_nhat_ho_so', { p_id: id, p: { nguoi_phu_trach: n.id } }); bao('Đã phân công ' + chon.length + ' hồ sơ cho ' + n.ho_ten); setChon([]); L.lamMoi() } catch (e) { bao(e.message, 'loi') } }}>{n.ho_ten}</button>
               ))}
             </>}
           </Menu>
@@ -210,73 +373,23 @@ export default function Candidates() {
         </div>
       )}
 
-      <Modal mo={moLoc} dong={() => setMoLoc(false)} tieuDe="Bộ lọc" moTa="Lọc hồ sơ theo vị trí, nguồn, người phụ trách, thời gian."
-        chan={<><Btn kieu="trong" onClick={() => setLoc((l) => ({ vi_tri_id: '', ma_nguon: '', phu_trach: '', uu_tien: false, tu: '', den: '', sap_xep: l.sap_xep }))}>Đặt lại</Btn><Btn kieu="den" onClick={() => setMoLoc(false)}>Xem {data?.tong ?? ''} hồ sơ</Btn></>}>
-        <div className="cot" style={{ gap: 16 }}>
-          <div><span className="nhan-nhom">Vị trí</span><Chips co="sm" ds={[{ v: '', t: 'Tất cả' }, ...s.dm.viTri.map((v) => ({ v: String(v.id), t: v.ten }))]} giaTri={String(loc.vi_tri_id || '')} onChon={(v) => setLoc((l) => ({ ...l, vi_tri_id: v }))} /></div>
-          <div><span className="nhan-nhom">Kênh / mã QR</span><Chips co="sm" ds={[{ v: '', t: 'Tất cả' }, ...s.dm.nguon.map((n) => ({ v: n.ma, t: n.ten }))]} giaTri={loc.ma_nguon || ''} onChon={(v) => setLoc((l) => ({ ...l, ma_nguon: v }))} /></div>
-          <div><span className="nhan-nhom">Người phụ trách</span><Chips co="sm" ds={[{ v: '', t: 'Tất cả' }, { v: 'toi', t: 'Của tôi' }, { v: 'chua', t: 'Chưa phân công' }, ...s.dm.nhanSu.filter((n) => n.hoat_dong).map((n) => ({ v: n.id, t: n.ho_ten }))]} giaTri={loc.phu_trach || ''} onChon={(v) => setLoc((l) => ({ ...l, phu_trach: v }))} /></div>
-          <div className="luoi-2">
-            <Field nhan="Nộp từ ngày" type="date" value={loc.tu} onChange={(e) => setLoc((l) => ({ ...l, tu: e.target.value }))} />
-            <Field nhan="Đến ngày" type="date" value={loc.den} onChange={(e) => setLoc((l) => ({ ...l, den: e.target.value }))} />
+      {moTo && (
+        <div className="man-ho-so" onMouseDown={(e) => { if (e.target === e.currentTarget) setMoTo(null) }}>
+          <div className="mhs-hop">
+            <HoSoChiTiet key={moTo} id={moTo} nhung nhip={nhipCT} onDoi={() => { L.lamMoi(); s.taiDem() }} phai={<IconBtn icon={X} nhan="Đóng" kieu="kinh" onClick={() => setMoTo(null)} />} />
           </div>
-          <Chips ds={[{ v: 'uu', t: 'Chỉ hồ sơ ưu tiên ★' }]} nhieu tick co="sm" giaTri={loc.uu_tien ? ['uu'] : []} onChon={(v) => setLoc((l) => ({ ...l, uu_tien: v.includes('uu') }))} />
-        </div>
-      </Modal>
-      {giaoDienGD}
-      {henCho && <LichModal hoSo={henCho} dong={() => setHenCho(null)} xong={() => { setHenCho(null); reload(true); s.taiDem() }} />}
-    </>
-  )
-}
-
-function XemNhanh({ r, dong, doiGD, henPV }) {
-  const s = useStaff()
-  const { data: ct } = useAsync(() => rpc('td_chi_tiet', { p_id: r.id }), [r.id])
-  const anh = (ct?.tep || []).filter((t) => t.loai === 'anh')
-  const [chiSo, setChiSo] = useState(0)
-  const [moAnh, setMoAnh] = useState(null)
-  useEffect(() => { setChiSo(0) }, [r.id])
-  const dangXem = anh[chiSo] ? (anh[chiSo].duong_dan_nho || anh[chiSo].duong_dan) : r.anh
-  return (
-    <aside className="xem-nhanh" aria-label="Xem nhanh hồ sơ">
-      <div className="bia">
-        {dangXem ? <>
-          <AnhKho path={dangXem} alt="" className="bia-mo" />
-          <button type="button" className="bia-anh" onClick={() => anh.length && setMoAnh(chiSo)} aria-label="Phóng to ảnh"><AnhKho path={dangXem} alt={r.ho_ten} /></button>
-        </> : <div className="glow hong" style={{ width: 200, height: 200, left: 60, top: -40, opacity: 0.6 }} />}
-        <button className="icon-btn sm kinh dong-x" onClick={dong} aria-label="Đóng"><X size={16} /></button>
-        {anh.length > 0 && <span className="bia-dem">{chiSo + 1}/{anh.length}</span>}
-      </div>
-      {anh.length > 1 && (
-        <div className="bia-strip">
-          {anh.map((t, i) => (
-            <button key={t.id} type="button" className={i === chiSo ? 'on' : ''} onMouseEnter={() => setChiSo(i)} onFocus={() => setChiSo(i)} onClick={() => setMoAnh(i)} aria-label={'Ảnh ' + (i + 1)}>
-              <AnhKho path={t.duong_dan_nho || t.duong_dan} alt="" />
-            </button>
-          ))}
         </div>
       )}
-      {moAnh != null && <Lightbox ds={anh.map((t) => t.duong_dan)} chiSo={moAnh} dong={() => setMoAnh(null)} />}
-      <div className="noi">
-        <div>
-          <span className="eyebrow">{r.ma}</span>
-          <h2 style={{ fontSize: 22, fontWeight: 800, marginTop: 4 }}>{r.ho_ten}</h2>
-          <p className="nho muted-2" style={{ marginTop: 4 }}>{r.vi_tri} · {r.tuoi} tuổi · {r.chieu_cao}cm/{r.can_nang}kg</p>
+      {xemVideo && (
+        <div className="man-video" onMouseDown={(e) => { if (e.target === e.currentTarget) setXemVideo(null) }}>
+          <div className="mv-hop">
+            <div className="hang" style={{ marginBottom: 10 }}><b className="gian" style={{ color: '#fff', fontSize: 15 }}>Video · {xemVideo.ten}</b><IconBtn icon={X} nhan="Đóng" kieu="kinh" onClick={() => setXemVideo(null)} /></div>
+            <TrinhPhat v={xemVideo.v} tuChay />
+          </div>
         </div>
-        <div className="hang wrap" style={{ gap: 6 }}><StageTag ma={r.trang_thai} lg /><Diem v={r.diem_tb} />{r.uu_tien && <span className="tag lg" style={{ background: '#FFF4DB', color: '#9A6A00' }}><Star size={12} fill="currentColor" />Ưu tiên</span>}</div>
-        <dl className="cap-tl" style={{ gridTemplateColumns: '1fr' }}>
-          <dt>Điện thoại</dt><dd><a href={'tel:' + r.sdt}>{fmtSdt(r.sdt)}</a></dd>
-          <dt>Chỗ ở · khu vực mong muốn</dt><dd>{r.cho_o}{r.khu_vuc_mong_muon ? ' · ' + r.khu_vuc_mong_muon : ''}</dd>
-          <dt>Học vấn</dt><dd>{r.hoc_van || '—'}</dd>
-          <dt>Nguồn</dt><dd>{(r.nguon || []).join(', ') || '—'}</dd>
-          <dt>Nộp lúc</dt><dd>{fmtNgayGio(r.nop_luc)}</dd>
-        </dl>
-        <div className="cot" style={{ gap: 8 }}>
-          <Link to={'/quantri/ung-vien/' + r.id} className="btn den rong co-orb" style={{ justifyContent: 'space-between' }}>Mở hồ sơ đầy đủ<span className="orb sm"><ExternalLink size={15} /></span></Link>
-          <div className="hang wrap" style={{ gap: 8 }}><HanhDongBuoc h={r} doiGD={doiGD} henPV={henPV} /></div>
-          <a className="btn md vien" href={'tel:' + r.sdt}><Phone size={16} />Gọi {fmtSdt(r.sdt)}</a>
-        </div>
-      </div>
-    </aside>
+      )}
+      {giaoDienGD}
+      {henCho && <LichModal hoSo={henCho} dong={() => setHenCho(null)} xong={() => { setHenCho(null); L.lamMoi(); s.taiDem(); setNhipCT((n) => n + 1) }} />}
+    </>
   )
 }

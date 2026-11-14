@@ -28,7 +28,7 @@ export function MenuGiaiDoan({ nut, chon, hienTai }) {
 }
 
 // Chuyển giai đoạn theo đúng quy trình 2 bước:
-//  - từ Chờ sàng lọc: qua (→ PV online) / không qua (→ Không đạt) = kết quả SÀNG LỌC
+//  - từ Chờ sàng lọc: qua (→ Phỏng vấn) / không qua (→ Không đạt) = kết quả SÀNG LỌC
 //  - từ PV online: Trúng tuyển / Không đạt / Dự bị = CHỐT KẾT QUẢ phỏng vấn
 //  - Trúng tuyển → Nhận việc: mở hộp phân công cửa hàng
 export function useDoiGiaiDoan({ xong, henPV }) {
@@ -45,7 +45,7 @@ export function useDoiGiaiDoan({ xong, henPV }) {
       let n = 0
       if (GD_SANG_LOC.includes(tu) && (tt === 'hen_pv' || tt === 'khong_dat')) {
         n = await rpc('td_sang_loc', { p_ids: ids, p_ket_qua: tt === 'hen_pv' ? 'qua' : 'khong_qua', p_ghi_chu: ghiChu || null })
-        bao(tt === 'hen_pv' ? 'Qua sàng lọc → phỏng vấn online' + (n > 1 ? ' (' + n + ' hồ sơ)' : '') : 'Đã loại ở bước sàng lọc' + (n > 1 ? ' (' + n + ')' : ''))
+        bao(tt === 'hen_pv' ? 'Qua sàng lọc → phỏng vấn' + (n > 1 ? ' (' + n + ' hồ sơ)' : '') : 'Đã loại ở bước sàng lọc' + (n > 1 ? ' (' + n + ')' : ''))
       } else if (['dat', 'khong_dat', 'du_bi'].includes(tt) && rows?.every((r) => !GD_SANG_LOC.includes(r.trang_thai))) {
         for (const id of ids) { await rpc('td_chot_ket_qua', { p_id: id, p_ket_qua: tt, p_ghi_chu: ghiChu || null }); n++ }
         bao('Đã chốt kết quả: ' + GD[tt].ten + (n > 1 ? ' (' + n + ')' : ''))
@@ -157,7 +157,7 @@ export function HanhDongBuoc({ h, doiGD, henPV, toi, sang }) {
   )
   if (GD_PHONG_VAN.includes(tt) || tt === 'du_bi') return (
     <>
-      {s.coSua && henPV && <Btn kieu={k} co="md" icon={CalendarPlus} onClick={henPV}>Hẹn PV online</Btn>}
+      {s.coSua && henPV && <Btn kieu={k} co="md" icon={CalendarPlus} onClick={henPV}>Hẹn phỏng vấn</Btn>}
       {s.coCham && <Link to={'/quantri/ung-vien/' + h.id + '/cham'} className={'btn md ' + k} style={{ textDecoration: 'none' }}><ClipboardCheck size={16} />Phiếu chấm</Link>}
       {s.coCham && <Btn kieu="xanh" co="md" icon={Check} onClick={() => doiGD([h.id], 'dat', [h])}>Đạt</Btn>}
       {s.coCham && <Btn kieu={sang ? 'vien-sang' : 'do'} co="md" icon={X} onClick={() => doiGD([h.id], 'khong_dat', [h])}>Không đạt</Btn>}

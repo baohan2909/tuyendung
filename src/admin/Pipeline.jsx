@@ -5,7 +5,8 @@ import { rpc } from '../lib/api'
 import { useAsync } from '../lib/hooks'
 import { congNgay, fmtGiay, fmtGio, fmtNgayNgan, ngayVN } from '../lib/format'
 import { GD, GD_COT, GD_KET_THUC } from '../lib/stages'
-import { Avatar, Diem, Segment, Skeleton, Switch } from '../components/ui'
+import { Avatar, Diem, Segment, Skeleton } from '../components/ui'
+import ChonNgay, { tinhKhoang } from './ChonNgay'
 import { useStaff } from './context'
 import LichModal from './LichModal'
 import { tenNgan } from './Dashboard'
@@ -17,12 +18,13 @@ export default function Pipeline() {
   const s = useStaff()
   const nav = useNavigate()
   const [vt, setVt] = useState('')
-  const [tatCa, setTatCa] = useState(false)
+  const [khoang, setKhoang] = useState({ v: '90' })
+  const [tuNgay, denNgay] = tinhKhoang(khoang)
   const [keo, setKeo] = useState(null)
   const [tha, setTha] = useState(null)
   const [henCho, setHenCho] = useState(null)
-  const p = { so_dong: 1500, vi_tri_id: vt || null, tu: tatCa ? null : congNgay(ngayVN(), -90), sap_xep: 'cap_nhat' }
-  const { data, loading, reload, setData } = useAsync(() => rpc('td_ds_ho_so', { p }), [vt, tatCa, s.nhip])
+  const p = { so_dong: 1500, vi_tri_id: vt || null, tu: tuNgay, den: denNgay, sap_xep: 'cap_nhat' }
+  const { data, loading, reload, setData } = useAsync(() => rpc('td_ds_ho_so', { p }), [vt, tuNgay, denNgay, s.nhip])
   const nhom = useMemo(() => {
     const g = {}
     for (const r of data?.dong || []) (g[r.trang_thai] = g[r.trang_thai] || []).push(r)
@@ -54,7 +56,7 @@ export default function Pipeline() {
           <h1>{coKeo ? <>Kéo thả để <b>chuyển giai đoạn</b></> : <>Toàn cảnh <b>quy trình</b></>}</h1>
         </div>
         <Segment trang ds={[{ v: '', t: 'Tất cả vị trí' }, ...s.dm.viTri.map((v) => ({ v: String(v.id), t: tenNgan(v.ten) }))]} giaTri={vt} onChon={setVt} />
-        <label className="hang nho" style={{ gap: 8, fontWeight: 600, color: 'var(--muted-2)' }}><Switch on={tatCa} onDoi={setTatCa} nhan="Mọi thời gian" />{tatCa ? 'Mọi thời gian' : '90 ngày gần đây'}</label>
+        <ChonNgay giaTri={khoang} onDoi={setKhoang} canh="phai" />
       </header>
 
       {loading && !data ? (

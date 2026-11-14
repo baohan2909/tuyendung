@@ -40,7 +40,7 @@ export default function SangLoc() {
     setDang(true)
     try {
       await rpc('td_sang_loc', { p_ids: [r.id], p_ket_qua: kq, p_ghi_chu: kq === 'khong_qua' ? lyDo : null })
-      bao(kq === 'qua' ? r.ho_ten + ': qua sàng lọc → PV online' : r.ho_ten + ': không qua', kq === 'qua' ? 'ok' : 'hong')
+      bao(kq === 'qua' ? r.ho_ten + ': qua sàng lọc → Phỏng vấn' : r.ho_ten + ': không qua', kq === 'qua' ? 'ok' : 'hong')
       setBo((b) => [...b, r.id]); setDaXu((n) => n + 1); s.taiDem()
     } catch (e) { bao(e.message, 'loi') }
     setDang(false)
@@ -63,7 +63,7 @@ export default function SangLoc() {
         <div className="tieu">
           <span className="eyebrow">Bước 1 · Sàng lọc hồ sơ</span>
           <h1><b>{data ? ds.length : '…'}</b> hồ sơ chờ sàng lọc{daXu ? <span className="nho muted" style={{ fontSize: 14, marginLeft: 10 }}>· đã xử lý {daXu}</span> : null}</h1>
-          <p className="phu">Xem ảnh, video rồi quyết định: <b>→</b> qua (chuyển phỏng vấn online) · <b>←</b> loại · <b>Space</b> bỏ qua</p>
+          <p className="phu">Xem ảnh, video rồi quyết định: <b>→</b> qua (chuyển phỏng vấn) · <b>←</b> loại · <b>Space</b> bỏ qua</p>
         </div>
         <Btn kieu="trang" co="md" onClick={() => { setBo([]); setI(0); reload() }}>Làm mới</Btn>
       </header>

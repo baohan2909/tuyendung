@@ -12,7 +12,7 @@ function dsMuc(s) {
     { to: '/quantri', ten: 'Tổng quan', ic: LayoutGrid, end: true },
     s.coSua && { to: '/quantri/sang-loc', ten: 'Sàng lọc', ic: Filter, badge: (s.dem?.moi || 0) + (s.dem?.sang_loc || 0) },
     { to: '/quantri/ung-vien', ten: 'Ứng viên', ic: Users },
-    { to: '/quantri/phong-van', ten: 'PV online', ic: CalendarDays, badge: s.dem?.hen_pv },
+    { to: '/quantri/phong-van', ten: 'Phỏng vấn', ic: CalendarDays, badge: s.dem?.hen_pv },
     { to: '/quantri/quy-trinh', ten: 'Quy trình', ic: Columns3 },
     { nhom: 'Nhân sự' },
     s.vaiTro !== 'phong_van' && { to: '/quantri/nhan-vien', ten: 'Nhân viên mới', ic: UserCheck },

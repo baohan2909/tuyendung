@@ -15,11 +15,16 @@ const IC_HD = { nop: FileText, trang_thai: Filter, ghi_chu: StickyNote, hen_pv: 
 
 export default function Profile() {
   const { id } = useParams()
+  return <HoSoChiTiet id={id} />
+}
+
+// Toàn bộ thông tin hồ sơ trên 1 màn — dùng cho trang riêng và khung xem bên phải danh sách (nhung)
+export function HoSoChiTiet({ id, nhung, nhip, onDoi, phai }) {
   const s = useStaff()
   const nav = useNavigate()
   const bao = useToast()
   const xacNhan = useXacNhan()
-  const { data: d, loading, error, reload, setData } = useAsync(() => rpc('td_chi_tiet', { p_id: id }), [id, s.nhip])
+  const { data: d, loading, error, reload, setData } = useAsync(() => rpc('td_chi_tiet', { p_id: id }), [id, s.nhip, nhip])
   const [anhMo, setAnhMo] = useState(null)
   const [moLich, setMoLich] = useState(null)
   const [moSua, setMoSua] = useState(false)
@@ -27,15 +32,15 @@ export default function Profile() {
   const [dangGhi, setDangGhi] = useState(false)
   const [the, setThe] = useState('')
 
-  const [doiGD, giaoDienGD] = useDoiGiaiDoan({ xong: () => { reload(true); s.taiDem() }, henPV: () => setMoLich({}) })
+  const [doiGD, giaoDienGD] = useDoiGiaiDoan({ xong: () => { reload(true); s.taiDem(); onDoi?.() }, henPV: () => setMoLich({}) })
   const thuTu = useMemo(() => { try { return JSON.parse(sessionStorage.getItem('ns-td-thu-tu')) || [] } catch (e) { return [] } }, [id])
   const vt = thuTu.indexOf(id)
   const truoc = vt > 0 ? thuTu[vt - 1] : null
   const sau = vt >= 0 && vt < thuTu.length - 1 ? thuTu[vt + 1] : null
-  usePhim(['ArrowLeft', 'ArrowRight'], (e) => { if (e.key === 'ArrowLeft' && truoc) nav('/quantri/ung-vien/' + truoc); if (e.key === 'ArrowRight' && sau) nav('/quantri/ung-vien/' + sau) }, !anhMo && !moLich && !moSua)
+  usePhim(['ArrowLeft', 'ArrowRight'], (e) => { if (e.key === 'ArrowLeft' && truoc) nav('/quantri/ung-vien/' + truoc); if (e.key === 'ArrowRight' && sau) nav('/quantri/ung-vien/' + sau) }, !nhung && anhMo == null && !moLich && !moSua)
 
   if (error) return <div className="card"><Empty icon={AlertTriangle} tieuDe="Không mở được hồ sơ">{error.message}</Empty><div className="hang" style={{ justifyContent: 'center' }}><Btn onClick={() => nav('/quantri/ung-vien')} icon={ArrowLeft}>Về danh sách</Btn></div></div>
-  if (loading && !d) return <div className="cot" style={{ gap: 18 }}><Skeleton h={150} style={{ borderRadius: 34 }} /><div className="hai-cot"><Skeleton h={420} style={{ flex: '2 1 520px', borderRadius: 28 }} /><Skeleton h={420} style={{ flex: '1 1 320px', borderRadius: 28 }} /></div></div>
+  if (loading && !d) return <div className="cot" style={{ gap: 18 }}><Skeleton h={150} style={{ borderRadius: 34 }} /><div className={'hai-cot' + (nhung ? ' hs-nhung' : '')}><Skeleton h={420} style={{ flex: '2 1 520px', borderRadius: 28 }} /><Skeleton h={420} style={{ flex: '1 1 320px', borderRadius: 28 }} /></div></div>
 
   const h = d.ho_so
   const anh = d.tep.filter((t) => t.loai === 'anh')
@@ -46,7 +51,7 @@ export default function Profile() {
       const r = await rpc('td_cap_nhat_ho_so', { p_id: h.id, p })
       setData((x) => ({ ...x, ho_so: { ...x.ho_so, ...r, the_gan: r.the_gan } }))
       if (thongBao) bao(thongBao)
-      reload(true)
+      reload(true); onDoi?.()
     } catch (e) { bao(e.message, 'loi') }
   }
   async function guiGhi() {
@@ -79,7 +84,8 @@ export default function Profile() {
       <section className="ho-so-hero">
         <div className="glow hong" style={{ width: 360, height: 360, right: -100, top: -160, opacity: 0.55, filter: 'blur(90px)' }} />
         <div className="glow tim" style={{ width: 240, height: 240, left: '30%', bottom: -170, opacity: 0.45, filter: 'blur(80px)' }} />
-        <IconBtn icon={ArrowLeft} nhan="Quay lại danh sách" kieu="kinh" onClick={() => (window.history.length > 1 ? nav(-1) : nav('/quantri/ung-vien'))} />
+        {!nhung && <IconBtn icon={ArrowLeft} nhan="Quay lại danh sách" kieu="kinh" onClick={() => (window.history.length > 1 ? nav(-1) : nav('/quantri/ung-vien'))} />}
+        {phai && <span className="hs-goc">{phai}</span>}
         <button type="button" className="av-lon" onClick={() => anh.length && setAnhMo(0)} aria-label="Xem ảnh" style={{ padding: 0 }}>
           {anh[0] ? <AnhKho path={anh[0].duong_dan_nho || anh[0].duong_dan} alt={h.ho_ten} /> : <Avatar ten={h.ho_ten} co="xl" />}
         </button>
@@ -111,11 +117,11 @@ export default function Profile() {
         {h.email && <a className="btn trang md" href={'mailto:' + h.email}><Mail size={16} />Email</a>}
         <Btn kieu="trang" co="md" icon={Copy} onClick={() => navigator.clipboard?.writeText(h.sdt).then(() => bao('Đã sao chép SĐT'))}>Sao chép</Btn>
         {q.sua && <Btn kieu="den" co="md" icon={CalendarPlus} onClick={() => setMoLich({})}>Hẹn phỏng vấn</Btn>}
-        <span className="day hang" style={{ gap: 6 }}>
+        {!nhung && <span className="day hang" style={{ gap: 6 }}>
           <IconBtn icon={ChevronLeft} nhan="Hồ sơ trước (←)" disabled={!truoc} onClick={() => nav('/quantri/ung-vien/' + truoc)} />
           {vt >= 0 && <span className="nho muted so">{vt + 1}/{thuTu.length}</span>}
           <IconBtn icon={ChevronRight} nhan="Hồ sơ sau (→)" disabled={!sau} onClick={() => nav('/quantri/ung-vien/' + sau)} />
-        </span>
+        </span>}
       </div>
 
       {d.trung_sdt.length > 0 && (
@@ -124,16 +130,7 @@ export default function Profile() {
 
       <div className="hai-cot">
         <div className="lon cot" style={{ gap: 18 }}>
-          <section className="card">
-            <div className="dau-the"><h2>Video giới thiệu</h2>{video[0]?.thoi_luong && <span className="tag">{Math.floor(video[0].thoi_luong / 60)}:{String(Math.round(video[0].thoi_luong % 60)).padStart(2, '0')}</span>}{video[0] && <span className="tag">{fmtMB(video[0].kich_thuoc)}</span>}</div>
-            {video.length ? video.map((v) => <TrinhPhat key={v.id} v={v} />) : <Empty icon={X} tieuDe="Không có video" />}
-          </section>
-          <section className="card">
-            <div className="dau-the"><h2>Ảnh cá nhân · {anh.length}</h2></div>
-            <div className="luoi-anh-hs">
-              {anh.map((a, i) => <div key={a.id} className="o" onClick={() => setAnhMo(i)}><AnhKho path={a.duong_dan_nho || a.duong_dan} alt={'Ảnh ' + (i + 1)} /></div>)}
-            </div>
-          </section>
+          <KhuAnhVideo anh={anh} video={video} moAnh={setAnhMo} />
           <section className="card">
             <div className="dau-the"><h2>Thông tin ứng tuyển</h2>{q.sua && <Btn kieu="trong" co="sm" icon={Edit3} onClick={() => setMoSua(true)}>Sửa</Btn>}</div>
             <dl className="cap-tl">
@@ -161,7 +158,7 @@ export default function Profile() {
         <div className="nho-cot cot" style={{ gap: 18 }}>
           <TruyVet id={h.id} nhip={d.hoat_dong.length} />
           <section className="card">
-            <div className="dau-the"><h2>Lịch phỏng vấn online</h2>{q.sua && <Btn kieu="den" co="sm" icon={CalendarPlus} onClick={() => setMoLich({})}>Hẹn</Btn>}</div>
+            <div className="dau-the"><h2>Lịch phỏng vấn</h2>{q.sua && <Btn kieu="den" co="sm" icon={CalendarPlus} onClick={() => setMoLich({})}>Hẹn</Btn>}</div>
             {!d.lich.length ? <p className="nho muted">Chưa có lịch phỏng vấn.</p> : (
               <div className="cot" style={{ gap: 10 }}>
                 {d.lich.map((l) => (
@@ -259,14 +256,42 @@ export default function Profile() {
       </div>
 
       {anhMo != null && <Lightbox ds={anh.map((a) => a.duong_dan)} chiSo={anhMo} dong={() => setAnhMo(null)} />}
-      {moLich && <LichModal hoSo={{ ...h }} lich={moLich.lich} dong={() => setMoLich(null)} xong={() => { setMoLich(null); reload(true); s.taiDem() }} />}
+      {moLich && <LichModal hoSo={{ ...h }} lich={moLich.lich} dong={() => setMoLich(null)} xong={() => { setMoLich(null); reload(true); s.taiDem(); onDoi?.() }} />}
       {moSua && <SuaUngVien h={h} dong={() => setMoSua(false)} xong={() => { setMoSua(false); reload(true) }} />}
       {giaoDienGD}
     </>
   )
 }
 
-export function TrinhPhat({ v }) {
+// Ảnh + video trên cùng một khung: ảnh lớn (rê vào ảnh nhỏ để đổi, bấm để phóng to) và video bên cạnh
+export function KhuAnhVideo({ anh, video, moAnh }) {
+  const [i, setI] = useState(0)
+  const a = anh[i] || anh[0]
+  return (
+    <section className="card khu-av">
+      <div className="kav-anh">
+        <div className="dau-the"><h2>Ảnh · {anh.length}</h2>{anh.length > 1 && <span className="nho muted">Rê chuột để xem, bấm để phóng to</span>}</div>
+        {a ? (
+          <button type="button" className="kav-lon" onClick={() => moAnh(anh.indexOf(a))} aria-label="Phóng to ảnh">
+            <AnhKho path={a.duong_dan} alt="" className="kav-mo" />
+            <AnhKho path={a.duong_dan} alt="Ảnh ứng viên" className="kav-chinh" />
+          </button>
+        ) : <Empty icon={X} tieuDe="Không có ảnh" />}
+        {anh.length > 1 && (
+          <div className="kav-strip">
+            {anh.map((t, k) => <button key={t.id} type="button" className={k === i ? 'on' : ''} onMouseEnter={() => setI(k)} onFocus={() => setI(k)} onClick={() => moAnh(k)} aria-label={'Ảnh ' + (k + 1)}><AnhKho path={t.duong_dan_nho || t.duong_dan} alt="" /></button>)}
+          </div>
+        )}
+      </div>
+      <div className="kav-video">
+        <div className="dau-the"><h2>Video</h2>{video[0]?.thoi_luong && <span className="tag">{Math.floor(video[0].thoi_luong / 60)}:{String(Math.round(video[0].thoi_luong % 60)).padStart(2, '0')}</span>}{video[0] && <span className="tag">{fmtMB(video[0].kich_thuoc)}</span>}</div>
+        {video.length ? video.map((v) => <TrinhPhat key={v.id} v={v} />) : <Empty icon={X} tieuDe="Không có video" />}
+      </div>
+    </section>
+  )
+}
+
+export function TrinhPhat({ v, tuChay }) {
   const url = useSignedUrl(v.duong_dan)
   const bia = useSignedUrl(v.duong_dan_nho)
   const [tocDo, setTocDo] = useState(1)
@@ -274,7 +299,7 @@ export function TrinhPhat({ v }) {
   useEffect(() => { if (el) el.playbackRate = tocDo }, [el, tocDo])
   return (
     <div className="video-khung">
-      {url ? <video ref={setEl} src={url} poster={bia || undefined} controls playsInline preload="metadata" /> : <div className="khung" style={{ width: '100%', height: '100%', borderRadius: 0 }} />}
+      {url ? <video ref={setEl} src={url} poster={bia || undefined} controls playsInline preload="metadata" autoPlay={!!tuChay} /> : <div className="khung" style={{ width: '100%', height: '100%', borderRadius: 0 }} />}
       <div className="toc-do">{[1, 1.5, 2].map((t) => <button key={t} className={tocDo === t ? 'on' : ''} onClick={() => setTocDo(t)}>{t}×</button>)}</div>
     </div>
   )
