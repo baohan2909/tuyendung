@@ -54,7 +54,7 @@ function DemNguoc({ thu, onDoi }) {
   if (thu.trang_thai !== 'cho') return null
   return (
     <div className="dem-nguoc">
-      <span className="dn-dong"><Timer size={16} /><span>Gửi lúc <b>{fmtGio(thu.gui_luc)}</b>{con > 0 ? <> · còn <b className="so">{mmss(con)}</b></> : ' · đang chuyển máy gửi…'}</span></span>
+      <span className="dn-dong"><Timer size={16} /><span>Gửi lúc <b>{fmtGio(thu.gui_luc)}</b>{con > 0 ? <> · còn <b className="so">{mmss(con)}</b></> : thu.bay_gio && new Date(thu.bay_gio) - new Date(thu.gui_luc) > 300000 ? ' · đang chờ lượt gửi Gmail, sẽ tự gửi' : ' · đang chuyển máy gửi…'}</span></span>
       <div className="hang" style={{ gap: 6 }}>
         <Btn kieu="do" co="sm" icon={Ban} loading={dang === 'huy'} onClick={() => lam('td_thu_huy', 'huy')}>Hủy gửi</Btn>
         <Btn kieu="trang" co="sm" icon={Zap} loading={dang === 'ngay'} onClick={() => lam('td_thu_gui_ngay', 'ngay')}>Gửi ngay</Btn>
@@ -294,7 +294,9 @@ function MayGui() {
             <span>{tt.tai_khoan ? 'Gửi từ ' + tt.tai_khoan : 'Gmail Phòng Nhân sự chạy Apps Script'}{tt.nhip ? ' · nhịp gần nhất ' + tuongDoi(tt.nhip) : ''}</span>
           </div>
         </div>
+        {tt.qua_han > 0 && <Bao kieu="vang">{tt.qua_han} email đang chờ lượt gửi{tt.han_muc === 0 ? ' — Gmail đã hết 100 lượt gửi trong 24 giờ, sẽ tự gửi tiếp khi có lượt' : ''}.</Bao>}
         <div className="luoi-so-thu">
+          <div className={tt.han_muc === 0 ? 'loi' : ''}><b>{tt.han_muc ?? '—'}</b><span>Lượt gửi còn (24h)</span></div>
           <div><b>{tt.cho}</b><span>Đang chờ</span></div>
           <div><b>{tt.gui_24h}</b><span>Đã gửi 24h</span></div>
           <div className={tt.loi_7n ? 'loi' : ''}><b>{tt.loi_7n}</b><span>Lỗi 7 ngày</span></div>
