@@ -33,7 +33,7 @@ export default function AdminApp() {
           <Route path="nhan-vien" element={<DsNhanVien />} />
           <Route path="nhan-vien/:id" element={<ChiTietNhanVien />} />
           <Route path="nhat-ky" element={<NhatKy />} />
-          <Route path="*" element={<Navigate to="/quan-tri" replace />} />
+          <Route path="*" element={<Navigate to="/quantri" replace />} />
         </Route>
       </Routes>
     </StaffProvider>

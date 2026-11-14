@@ -158,12 +158,12 @@ export function HanhDongBuoc({ h, doiGD, henPV, toi, sang }) {
   if (GD_PHONG_VAN.includes(tt) || tt === 'du_bi') return (
     <>
       {s.coSua && henPV && <Btn kieu={k} co="md" icon={CalendarPlus} onClick={henPV}>Hẹn PV online</Btn>}
-      {s.coCham && <Link to={'/quan-tri/ung-vien/' + h.id + '/cham'} className={'btn md ' + k} style={{ textDecoration: 'none' }}><ClipboardCheck size={16} />Phiếu chấm</Link>}
+      {s.coCham && <Link to={'/quantri/ung-vien/' + h.id + '/cham'} className={'btn md ' + k} style={{ textDecoration: 'none' }}><ClipboardCheck size={16} />Phiếu chấm</Link>}
       {s.coCham && <Btn kieu="xanh" co="md" icon={Check} onClick={() => doiGD([h.id], 'dat', [h])}>Đạt</Btn>}
       {s.coCham && <Btn kieu={sang ? 'vien-sang' : 'do'} co="md" icon={X} onClick={() => doiGD([h.id], 'khong_dat', [h])}>Không đạt</Btn>}
     </>
   )
   if (tt === 'dat' && s.coSua) return <Btn kieu={sang ? 'trang' : 'den'} co="md" icon={Store} onClick={() => doiGD([h.id], 'nhan_viec', [h])}>Nhận việc & phân công</Btn>
-  if (tt === 'nhan_viec' && s.vaiTro !== 'phong_van') return <Link to={'/quan-tri/nhan-vien/' + h.id} className={'btn md ' + k} style={{ textDecoration: 'none' }}><Briefcase size={16} />Hồ sơ nhân viên</Link>
+  if (tt === 'nhan_viec' && s.vaiTro !== 'phong_van') return <Link to={'/quantri/nhan-vien/' + h.id} className={'btn md ' + k} style={{ textDecoration: 'none' }}><Briefcase size={16} />Hồ sơ nhân viên</Link>
   return toi || null
 }

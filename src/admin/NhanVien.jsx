@@ -55,7 +55,7 @@ export function DsNhanVien() {
       ) : (
         <div className="bang-uv">
           {ds.map((r) => (
-            <div key={r.id} className="dong" style={{ gridTemplateColumns: 'minmax(220px,2fr) 1.6fr 1fr 1fr 1fr 90px', display: 'grid', gap: 12, alignItems: 'center', padding: '0 14px' }} onClick={() => nav('/quan-tri/nhan-vien/' + r.id)}>
+            <div key={r.id} className="dong" style={{ gridTemplateColumns: 'minmax(220px,2fr) 1.6fr 1fr 1fr 1fr 90px', display: 'grid', gap: 12, alignItems: 'center', padding: '0 14px' }} onClick={() => nav('/quantri/nhan-vien/' + r.id)}>
               <div className="ten-uv"><Avatar ten={r.ho_ten} path={r.anh} /><div className="gian"><b className="cat">{r.ho_ten}</b><span className="cat">{r.ma_nv || 'Chưa có mã NV'} · {r.vi_tri}</span></div></div>
               <span className="cat"><Store size={13} style={{ verticalAlign: -2, marginRight: 5 }} />{r.cua_hang || '—'}</span>
               <span className="nho muted-2">{nd(r.ngay_nhan_viec)}</span>
@@ -106,7 +106,7 @@ export function ChiTietNhanVien() {
     <>
       <section className="ho-so-hero">
         <div className="glow hong" style={{ width: 340, height: 340, right: -110, top: -160, opacity: 0.5, filter: 'blur(90px)' }} />
-        <IconBtn icon={ArrowLeft} nhan="Quay lại" kieu="kinh" onClick={() => nav('/quan-tri/nhan-vien')} />
+        <IconBtn icon={ArrowLeft} nhan="Quay lại" kieu="kinh" onClick={() => nav('/quantri/nhan-vien')} />
         <span className="av-lon" style={{ cursor: 'default' }}><Avatar ten={n.ho_ten} path={n.anh} co="xl" /></span>
         <div className="gian" style={{ flex: '1 1 260px' }}>
           <p className="eyebrow sang" style={{ marginBottom: 6 }}>{n.ma_nv || 'Chưa có mã NV'} · nhận việc {nd(n.ngay_nhan_viec)}</p>
@@ -123,7 +123,7 @@ export function ChiTietNhanVien() {
             <Menu rong={200} nut={<Btn kieu="vien-sang" co="md" icon={ChevronDown}>Trạng thái</Btn>}>
               {(dong) => Object.entries(NV_TT).map(([k, v]) => <button key={k} className={n.trang_thai === k ? 'on' : ''} onClick={() => { dong(); goi('td_cap_nhat_nhan_vien', { p_id: n.id, p: { trang_thai: k } }, 'Đã chuyển: ' + v.ten) }}>{v.ten}</button>)}
             </Menu>
-            <Link to={'/quan-tri/ung-vien/' + n.ho_so_id} className="btn md vien-sang"><ExternalLink size={16} />Hồ sơ ứng tuyển</Link>
+            <Link to={'/quantri/ung-vien/' + n.ho_so_id} className="btn md vien-sang"><ExternalLink size={16} />Hồ sơ ứng tuyển</Link>
           </div>
         )}
       </section>

@@ -9,18 +9,18 @@ import Login from './Login'
 
 function dsMuc(s) {
   return [
-    { to: '/quan-tri', ten: 'Tổng quan', ic: LayoutGrid, end: true },
-    s.coSua && { to: '/quan-tri/sang-loc', ten: 'Sàng lọc', ic: Filter, badge: (s.dem?.moi || 0) + (s.dem?.sang_loc || 0) },
-    { to: '/quan-tri/ung-vien', ten: 'Ứng viên', ic: Users },
-    { to: '/quan-tri/phong-van', ten: 'PV online', ic: CalendarDays, badge: s.dem?.hen_pv },
-    { to: '/quan-tri/quy-trinh', ten: 'Quy trình', ic: Columns3 },
+    { to: '/quantri', ten: 'Tổng quan', ic: LayoutGrid, end: true },
+    s.coSua && { to: '/quantri/sang-loc', ten: 'Sàng lọc', ic: Filter, badge: (s.dem?.moi || 0) + (s.dem?.sang_loc || 0) },
+    { to: '/quantri/ung-vien', ten: 'Ứng viên', ic: Users },
+    { to: '/quantri/phong-van', ten: 'PV online', ic: CalendarDays, badge: s.dem?.hen_pv },
+    { to: '/quantri/quy-trinh', ten: 'Quy trình', ic: Columns3 },
     { nhom: 'Nhân sự' },
-    s.vaiTro !== 'phong_van' && { to: '/quan-tri/nhan-vien', ten: 'Nhân viên mới', ic: UserCheck },
+    s.vaiTro !== 'phong_van' && { to: '/quantri/nhan-vien', ten: 'Nhân viên mới', ic: UserCheck },
     { nhom: 'Quản lý' },
-    s.coSua && { to: '/quan-tri/vi-tri', ten: 'Vị trí tuyển', ic: Briefcase },
-    s.vaiTro !== 'phong_van' && { to: '/quan-tri/bao-cao', ten: 'Báo cáo', ic: BarChart3 },
-    s.coSua && { to: '/quan-tri/nhat-ky', ten: 'Nhật ký', ic: History },
-    { to: '/quan-tri/cai-dat', ten: 'Cài đặt', ic: Settings }
+    s.coSua && { to: '/quantri/vi-tri', ten: 'Vị trí tuyển', ic: Briefcase },
+    s.vaiTro !== 'phong_van' && { to: '/quantri/bao-cao', ten: 'Báo cáo', ic: BarChart3 },
+    s.coSua && { to: '/quantri/nhat-ky', ten: 'Nhật ký', ic: History },
+    { to: '/quantri/cai-dat', ten: 'Cài đặt', ic: Settings }
   ].filter(Boolean).filter((m, i, a) => !m.nhom || (a[i + 1] && !a[i + 1].nhom))
 }
 
@@ -54,6 +54,7 @@ export default function AdminLayout() {
       <nav className="sidebar" aria-label="Menu chính">
         <div className="glow hong" style={{ width: 220, height: 220, left: -90, bottom: -60, opacity: 0.45 }} />
         <div className="sb-brand"><span className="orb"><NonIcon size={20} /></span><div><b>NS TUYỂN DỤNG</b><span>Nón Sơn</span></div></div>
+        <div className="sb-cuon">
         {muc.map((m, i) => m.nhom
           ? <div key={i} className="nav-nhom">{m.nhom}</div>
           : (
@@ -61,7 +62,8 @@ export default function AdminLayout() {
               <m.ic size={19} strokeWidth={2} />{m.ten}{m.badge > 0 && <span className="badge">{m.badge > 99 ? '99+' : m.badge}</span>}
             </NavLink>
           ))}
-        <a className="nav-item" href="#/" target="_blank" rel="noreferrer"><ExternalLink size={19} />Trang ứng tuyển</a>
+        <a className="nav-item" href="/tuyendung/" target="_blank" rel="noreferrer"><ExternalLink size={19} />Trang ứng tuyển</a>
+        </div>
         <div className="sb-user">
           <span className="av">{chuCai(s.toi.ho_ten)}</span>
           <div className="gian"><b className="cat">{s.toi.ho_ten}</b><span>{VAI_TRO[s.vaiTro]} · {s.toi.ma_nv}</span></div>
@@ -72,7 +74,7 @@ export default function AdminLayout() {
       <header className="topbar">
         <span className="orb sm"><NonIcon size={17} /></span>
         <span className="ten cat">{tieuDe}</span>
-        <button className="icon-btn sm" onClick={() => nav('/quan-tri/cai-dat')} aria-label="Tài khoản"><span className="av sm" style={{ background: 'var(--ink)', color: '#fff' }}>{chuCai(s.toi.ho_ten)}</span></button>
+        <button className="icon-btn sm" onClick={() => nav('/quantri/cai-dat')} aria-label="Tài khoản"><span className="av sm" style={{ background: 'var(--ink)', color: '#fff' }}>{chuCai(s.toi.ho_ten)}</span></button>
       </header>
 
       <main className="admin-main">
@@ -94,7 +96,7 @@ export default function AdminLayout() {
           {muc.filter((m) => m.to).slice(4).map((m) => (
             <Btn key={m.to} kieu="mem" co="lg" icon={m.ic} className="rong" style={{ justifyContent: 'flex-start' }} onClick={() => { setMoThem(false); nav(m.to) }}>{m.ten}</Btn>
           ))}
-          <Btn co="lg" icon={ExternalLink} className="rong" style={{ justifyContent: 'flex-start' }} onClick={() => window.open('#/', '_blank')}>Trang ứng tuyển</Btn>
+          <Btn co="lg" icon={ExternalLink} className="rong" style={{ justifyContent: 'flex-start' }} onClick={() => window.open('/tuyendung/', '_blank')}>Trang ứng tuyển</Btn>
           <Btn kieu="do" co="lg" icon={LogOut} className="rong" style={{ justifyContent: 'flex-start' }} onClick={() => { setMoThem(false); s.thoat() }}>Đăng xuất</Btn>
         </div>
       </Modal>

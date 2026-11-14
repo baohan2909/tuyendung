@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Eye, EyeOff, LogIn } from 'lucide-react'
 import { dangNhap, daCauHinh } from '../lib/api'
-import { Bao, Brand, Field, Spinner } from '../components/ui'
+import { Bao, Field, Spinner } from '../components/ui'
 
 export default function Login() {
   const [ma, setMa] = useState(() => localStorage.getItem('ns-td-ma') || '')
@@ -25,17 +25,21 @@ export default function Login() {
 
   return (
     <div className="dang-nhap">
-      <div className="glow hong" style={{ width: 380, height: 380, left: -140, top: '18%', opacity: 0.65, filter: 'blur(90px)', zIndex: -1 }} />
-      <div className="glow tim" style={{ width: 300, height: 300, right: -120, bottom: 40, opacity: 0.5, filter: 'blur(90px)', zIndex: -1 }} />
+      <div className="glow hong" style={{ width: 380, height: 380, left: -140, top: '18%', opacity: 0.6, filter: 'blur(100px)', zIndex: -1 }} />
+      <div className="glow tim" style={{ width: 300, height: 300, right: -120, bottom: 40, opacity: 0.45, filter: 'blur(100px)', zIndex: -1 }} />
+      <span className="bong-tron b1 dn-b1" aria-hidden="true" />
+      <span className="bong-tron b2 dn-b2" aria-hidden="true" />
       <form className="hop-dn" onSubmit={vao} autoComplete="on">
-        <span className="qua-cau troi" aria-hidden="true" style={{ width: 140, height: 140, right: -6, top: -40 }} />
-        <span className="qua-cau tim troi cham" aria-hidden="true" style={{ width: 44, height: 44, right: 150, top: 84 }} />
-        <Brand />
-        <div style={{ marginTop: 150 }}>
-          <p className="eyebrow sang" style={{ marginBottom: 10 }}>Khu vực nội bộ</p>
-          <h1>NS <b>Tuyển Dụng</b></h1>
+        <span className="portal-ten">NÓN SƠN</span>
+        <div className="dn-tieu">
+          <p className="eyebrow sang">Khu vực nội bộ</p>
+          <h1 className="hero-chu" aria-label="Hệ thống tuyển dụng Nón Sơn">
+            <span className="d1">Hệ thống</span>
+            <span className="d2">Tuyển dụng</span>
+            <span className="d3">Nón Sơn</span>
+          </h1>
         </div>
-        <div className="cot" style={{ marginTop: 28, gap: 12 }}>
+        <div className="cot" style={{ marginTop: 30, gap: 12 }}>
           {!daCauHinh && <Bao kieu="vang">Hệ thống chưa được cấu hình kết nối máy chủ.</Bao>}
           <Field kieu="toi" nhan="Mã nhân viên" value={ma} onChange={(e) => setMa(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))} placeholder="NS00000" autoComplete="username" autoCapitalize="characters" spellCheck={false} style={{ letterSpacing: '.06em' }} />
           <div style={{ position: 'relative' }}>

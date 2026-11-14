@@ -119,7 +119,7 @@ export default function SangLoc() {
               <div className="hang" style={{ marginTop: 10, justifyContent: 'space-between' }}>
                 <Btn kieu="trong" co="sm" icon={SkipForward} onClick={() => setI((x) => (x + 1) % ds.length)}>Bỏ qua</Btn>
                 <a className="btn sm trong" href={'tel:' + r.sdt}><Phone size={15} />Gọi</a>
-                <Link to={'/quan-tri/ung-vien/' + r.id} className="btn sm trong"><ExternalLink size={15} />Hồ sơ đầy đủ</Link>
+                <Link to={'/quantri/ung-vien/' + r.id} className="btn sm trong"><ExternalLink size={15} />Hồ sơ đầy đủ</Link>
               </div>
             </section>
           </div>

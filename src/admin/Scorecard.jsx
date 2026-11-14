@@ -87,7 +87,7 @@ export default function Scorecard() {
   return (
     <>
       <header className="trang-dau" style={{ alignItems: 'center' }}>
-        <IconBtn icon={ArrowLeft} nhan="Quay lại hồ sơ" onClick={() => nav('/quan-tri/ung-vien/' + id)} />
+        <IconBtn icon={ArrowLeft} nhan="Quay lại hồ sơ" onClick={() => nav('/quantri/ung-vien/' + id)} />
         <div className="tieu">
           <span className="eyebrow">{lichNay ? (ngayVN(lichNay.bat_dau) === ngayVN() ? 'Đang phỏng vấn · ' : 'Phỏng vấn · ') + fmtGio(lichNay.bat_dau) + ' – ' + fmtGio(new Date(new Date(lichNay.bat_dau).getTime() + lichNay.thoi_luong * 60000)) : 'Phiếu chấm phỏng vấn'}</span>
           <h1 style={{ fontSize: 28 }}>Phiếu chấm · <b>{h.ho_ten}</b></h1>
@@ -147,7 +147,7 @@ export default function Scorecard() {
               <dt>Kinh nghiệm</dt><dd style={{ fontWeight: 500 }}>{h.kinh_nghiem || '—'}</dd>
               <dt>Khu vực mong muốn · thu nhập</dt><dd style={{ fontWeight: 500 }}>{h.khu_vuc_mong_muon || '—'} · {h.thu_nhap_mong_muon || '—'}</dd>
             </dl>
-            <Link to={'/quan-tri/ung-vien/' + id} className="nho dam">Xem hồ sơ đầy đủ, ảnh & video →</Link>
+            <Link to={'/quantri/ung-vien/' + id} className="nho dam">Xem hồ sơ đầy đủ, ảnh & video →</Link>
           </section>
 
           {daGui && nguoiKhac.length > 0 && (

@@ -48,7 +48,7 @@ export function NhatKyDs({ loc, gon }) {
             <Avatar ten={k.nguoi} co="sm" />
             <div className="gian">
               <div style={{ fontSize: 13.5 }}><b>{k.nguoi}</b>{k.ma_nv && <span className="muted"> · {k.ma_nv}</span>} <span className="muted-2">{HD[k.hanh_dong] || k.hanh_dong} {BANG[k.bang] || k.bang}</span>
-                {!gon && k.ho_so && <> · <Link to={'/quan-tri/ung-vien/' + k.ho_so_id} style={{ fontWeight: 700 }}>{k.ho_so}</Link></>}</div>
+                {!gon && k.ho_so && <> · <Link to={'/quantri/ung-vien/' + k.ho_so_id} style={{ fontWeight: 700 }}>{k.ho_so}</Link></>}</div>
               <div className="nho muted">{fmtNgayGio(k.tao_luc)} · {tuongDoi(k.tao_luc)}</div>
               {ds.length > 0 && (
                 <div className="cot" style={{ gap: 3, marginTop: 6 }}>

@@ -72,7 +72,7 @@ export default function Interviews() {
                     return (
                       <div key={l.id} className="muc-lich" style={l.trang_thai === 'huy' ? { opacity: 0.55 } : null}>
                         <div className="gio"><b>{fmtGio(l.bat_dau)}</b><span>{l.thoi_luong} phút</span></div>
-                        <Link to={'/quan-tri/ung-vien/' + h.id} className="ai">
+                        <Link to={'/quantri/ung-vien/' + h.id} className="ai">
                           <Avatar ten={h.ho_ten} path={h.anh} />
                           <span className="gian"><b className="cat">{h.ho_ten}</b><span className="cat" style={{ display: 'block' }}>{h.vi_tri} · {h.tuoi} tuổi · {h.sdt}</span></span>
                         </Link>
@@ -82,7 +82,7 @@ export default function Interviews() {
                         {h.diem_tb != null && <Diem v={h.diem_tb} />}
                         <span className="hang" style={{ gap: 6 }}>
                           {s.coCham && l.cua_toi && !l.toi_da_cham && l.trang_thai !== 'huy' && l.trang_thai !== 'vang_mat' && new Date(l.bat_dau).getTime() - Date.now() < 3 * 3600e3 && (
-                            <Link to={'/quan-tri/ung-vien/' + h.id + '/cham'} className="btn sm den"><ClipboardCheck size={15} />Chấm điểm</Link>
+                            <Link to={'/quantri/ung-vien/' + h.id + '/cham'} className="btn sm den"><ClipboardCheck size={15} />Chấm điểm</Link>
                           )}
                           {l.toi_da_cham && <span className="tag" style={{ background: 'var(--ok-bg)', color: 'var(--ok)' }}><Check size={12} />Đã chấm</span>}
                           <Menu rong={230} nut={<button className="icon-btn sm mem" aria-label="Thao tác"><MoreHorizontal size={17} /></button>}>

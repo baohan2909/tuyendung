@@ -51,7 +51,7 @@ export default function Dashboard() {
           <h1 style={{ fontWeight: 800, fontSize: 26 }}>{chaoTheoGio()}, {tenGoi(s.toi.ho_ten)}</h1>
           <p className="phu">{ngayDai()} · {loading && !d ? '…' : (k.cho_xu_ly || 0) + ' hồ sơ mới cần sàng lọc'}</p>
         </div>
-        <form className="input-tron" style={{ flex: '0 1 320px' }} onSubmit={(e) => { e.preventDefault(); nav('/quan-tri/ung-vien?tim=' + encodeURIComponent(tim)) }}>
+        <form className="input-tron" style={{ flex: '0 1 320px' }} onSubmit={(e) => { e.preventDefault(); nav('/quantri/ung-vien?tim=' + encodeURIComponent(tim)) }}>
           <Search size={18} />
           <input aria-label="Tìm ứng viên" placeholder="Tìm tên, số điện thoại, mã hồ sơ…" value={tim} onChange={(e) => setTim(e.target.value)} />
         </form>
@@ -60,13 +60,13 @@ export default function Dashboard() {
 
       <section className="kpis" aria-label="Chỉ số">
         {loading && !d ? [0, 1, 2, 3].map((i) => <div key={i} className="kpi"><Skeleton h={14} w="60%" /><Skeleton h={36} w="40%" /><Skeleton h={12} w="70%" /></div>) : <>
-          <Kpi to="/quan-tri/ung-vien" nhan="Hồ sơ mới · 7 ngày" so={k.moi_7n} cham="#D6006C" nen="#FDEBF3"
+          <Kpi to="/quantri/ung-vien" nhan="Hồ sơ mới · 7 ngày" so={k.moi_7n} cham="#D6006C" nen="#FDEBF3"
             delta={doiTuan == null ? null : (doiTuan > 0 ? '+' : doiTuan < 0 ? '−' : '') + Math.abs(doiTuan) + '%'} kieuDelta={doiTuan > 0 ? 'len' : doiTuan < 0 ? 'xuong' : 'trung'} ghi={'So với 7 ngày trước (' + (k.moi_7n_truoc || 0) + ')'} />
-          <Kpi to="/quan-tri/sang-loc" nhan="Chờ sàng lọc" so={k.cho_xu_ly} cham="#D98A1C" nen="#FDF3E3" delta={(k.moi_hom_nay || 0) + ' hôm nay'} kieuDelta="trung" ghi="Hồ sơ ở giai đoạn Mới" />
-          <Kpi to="/quan-tri/phong-van" nhan="PV online tuần này" so={k.pv_tuan} cham="#3B6FE0" nen="#EAF0FD" delta={(k.pv_hom_nay || 0) + ' hôm nay'} kieuDelta="trung" ghi="Lịch đã hẹn trong tuần" />
+          <Kpi to="/quantri/sang-loc" nhan="Chờ sàng lọc" so={k.cho_xu_ly} cham="#D98A1C" nen="#FDF3E3" delta={(k.moi_hom_nay || 0) + ' hôm nay'} kieuDelta="trung" ghi="Hồ sơ ở giai đoạn Mới" />
+          <Kpi to="/quantri/phong-van" nhan="PV online tuần này" so={k.pv_tuan} cham="#3B6FE0" nen="#EAF0FD" delta={(k.pv_hom_nay || 0) + ' hôm nay'} kieuDelta="trung" ghi="Lịch đã hẹn trong tuần" />
           {s.vaiTro === 'phong_van'
-            ? <Kpi to="/quan-tri/phong-van" nhan="Chờ bạn chấm điểm" so={k.cho_cham} cham="#7B2CBF" nen="#EFE8FB" ghi="Phỏng vấn đã diễn ra, chưa gửi phiếu" />
-            : <Kpi to="/quan-tri/ung-vien?gd=nhan_viec" nhan="Nhận việc · tháng" so={k.nhan_viec_thang} cham="#12A37F" nen="#E6F6F0" delta={(k.dat_thang || 0) + ' đạt'} kieuDelta="len" ghi="Ứng viên đã nhận việc trong tháng" />}
+            ? <Kpi to="/quantri/phong-van" nhan="Chờ bạn chấm điểm" so={k.cho_cham} cham="#7B2CBF" nen="#EFE8FB" ghi="Phỏng vấn đã diễn ra, chưa gửi phiếu" />
+            : <Kpi to="/quantri/ung-vien?gd=nhan_viec" nhan="Nhận việc · tháng" so={k.nhan_viec_thang} cham="#12A37F" nen="#E6F6F0" delta={(k.dat_thang || 0) + ' đạt'} kieuDelta="len" ghi="Ứng viên đã nhận việc trong tháng" />}
         </>}
       </section>
 
@@ -102,25 +102,25 @@ export default function Dashboard() {
           </div>
           <div className="cot" style={{ gap: 8 }}>
             {(d?.hom_nay || []).map((l) => (
-              <Link key={l.id} to={'/quan-tri/ung-vien/' + l.ho_so_id} className="lich-dong">
+              <Link key={l.id} to={'/quantri/ung-vien/' + l.ho_so_id} className="lich-dong">
                 <span className="gio">{fmtGio(l.bat_dau)}</span>
                 <span className="gian"><b className="cat">{l.ho_ten}</b><span className="cat" style={{ display: 'block' }}>{l.vi_tri} · {HINH_THUC[l.hinh_thuc]}</span></span>
                 <LichTag ma={l.trang_thai} />
               </Link>
             ))}
             {d && !(d.hom_nay || []).length && <p style={{ color: 'rgba(255,255,255,.6)', fontSize: 13.5, padding: '18px 4px' }}>Hôm nay chưa có lịch phỏng vấn.</p>}
-            <Link to="/quan-tri/phong-van" className="hang nho" style={{ color: '#FF8CC0', fontWeight: 700, marginTop: 6, gap: 4 }}>Xem lịch cả tuần <ChevronRight size={15} /></Link>
+            <Link to="/quantri/phong-van" className="hang nho" style={{ color: '#FF8CC0', fontWeight: 700, marginTop: 6, gap: 4 }}>Xem lịch cả tuần <ChevronRight size={15} /></Link>
           </div>
         </section>
       </div>
 
       <div className="hai-cot">
         <section className="card lon" aria-label="Hồ sơ mới nhất">
-          <div className="dau-the"><h2>Hồ sơ mới nhất</h2><Link to="/quan-tri/ung-vien" className="nho dam">Xem tất cả</Link></div>
+          <div className="dau-the"><h2>Hồ sơ mới nhất</h2><Link to="/quantri/ung-vien" className="nho dam">Xem tất cả</Link></div>
           {loading && !d ? <div className="cot">{[0, 1, 2, 3].map((i) => <Skeleton key={i} h={48} />)}</div>
             : !(d?.moi_nhat || []).length ? <Empty tieuDe="Chưa có hồ sơ">Hồ sơ ứng viên nộp sẽ xuất hiện tại đây.</Empty>
             : d.moi_nhat.map((r) => (
-              <Link key={r.id} to={'/quan-tri/ung-vien/' + r.id} className="dong-hs">
+              <Link key={r.id} to={'/quantri/ung-vien/' + r.id} className="dong-hs">
                 <Avatar ten={r.ho_ten} path={r.anh} />
                 <span className="gian"><b className="cat">{r.ho_ten} {r.uu_tien && <Star size={13} className="uu-tien-sao" fill="currentColor" style={{ verticalAlign: -1 }} />}</b><span className="cat" style={{ display: 'block' }}>{r.vi_tri} · {r.tuoi} tuổi · {r.khu_vuc_mong_muon || r.cho_o}</span></span>
                 {r.video_giay != null && <span className="vid"><Film size={15} />{fmtGiay(r.video_giay)}</span>}

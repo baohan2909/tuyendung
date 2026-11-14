@@ -61,7 +61,7 @@ export function StaffProvider({ children }) {
       hen = setTimeout(() => { setNhip((n) => n + 1); taiDem() }, 600)
       if (r.trang_thai === 'moi' && r.nop_luc && Date.now() - new Date(r.nop_luc).getTime() < 120000 && !daBao.has(r.id)) {
         daBao.add(r.id)
-        bao('Hồ sơ mới: ' + r.ho_ten, 'hong', { ms: 7000, hanhDong: { ten: 'Xem', lam: () => navRef.current('/quan-tri/ung-vien/' + r.id) } })
+        bao('Hồ sơ mới: ' + r.ho_ten, 'hong', { ms: 7000, hanhDong: { ten: 'Xem', lam: () => navRef.current('/quantri/ung-vien/' + r.id) } })
       }
     })
     return () => { clearTimeout(hen); huy() }

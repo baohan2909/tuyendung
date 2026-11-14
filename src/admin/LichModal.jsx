@@ -18,7 +18,7 @@ export function tinMoi(mau, hs, lich) {
     .replaceAll('{thu}', thu(lich.bat_dau).toLowerCase())
     .replaceAll('{ngay}', fmtNgay(lich.bat_dau))
     .replaceAll('{dia_diem}', lich.dia_diem ? (lich.hinh_thuc === 'online' ? ' (online: ' + lich.dia_diem + ')' : lich.hinh_thuc === 'dien_thoai' ? ' (qua điện thoại)' : ' tại ' + lich.dia_diem) : '')
-    .replaceAll('{link}', APP_URL + '#/tra-cuu?ma=' + encodeURIComponent(ma))
+    .replaceAll('{link}', APP_URL + 'tra-cuu?ma=' + encodeURIComponent(ma))
 }
 
 export default function LichModal({ hoSo, lich, dong, xong }) {

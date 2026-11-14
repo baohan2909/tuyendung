@@ -123,12 +123,18 @@ export function Diem({ v }) {
   return <span className={'diem ' + (n >= 8.5 ? 'cao' : n >= 7 ? 'kha' : 'thap')}>{fmtDiem(n)}</span>
 }
 
-export function Avatar({ ten, path, co = '', className = '' }) {
+export function Avatar({ ten, path, co = '', className = '', phong }) {
   const url = useSignedUrl(path)
   const [bg, fg] = mauAv(ten)
+  const [vt, setVt] = useState(null)
+  const vao = phong && url ? (e) => setVt(e.currentTarget.getBoundingClientRect()) : undefined
   return (
-    <span className={['av', co, className].join(' ')} style={{ background: bg, color: fg }}>
+    <span className={['av', co, className, vao ? 'co-phong' : ''].join(' ')} style={{ background: bg, color: fg }} onMouseEnter={vao} onMouseLeave={vao && (() => setVt(null))}>
       {url ? <img src={url} alt="" loading="lazy" /> : chuCai(ten)}
+      {vt && createPortal(
+        <div className="anh-phong" style={{ left: Math.min(vt.right + 14, window.innerWidth - 254), top: Math.max(12, Math.min(vt.top + vt.height / 2 - 150, window.innerHeight - 312)) }}>
+          <img src={url} alt={ten} />
+        </div>, document.body)}
     </span>
   )
 }

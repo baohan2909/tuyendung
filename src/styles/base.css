@@ -135,6 +135,11 @@ h1, h2, h3, h4, p { margin: 0; }
 .field.toi > span.nhan { color: rgba(255,255,255,.6); }
 .field.toi input { color: #fff; }
 .field.toi input::placeholder { color: rgba(255,255,255,.35); }
+.field input:-webkit-autofill, .field input:-webkit-autofill:hover, .field input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--ink); caret-color: var(--ink); transition: background-color 600000s 0s, color 600000s 0s; }
+.field.toi input:-webkit-autofill, .field.toi input:-webkit-autofill:hover, .field.toi input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #fff; caret-color: #fff; }
+.field input:autofill { background: transparent !important; }
 .field.toi:focus-within { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.55); }
 .field.gon { min-height: 50px; padding: 7px 16px 6px; border-radius: 18px; }
 .field.gon input, .field.gon select { font-size: 14.5px; }

@@ -32,9 +32,9 @@ export default function Profile() {
   const vt = thuTu.indexOf(id)
   const truoc = vt > 0 ? thuTu[vt - 1] : null
   const sau = vt >= 0 && vt < thuTu.length - 1 ? thuTu[vt + 1] : null
-  usePhim(['ArrowLeft', 'ArrowRight'], (e) => { if (e.key === 'ArrowLeft' && truoc) nav('/quan-tri/ung-vien/' + truoc); if (e.key === 'ArrowRight' && sau) nav('/quan-tri/ung-vien/' + sau) }, !anhMo && !moLich && !moSua)
+  usePhim(['ArrowLeft', 'ArrowRight'], (e) => { if (e.key === 'ArrowLeft' && truoc) nav('/quantri/ung-vien/' + truoc); if (e.key === 'ArrowRight' && sau) nav('/quantri/ung-vien/' + sau) }, !anhMo && !moLich && !moSua)
 
-  if (error) return <div className="card"><Empty icon={AlertTriangle} tieuDe="Không mở được hồ sơ">{error.message}</Empty><div className="hang" style={{ justifyContent: 'center' }}><Btn onClick={() => nav('/quan-tri/ung-vien')} icon={ArrowLeft}>Về danh sách</Btn></div></div>
+  if (error) return <div className="card"><Empty icon={AlertTriangle} tieuDe="Không mở được hồ sơ">{error.message}</Empty><div className="hang" style={{ justifyContent: 'center' }}><Btn onClick={() => nav('/quantri/ung-vien')} icon={ArrowLeft}>Về danh sách</Btn></div></div>
   if (loading && !d) return <div className="cot" style={{ gap: 18 }}><Skeleton h={150} style={{ borderRadius: 34 }} /><div className="hai-cot"><Skeleton h={420} style={{ flex: '2 1 520px', borderRadius: 28 }} /><Skeleton h={420} style={{ flex: '1 1 320px', borderRadius: 28 }} /></div></div>
 
   const h = d.ho_so
@@ -68,7 +68,7 @@ export default function Profile() {
       await rpc('td_xoa_ho_so', { p_ids: [h.id] })
       bao('Đã xóa hồ sơ')
       s.taiDem()
-      nav('/quan-tri/ung-vien')
+      nav('/quantri/ung-vien')
     } catch (e) { bao(e.message, 'loi') }
   }
   const tl = h.tra_loi_them && typeof h.tra_loi_them === 'object' ? Object.entries(h.tra_loi_them).filter(([, v]) => v) : []
@@ -79,7 +79,7 @@ export default function Profile() {
       <section className="ho-so-hero">
         <div className="glow hong" style={{ width: 360, height: 360, right: -100, top: -160, opacity: 0.55, filter: 'blur(90px)' }} />
         <div className="glow tim" style={{ width: 240, height: 240, left: '30%', bottom: -170, opacity: 0.45, filter: 'blur(80px)' }} />
-        <IconBtn icon={ArrowLeft} nhan="Quay lại danh sách" kieu="kinh" onClick={() => (window.history.length > 1 ? nav(-1) : nav('/quan-tri/ung-vien'))} />
+        <IconBtn icon={ArrowLeft} nhan="Quay lại danh sách" kieu="kinh" onClick={() => (window.history.length > 1 ? nav(-1) : nav('/quantri/ung-vien'))} />
         <button type="button" className="av-lon" onClick={() => anh.length && setAnhMo(0)} aria-label="Xem ảnh" style={{ padding: 0 }}>
           {anh[0] ? <AnhKho path={anh[0].duong_dan_nho || anh[0].duong_dan} alt={h.ho_ten} /> : <Avatar ten={h.ho_ten} co="xl" />}
         </button>
@@ -112,14 +112,14 @@ export default function Profile() {
         <Btn kieu="trang" co="md" icon={Copy} onClick={() => navigator.clipboard?.writeText(h.sdt).then(() => bao('Đã sao chép SĐT'))}>Sao chép</Btn>
         {q.sua && <Btn kieu="den" co="md" icon={CalendarPlus} onClick={() => setMoLich({})}>Hẹn phỏng vấn</Btn>}
         <span className="day hang" style={{ gap: 6 }}>
-          <IconBtn icon={ChevronLeft} nhan="Hồ sơ trước (←)" disabled={!truoc} onClick={() => nav('/quan-tri/ung-vien/' + truoc)} />
+          <IconBtn icon={ChevronLeft} nhan="Hồ sơ trước (←)" disabled={!truoc} onClick={() => nav('/quantri/ung-vien/' + truoc)} />
           {vt >= 0 && <span className="nho muted so">{vt + 1}/{thuTu.length}</span>}
-          <IconBtn icon={ChevronRight} nhan="Hồ sơ sau (→)" disabled={!sau} onClick={() => nav('/quan-tri/ung-vien/' + sau)} />
+          <IconBtn icon={ChevronRight} nhan="Hồ sơ sau (→)" disabled={!sau} onClick={() => nav('/quantri/ung-vien/' + sau)} />
         </span>
       </div>
 
       {d.trung_sdt.length > 0 && (
-        <Bao kieu="vang">Số điện thoại này đã nộp {d.trung_sdt.length} hồ sơ khác: {d.trung_sdt.map((x, i) => <span key={x.id}>{i ? ', ' : ''}<Link to={'/quan-tri/ung-vien/' + x.id} style={{ fontWeight: 700 }}>{x.ma}</Link> ({x.vi_tri}, {GD[x.trang_thai]?.ten}, {fmtNgay(x.nop_luc)})</span>)}</Bao>
+        <Bao kieu="vang">Số điện thoại này đã nộp {d.trung_sdt.length} hồ sơ khác: {d.trung_sdt.map((x, i) => <span key={x.id}>{i ? ', ' : ''}<Link to={'/quantri/ung-vien/' + x.id} style={{ fontWeight: 700 }}>{x.ma}</Link> ({x.vi_tri}, {GD[x.trang_thai]?.ten}, {fmtNgay(x.nop_luc)})</span>)}</Bao>
       )}
 
       <div className="hai-cot">

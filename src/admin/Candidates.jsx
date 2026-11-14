@@ -6,7 +6,7 @@ import { useAsync, useDebounced, useLS, usePhim } from '../lib/hooks'
 import { fmtGiay, fmtNgayGio, fmtSdt, tuongDoi } from '../lib/format'
 import { GIAI_DOAN, GD } from '../lib/stages'
 import { xuatExcel } from '../lib/excel'
-import { AnhKho, Avatar, Btn, Chips, Diem, Empty, Field, Menu, Modal, Segment, Skeleton, StageTag, useToast } from '../components/ui'
+import { AnhKho, Avatar, Btn, Chips, Diem, Empty, Field, Lightbox, Menu, Modal, Segment, Skeleton, StageTag, useToast } from '../components/ui'
 import { useStaff } from './context'
 import LichModal from './LichModal'
 import { tenNgan } from './Dashboard'
@@ -64,14 +64,14 @@ export default function Candidates() {
   const [doiGD, giaoDienGD] = useDoiGiaiDoan({ xong: (ids, tt) => { setData((d) => d && ({ ...d, dong: d.dong.map((r) => (ids.includes(r.id) ? { ...r, trang_thai: tt } : r)) })); setChon([]); reload(true); s.taiDem() }, henPV: (r) => setHenCho(r) })
 
   const datGD = (v) => { const q = new URLSearchParams(qs); if (v) q.set('gd', v); else q.delete('gd'); q.delete('tim'); setQs(q, { replace: true }) }
-  const mo = (r) => (window.innerWidth >= 1280 ? setXem(r) : nav('/quan-tri/ung-vien/' + r.id))
+  const mo = (r) => (window.innerWidth >= 1280 ? setXem(r) : nav('/quantri/ung-vien/' + r.id))
   usePhim(['/'], (e) => { e.preventDefault(); timRef.current?.focus() })
   usePhim(['j', 'k', 'Enter', 'x', 'o'], (e) => {
     if (!ds.length) return
     if (e.key === 'j') setHl((i) => Math.min(ds.length - 1, i + 1))
     if (e.key === 'k') setHl((i) => Math.max(0, i - 1))
     if (e.key === 'Enter' && ds[hl]) mo(ds[hl])
-    if (e.key === 'o' && ds[hl]) nav('/quan-tri/ung-vien/' + ds[hl].id)
+    if (e.key === 'o' && ds[hl]) nav('/quantri/ung-vien/' + ds[hl].id)
     if (e.key === 'x' && ds[hl] && s.coSua) setChon((c) => (c.includes(ds[hl].id) ? c.filter((y) => y !== ds[hl].id) : [...c, ds[hl].id]))
   })
   useEffect(() => { if (hl >= 0) document.querySelector('[data-hang="' + hl + '"]')?.scrollIntoView({ block: 'nearest' }) }, [hl])
@@ -100,7 +100,7 @@ export default function Candidates() {
       <header className="trang-dau">
         <div className="tieu">
           <span className="eyebrow">Ứng viên</span>
-          <h1><b>{data ? data.tong : '…'}</b> hồ sơ{gd ? ' · ' + (gd === 'dang_xu_ly' ? 'đang xử lý' : GD[gd]?.ten.toLowerCase()) : <> · <b>{dem.moi || 0}</b> chờ xử lý</>}</h1>
+          <h1><span><b>{data ? data.tong : '…'}</b> hồ sơ</span><span className="dem-phu"><i />{gd ? (gd === 'dang_xu_ly' ? 'Đang xử lý' : GD[gd]?.ten) : (dem.moi || 0) + ' chờ sàng lọc'}</span></h1>
         </div>
         <Segment trang ds={[{ v: 'bang', t: 'Bảng', icon: LayoutList }, { v: 'the', t: 'Thẻ ảnh', icon: ImageIc }]} giaTri={kieu} onChon={setKieu} />
         {s.vaiTro !== 'phong_van' && <Btn kieu="den" orb="trai" icon={Download} loading={dangXuat} onClick={() => xuat(false)}>Xuất Excel</Btn>}
@@ -166,7 +166,7 @@ export default function Candidates() {
                       <div key={r.id} data-hang={i} className={'dong' + (daChon ? ' chon' : '') + (xem?.id === r.id || hl === i ? ' dang-xem' : '')} onClick={() => { setHl(i); mo(r) }}>
                         {s.coSua ? <button className={'o-chon' + (daChon ? ' on' : '')} onClick={(e) => { e.stopPropagation(); setChon((c) => (daChon ? c.filter((y) => y !== r.id) : [...c, r.id])) }} aria-label={'Chọn ' + r.ho_ten}>{daChon && <Check size={13} strokeWidth={3} />}</button> : <span className="nho muted">{i + 1}</span>}
                         <div className="ten-uv">
-                          <Avatar ten={r.ho_ten} path={r.anh} />
+                          <Avatar ten={r.ho_ten} path={r.anh} phong />
                           <div className="gian"><b className="cat">{r.ho_ten} {r.uu_tien && <Star size={12} className="uu-tien-sao" fill="currentColor" />}</b><span className="cat"><i className="chi-dt">{tenNgan(r.vi_tri)} · </i>{r.tuoi} tuổi · {r.chieu_cao}cm/{r.can_nang}kg · {fmtSdt(r.sdt)}</span></div>
                         </div>
                         <span className="cat">{tenNgan(r.vi_tri)}</span>
@@ -231,12 +231,32 @@ export default function Candidates() {
 
 function XemNhanh({ r, dong, doiGD, henPV }) {
   const s = useStaff()
+  const { data: ct } = useAsync(() => rpc('td_chi_tiet', { p_id: r.id }), [r.id])
+  const anh = (ct?.tep || []).filter((t) => t.loai === 'anh')
+  const [chiSo, setChiSo] = useState(0)
+  const [moAnh, setMoAnh] = useState(null)
+  useEffect(() => { setChiSo(0) }, [r.id])
+  const dangXem = anh[chiSo] ? (anh[chiSo].duong_dan_nho || anh[chiSo].duong_dan) : r.anh
   return (
     <aside className="xem-nhanh" aria-label="Xem nhanh hồ sơ">
       <div className="bia">
-        {r.anh ? <AnhKho path={r.anh} alt={r.ho_ten} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div className="glow hong" style={{ width: 200, height: 200, left: 60, top: -40, opacity: 0.6 }} />}
+        {dangXem ? <>
+          <AnhKho path={dangXem} alt="" className="bia-mo" />
+          <button type="button" className="bia-anh" onClick={() => anh.length && setMoAnh(chiSo)} aria-label="Phóng to ảnh"><AnhKho path={dangXem} alt={r.ho_ten} /></button>
+        </> : <div className="glow hong" style={{ width: 200, height: 200, left: 60, top: -40, opacity: 0.6 }} />}
         <button className="icon-btn sm kinh dong-x" onClick={dong} aria-label="Đóng"><X size={16} /></button>
+        {anh.length > 0 && <span className="bia-dem">{chiSo + 1}/{anh.length}</span>}
       </div>
+      {anh.length > 1 && (
+        <div className="bia-strip">
+          {anh.map((t, i) => (
+            <button key={t.id} type="button" className={i === chiSo ? 'on' : ''} onMouseEnter={() => setChiSo(i)} onFocus={() => setChiSo(i)} onClick={() => setMoAnh(i)} aria-label={'Ảnh ' + (i + 1)}>
+              <AnhKho path={t.duong_dan_nho || t.duong_dan} alt="" />
+            </button>
+          ))}
+        </div>
+      )}
+      {moAnh != null && <Lightbox ds={anh.map((t) => t.duong_dan)} chiSo={moAnh} dong={() => setMoAnh(null)} />}
       <div className="noi">
         <div>
           <span className="eyebrow">{r.ma}</span>
@@ -252,7 +272,7 @@ function XemNhanh({ r, dong, doiGD, henPV }) {
           <dt>Nộp lúc</dt><dd>{fmtNgayGio(r.nop_luc)}</dd>
         </dl>
         <div className="cot" style={{ gap: 8 }}>
-          <Link to={'/quan-tri/ung-vien/' + r.id} className="btn den rong co-orb" style={{ justifyContent: 'space-between' }}>Mở hồ sơ đầy đủ<span className="orb sm"><ExternalLink size={15} /></span></Link>
+          <Link to={'/quantri/ung-vien/' + r.id} className="btn den rong co-orb" style={{ justifyContent: 'space-between' }}>Mở hồ sơ đầy đủ<span className="orb sm"><ExternalLink size={15} /></span></Link>
           <div className="hang wrap" style={{ gap: 8 }}><HanhDongBuoc h={r} doiGD={doiGD} henPV={henPV} /></div>
           <a className="btn md vien" href={'tel:' + r.sdt}><Phone size={16} />Gọi {fmtSdt(r.sdt)}</a>
         </div>

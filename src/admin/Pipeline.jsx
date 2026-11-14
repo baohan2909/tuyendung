@@ -71,7 +71,7 @@ export default function Pipeline() {
                   <div key={r.id} className={'the-kb' + (keo?.id === r.id ? ' keo' : '')} draggable={coKeo}
                     onDragStart={(e) => { setKeo(r); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', r.id) }}
                     onDragEnd={() => { setKeo(null); setTha(null) }}
-                    onClick={() => nav('/quan-tri/ung-vien/' + r.id)}>
+                    onClick={() => nav('/quantri/ung-vien/' + r.id)}>
                     <div className="hang">
                       <Avatar ten={r.ho_ten} path={r.anh} co="sm" />
                       <div className="gian"><b className="cat" style={{ display: 'block' }}>{r.ho_ten} {r.uu_tien && <Star size={11} fill="#F5A524" color="#F5A524" />}</b><div className="meta cat">{r.tuoi} tuổi · {r.khu_vuc_mong_muon || r.cho_o}</div></div>
@@ -85,7 +85,7 @@ export default function Pipeline() {
                     </div>
                   </div>
                 ))}
-                {ds.length > GIOI_HAN && <button className="btn sm trang" onClick={() => nav('/quan-tri/ung-vien?gd=' + ma)}>+{ds.length - GIOI_HAN} hồ sơ khác</button>}
+                {ds.length > GIOI_HAN && <button className="btn sm trang" onClick={() => nav('/quantri/ung-vien?gd=' + ma)}>+{ds.length - GIOI_HAN} hồ sơ khác</button>}
                 {!ds.length && <p className="nho" style={{ color: '#B7B0BD', textAlign: 'center', padding: '20px 0' }}>{coKeo ? 'Thả hồ sơ vào đây' : 'Trống'}</p>}
               </section>
             )
@@ -95,7 +95,7 @@ export default function Pipeline() {
 
       <div className="vung-ket">
         {GD_KET_THUC.map((ma) => (
-          <div key={ma} className={'o' + (tha === ma ? ' tha' : '')} {...vung(ma)} onClick={() => nav('/quan-tri/ung-vien?gd=' + ma)} role="button" tabIndex={0}>
+          <div key={ma} className={'o' + (tha === ma ? ' tha' : '')} {...vung(ma)} onClick={() => nav('/quantri/ung-vien?gd=' + ma)} role="button" tabIndex={0}>
             <span style={{ width: 10, height: 10, borderRadius: '50%', background: GD[ma].cham }} />{GD[ma].ten}<span className="tag">{(nhom[ma] || []).length}</span>
           </div>
         ))}

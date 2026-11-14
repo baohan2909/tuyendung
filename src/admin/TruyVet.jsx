@@ -25,7 +25,7 @@ export default function TruyVet({ id, nhip }) {
   ]
   return (
     <section className="card">
-      <div className="dau-the"><h2>Truy vết xử lý</h2>{(s.vaiTro === 'quan_tri' || s.vaiTro === 'tuyen_dung') && <Link to={'/quan-tri/nhat-ky?ho_so=' + id} className="nho dam hang" style={{ gap: 5 }}><History size={14} />Nhật ký chi tiết</Link>}</div>
+      <div className="dau-the"><h2>Truy vết xử lý</h2>{(s.vaiTro === 'quan_tri' || s.vaiTro === 'tuyen_dung') && <Link to={'/quantri/nhat-ky?ho_so=' + id} className="nho dam hang" style={{ gap: 5 }}><History size={14} />Nhật ký chi tiết</Link>}</div>
       <div className="dong-thoi-gian">
         {buoc.map((b, i) => (
           <div key={i} className="m">
