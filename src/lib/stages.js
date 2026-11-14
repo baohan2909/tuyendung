@@ -5,6 +5,8 @@ export const GIAI_DOAN = [
   { ma: 'hen_pv', ten: 'Phỏng vấn', ngan: 'Phỏng vấn', bg: '#EAF0FD', fg: '#2E5BC9', cham: '#3B6FE0' },
   { ma: 'da_pv', ten: 'Đã PV', bg: '#EFE8FB', fg: '#5B2A9E', cham: '#7B2CBF', cu: true },
   { ma: 'de_xuat', ten: 'Đề xuất', bg: '#E1F3F6', fg: '#0F6375', cham: '#1590A8', cu: true },
+  { ma: 'can_nhac', ten: 'Cân nhắc thêm', bg: '#FDF3E3', fg: '#8A5410', cham: '#D98A1C' },
+  { ma: 'chua_lien_lac', ten: 'Chưa liên lạc được', bg: '#EEF2FF', fg: '#3F4FB5', cham: '#5B6CDB' },
   { ma: 'dat', ten: 'Trúng tuyển', bg: '#E3F5EE', fg: '#0E7F63', cham: '#12A37F' },
   { ma: 'nhan_viec', ten: 'Nhận việc', bg: '#17111A', fg: '#FFFFFF', cham: '#17111A' },
   { ma: 'du_bi', ten: 'Dự bị', bg: '#EEF1F5', fg: '#475A70', cham: '#7A8CA3', cu: true },
@@ -12,12 +14,12 @@ export const GIAI_DOAN = [
   { ma: 'rut', ten: 'Rút hồ sơ', bg: '#F4F1F5', fg: '#8C8494', cham: '#B9B2BF' }
 ]
 export const GD = Object.fromEntries(GIAI_DOAN.map((g) => [g.ma, g]))
-export const GD_DANG_XU_LY = ['moi', 'sang_loc', 'hen_pv', 'da_pv', 'de_xuat']
+export const GD_DANG_XU_LY = ['moi', 'sang_loc', 'hen_pv', 'da_pv', 'de_xuat', 'can_nhac', 'chua_lien_lac']
 export const GD_COT = ['moi', 'hen_pv', 'dat', 'nhan_viec']
 export const GD_KET_THUC = ['khong_dat', 'rut']
 export const GD_SANG_LOC = ['moi', 'sang_loc']
 // Còn mở: có thể bấm Phỏng vấn / Loại
-export const GD_MO = ['moi', 'sang_loc', 'hen_pv', 'da_pv', 'de_xuat', 'du_bi']
+export const GD_MO = ['moi', 'sang_loc', 'hen_pv', 'da_pv', 'de_xuat', 'du_bi', 'can_nhac', 'chua_lien_lac']
 export const GD_PHONG_VAN = ['hen_pv', 'da_pv', 'de_xuat']
 export const NV_TT = {
   thu_viec: { ten: 'Thử việc', bg: '#FDF3E3', fg: '#8A5410' },
@@ -50,6 +52,8 @@ export const HINH_THUC = { truc_tiep: 'Trực tiếp', online: 'Online', dien_th
 export const KET_LUAN = {
   dat: { ten: 'Đạt', bg: '#E3F5EE', fg: '#0E7F63' },
   du_bi: { ten: 'Dự bị', bg: '#EEF1F5', fg: '#475A70' },
+  can_nhac: { ten: 'Cân nhắc thêm', bg: '#FDF3E3', fg: '#8A5410' },
+  chua_lien_lac: { ten: 'Chưa liên lạc được', bg: '#EEF2FF', fg: '#3F4FB5' },
   khong_dat: { ten: 'Không đạt', bg: '#FDECEC', fg: '#B93838' }
 }
 
@@ -57,6 +61,7 @@ export const KET_LUAN = {
 export const CONG_KHAI = {
   xet_duyet: { buoc: 2, tieu_de: ['Hồ sơ đang', 'được xét duyệt'], mo_ta: 'Nón Sơn đã nhận hồ sơ và đang xem xét. Chúng tôi sẽ liên hệ bạn sớm nhất.' },
   phong_van: { buoc: 3, tieu_de: ['Hồ sơ của bạn', 'đang phỏng vấn'], mo_ta: 'Bộ phận tuyển dụng Nón Sơn sẽ gọi điện hoặc Zalo để phỏng vấn online. Bạn để ý điện thoại nhé.' },
+  chua_lien_lac: { buoc: 3, tieu_de: ['Nón Sơn chưa', 'liên lạc được với bạn'], mo_ta: 'Bộ phận tuyển dụng đã gọi cho bạn nhưng chưa kết nối được. Bạn vui lòng để ý điện thoại, Zalo và nghe máy giúp Nón Sơn nhé — chúng tôi sẽ gọi lại.' },
   cho_ket_qua: { buoc: 4, tieu_de: ['Đã phỏng vấn,', 'chờ kết quả'], mo_ta: 'Cảm ơn bạn đã tham gia phỏng vấn. Kết quả sẽ có trong thời gian sớm nhất.' },
   trung_tuyen: { buoc: 5, tieu_de: ['Chúc mừng,', 'bạn đã trúng tuyển!'], mo_ta: 'Hãy đến đúng cửa hàng và giờ hẹn bên dưới nhé. Nón Sơn rất mong được làm việc cùng bạn.' },
   nhan_viec: { buoc: 5, tieu_de: ['Chào mừng bạn', 'đến với Nón Sơn!'], mo_ta: 'Hẹn gặp bạn tại nơi làm việc.' },

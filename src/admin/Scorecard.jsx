@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Check, CheckCircle2, CloudOff, Copy, Lock, Mail, MessageCircle, Send, Phone, Store, ThumbsDown, UserCheck, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Check, CheckCircle2, Hourglass, PhoneMissed, CloudOff, Copy, Lock, Mail, MessageCircle, Send, Phone, Store, ThumbsDown, UserCheck, ExternalLink } from 'lucide-react'
 import { docBang, rpc } from '../lib/api'
 import { dsTacPhong, tinDat, tinKhongDat } from '../lib/thongBao'
 import { useAsync } from '../lib/hooks'
@@ -23,6 +23,8 @@ export function tinhDiem(tieuChi, diem) {
 
 const KQ = [
   { v: 'dat', t: 'Đạt', ic: CheckCircle2 },
+  { v: 'can_nhac', t: 'Cân nhắc thêm', ic: Hourglass },
+  { v: 'chua_lien_lac', t: 'Chưa liên lạc được', ic: PhoneMissed },
   { v: 'khong_dat', t: 'Không đạt', ic: ThumbsDown }
 ]
 
@@ -61,7 +63,7 @@ export default function Scorecard() {
     const p = d.phieu_cua_toi
     if (p) { setDiem(Object.fromEntries(Object.entries(p.diem || {}).map(([k, v]) => [k, Number(v)]))); setNhanXet(p.nhan_xet || ''); setKetLuan(p.ket_luan); setDaGui(!!p.da_gui) }
     const h = d.ho_so
-    if (['dat', 'khong_dat'].includes(h.trang_thai) && !p?.ket_luan) setKetLuan(h.trang_thai)
+    if (['dat', 'khong_dat', 'can_nhac', 'chua_lien_lac'].includes(h.trang_thai) && !p?.ket_luan) setKetLuan(h.trang_thai)
     if (h.cua_hang_du_kien || h.ngay_nhan_viec) setNv({ cua_hang_ma: h.cua_hang_du_kien || '', ngay_nhan_viec: h.ngay_nhan_viec || congNgay(ngayVN(), 1), gio_nhan_viec: h.gio_nhan_viec ? String(h.gio_nhan_viec).slice(0, 5) : '08:00', ghi_chu_nhan_viec: h.ghi_chu_nhan_viec || '' })
     daNap.current = true
   }, [d])
@@ -83,9 +85,9 @@ export default function Scorecard() {
 
   async function hoanTat() {
     setLoi(null)
-    if (!ketLuan) return setLoi('Chọn kết quả: Đạt hoặc Không đạt.')
+    if (!ketLuan) return setLoi('Chọn kết quả phỏng vấn.')
     const duTieuChi = du === tieuChi.length && tieuChi.length > 0
-    if (ketLuan !== 'khong_dat' && !duTieuChi) return setLoi('Còn ' + (tieuChi.length - du) + ' tiêu chí chưa chấm.')
+    if (ketLuan === 'dat' && !duTieuChi) return setLoi('Còn ' + (tieuChi.length - du) + ' tiêu chí chưa chấm.')
     if (ketLuan === 'dat' && !nv.cua_hang_ma) return setLoi('Chọn cửa hàng nhận việc cho ứng viên đạt.')
     if (ketLuan === 'dat' && !nv.ngay_nhan_viec) return setLoi('Chọn ngày nhận việc.')
     if (ketLuan === 'dat' && !nv.gio_nhan_viec) return setLoi('Chọn giờ có mặt.')
