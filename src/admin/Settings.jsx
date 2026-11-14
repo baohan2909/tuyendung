@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { EmailCaiDat } from './Email'
 import { banDo } from './stageActions'
 import { dsTacPhong, MAC_DINH_TIN_DAT, MAC_DINH_TIN_KHONG_DAT, TAC_PHONG_MAC_DINH } from '../lib/thongBao'
-import { Copy, Download, KeyRound, Link2, Lock, Plus, QrCode, RefreshCw, Save, ShieldCheck, Trash2, UserPlus, Pencil, Sparkles , MapPin } from 'lucide-react'
+import { Copy, Download, KeyRound, Link2, Lock, Plus, QrCode, RefreshCw, Save, ShieldCheck, Trash2, UserPlus, Pencil, Sparkles , MapPin , Upload } from 'lucide-react'
 import { docBang, doiMatKhau, dsTep, luuDong, rpc, themDong, xoaTep } from '../lib/api'
 import { useAsync } from '../lib/hooks'
 import { khongDau } from '../lib/format'
@@ -101,6 +101,7 @@ function NhanSu() {
   const bao = useToast()
   const [sua, setSua] = useState(null)
   const [mkMoi, setMkMoi] = useState(null)
+  const [nhap, setNhap] = useState(false)
   const ds = s.dm.nhanSu
   async function datLai(n) {
     const mk = taoMatKhau()
@@ -108,20 +109,23 @@ function NhanSu() {
   }
   return (
     <section className="card">
-      <div className="dau-the"><h2>Nhân sự tuyển dụng · {ds.length}</h2><Btn kieu="den" co="sm" icon={UserPlus} onClick={() => setSua({ ma_nv: '', ho_ten: '', vai_tro: 'phong_van', chuc_danh: '', khu_vuc: '', dien_thoai: '', mat_khau: taoMatKhau() })}>Thêm nhân sự</Btn></div>
+      <div className="dau-the"><h2>Nhân sự tuyển dụng · {ds.length}</h2>{s.laToiCao && <div className="hang" style={{ gap: 8 }}><Btn kieu="trang" co="sm" icon={Upload} onClick={() => setNhap(true)}>Nhập từ file mẫu</Btn><Btn kieu="den" co="sm" icon={UserPlus} onClick={() => setSua({ ma_nv: '', ho_ten: '', vai_tro: 'phong_van', chuc_danh: '', khu_vuc: '', dien_thoai: '', mat_khau: taoMatKhau() })}>Thêm nhân sự</Btn></div>}</div>
+      {!s.laToiCao && <Bao kieu="xanh">Chỉ Admin tối cao được thêm, sửa, khóa tài khoản và đặt lại mật khẩu nhân sự.</Bao>}
       {ds.map((n) => (
         <div key={n.id} className="dong-ns" style={{ opacity: n.hoat_dong ? 1 : 0.55 }}>
           <Avatar ten={n.ho_ten} />
           <div className="gian" style={{ flex: '1 1 200px' }}><b>{n.ho_ten} {n.id === s.toi.id && <span className="tag" style={{ height: 22 }}>Bạn</span>}</b><span>{n.ma_nv} · {n.chuc_danh || VAI_TRO[n.vai_tro]}{n.khu_vuc ? ' · ' + n.khu_vuc : ''}{n.dien_thoai ? ' · ' + fmtSdt(n.dien_thoai) : ''}</span></div>
-          <span className="tag" style={n.vai_tro === 'quan_tri' ? { background: 'var(--ink)', color: '#fff' } : n.vai_tro === 'tuyen_dung' ? { background: 'var(--pink-bg)', color: 'var(--pink-deep)' } : null}>{VAI_TRO[n.vai_tro]}</span>
+          {n.toi_cao && <span className="tag tag-toi-cao">Admin tối cao</span>}
+          <span className="tag" style={n.vai_tro === 'quan_tri' ? { background: 'var(--chon-nen)', color: 'var(--chon-chu)' } : n.vai_tro === 'tuyen_dung' ? { background: 'var(--pink-bg)', color: 'var(--pink-deep)' } : null}>{VAI_TRO[n.vai_tro]}</span>
           <span className="nho muted" style={{ minWidth: 110 }}>{n.dang_nhap_cuoi ? 'Vào ' + tuongDoi(n.dang_nhap_cuoi) : 'Chưa đăng nhập'}</span>
           <span className="nho muted">{n.so_phieu} phiếu · {n.so_lich} lịch</span>
           {!n.hoat_dong && <span className="tag" style={{ background: 'var(--err-bg)', color: 'var(--err)' }}>Đã khóa</span>}
-          <IconBtn icon={Pencil} nhan="Sửa" co="sm" kieu="mem" onClick={() => setSua(n)} size={15} />
-          <IconBtn icon={KeyRound} nhan="Đặt lại mật khẩu" co="sm" kieu="mem" onClick={() => datLai(n)} size={15} />
+          {s.laToiCao && <IconBtn icon={Pencil} nhan="Sửa" co="sm" kieu="mem" onClick={() => setSua(n)} size={15} />}
+          {s.laToiCao && <IconBtn icon={KeyRound} nhan="Đặt lại mật khẩu" co="sm" kieu="mem" onClick={() => datLai(n)} size={15} />}
         </div>
       ))}
       {sua && <SuaNhanSu n={sua} dong={() => setSua(null)} />}
+      {nhap && <NhapNhanSu dong={() => setNhap(false)} />}
       <Modal mo={!!mkMoi} dong={() => setMkMoi(null)} tieuDe="Mật khẩu mới" moTa={mkMoi ? mkMoi.n.ho_ten + ' · ' + mkMoi.n.ma_nv : ''} chan={<Btn kieu="den" onClick={() => setMkMoi(null)}>Xong</Btn>}>
         {mkMoi && <div className="cot" style={{ gap: 12 }}>
           <div className="hang" style={{ background: 'var(--soft)', borderRadius: 22, padding: '14px 16px' }}><b className="gian so" style={{ fontSize: 20, letterSpacing: '.04em' }}>{mkMoi.mk}</b><Btn co="sm" icon={Copy} onClick={() => navigator.clipboard?.writeText(mkMoi.mk).then(() => bao('Đã sao chép'))}>Sao chép</Btn></div>
@@ -129,6 +133,76 @@ function NhanSu() {
         </div>}
       </Modal>
     </section>
+  )
+}
+
+const COT_MAU_NS = [
+  { k: 'ma_nv', ten: 'Mã nhân viên', vd: 'NS00123', w: 16 },
+  { k: 'ho_ten', ten: 'Họ và tên', vd: 'Nguyễn Văn A', w: 26 },
+  { k: 'chuc_danh', ten: 'Chức danh', vd: 'Quản lý khu vực', w: 22 },
+  { k: 'vai_tro', ten: 'Vai trò (Quản trị / Tuyển dụng / Phỏng vấn / Chỉ xem)', vd: 'Phỏng vấn', w: 44 },
+  { k: 'mat_khau', ten: 'Mật khẩu (tối thiểu 8 ký tự)', vd: 'Matkhau123', w: 26 },
+  { k: 'dien_thoai', ten: 'Điện thoại', vd: '0901234567', w: 16 },
+  { k: 'khu_vuc', ten: 'Khu vực', vd: 'Hồ Chí Minh', w: 18 }
+]
+
+function NhapNhanSu({ dong }) {
+  const s = useStaff()
+  const bao = useToast()
+  const [ds, setDs] = useState(null)
+  const [kq, setKq] = useState(null)
+  const [dang, setDang] = useState(false)
+  async function taiMau() {
+    const XLSX = await import('xlsx')
+    const ws = XLSX.utils.aoa_to_sheet([COT_MAU_NS.map((c) => c.ten), COT_MAU_NS.map((c) => c.vd)])
+    ws['!cols'] = COT_MAU_NS.map((c) => ({ wch: c.w }))
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Nhân sự')
+    XLSX.writeFile(wb, 'Mau_nhap_nhan_su_tuyen_dung.xlsx')
+  }
+  async function docTep(e) {
+    const f = e.target.files?.[0]; if (!f) return
+    try {
+      const XLSX = await import('xlsx')
+      const wb = XLSX.read(await f.arrayBuffer())
+      const aoa = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: false, defval: '' })
+      const dong = aoa.slice(1).filter((r) => r.some((x) => String(x).trim()))
+        .map((r) => Object.fromEntries(COT_MAU_NS.map((c, i) => [c.k, String(r[i] ?? '').trim()])))
+        .map((r) => ({ ...r, ma_nv: r.ma_nv.toUpperCase().replace(/[^A-Z0-9]/g, '') }))
+      if (!dong.length) return bao('File không có dòng dữ liệu', 'loi')
+      setDs(dong); setKq(null)
+    } catch (err) { bao('Không đọc được file: ' + err.message, 'loi') }
+    e.target.value = ''
+  }
+  async function nhap() {
+    setDang(true)
+    try { const r = await rpc('td_nhap_nhan_su', { p: ds }); setKq(r); await s.taiDanhMuc(); bao('Đã tạo ' + r.tao + ' tài khoản') } catch (e) { bao(e.message, 'loi') }
+    setDang(false)
+  }
+  return (
+    <Modal mo rong dong={dong} tieuDe="Nhập nhân sự từ file mẫu" moTa="Tải file mẫu → điền mỗi dòng 1 nhân sự → tải lên → kiểm tra → tạo tài khoản."
+      chan={<><Btn kieu="trong" onClick={dong}>Đóng</Btn>{ds && !kq && <Btn kieu="den" icon={UserPlus} loading={dang} onClick={nhap}>Tạo {ds.length} tài khoản</Btn>}</>}>
+      <div className="cot" style={{ gap: 12 }}>
+        <div className="hang wrap" style={{ gap: 8 }}>
+          <Btn kieu="trang" co="sm" icon={Download} onClick={taiMau}>Tải file mẫu (.xlsx)</Btn>
+          <label className="btn den sm" style={{ cursor: 'pointer' }}><Upload size={14} />Chọn file đã điền<input type="file" accept=".xlsx,.xls,.csv" hidden onChange={docTep} /></label>
+        </div>
+        {ds && (
+          <div className="bang-nhap-ns">
+            <div className="bn-dau"><span>Mã NV</span><span>Họ tên</span><span>Chức danh</span><span>Vai trò</span><span>Mật khẩu</span></div>
+            {ds.map((r, i) => {
+              const loi = kq?.loi?.find((x) => x.ma_nv === r.ma_nv && x.ho_ten === r.ho_ten)
+              return (
+                <div key={i} className={'bn-dong' + (loi ? ' loi' : kq ? ' ok' : '')}>
+                  <b>{r.ma_nv || '—'}</b><span>{r.ho_ten}</span><span>{r.chuc_danh}</span><span>{r.vai_tro || 'Phỏng vấn'}</span><span>{r.mat_khau ? '•'.repeat(Math.min(8, r.mat_khau.length)) : <i style={{ color: 'var(--err)' }}>thiếu</i>}</span>
+                  {loi && <small>{loi.loi}</small>}
+                </div>
+              )
+            })}
+          </div>
+        )}
+        {kq && <Bao kieu={kq.loi.length ? 'vang' : 'ok'}>Đã tạo {kq.tao} tài khoản{kq.loi.length ? ' · ' + kq.loi.length + ' dòng lỗi (đánh dấu đỏ ở trên)' : ''}. Nhân sự đăng nhập bằng mã NV + mật khẩu trong file.</Bao>}
+      </div>
+    </Modal>
   )
 }
 

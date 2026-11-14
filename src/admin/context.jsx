@@ -74,6 +74,7 @@ export function StaffProvider({ children }) {
     lamMoi: () => { setNhip((n) => n + 1); taiDem() },
     coSua: vaiTro === 'quan_tri' || vaiTro === 'tuyen_dung',
     laQT: vaiTro === 'quan_tri',
+    laToiCao: !!toi?.toi_cao,
     coCham: vaiTro && vaiTro !== 'xem',
     tenVT: (id) => dm.viTri.find((v) => v.id === id)?.ten || '—',
     tenNS: (id) => dm.nhanSu.find((v) => v.id === id)?.ho_ten || '—'
