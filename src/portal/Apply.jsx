@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Camera, Check, Clock, Copy, Film, Plus, RotateCcw, Search, ShieldCheck, Smartphone, X } from 'lucide-react'
+import { AlertOctagon, ArrowLeft, ArrowRight, Camera, Check, Clock, Copy, Film, Inbox, Mail, Plus, RotateCcw, Search, ShieldCheck, Smartphone, Tag, X } from 'lucide-react'
 import { rpc } from '../lib/api'
 import { taiLen } from '../lib/upload'
 import { duoiTep, mimeVideo, thongTinVideo, xuLyAnh } from '../lib/media'
@@ -231,7 +231,7 @@ export default function Apply() {
       const tl = {}
       tep.forEach((t) => { if (t.loai === 'video' && t.thoiLuong) tl[t.path] = Math.round(t.thoiLuong * 10) / 10 })
       const r = await rpc('td_nop_ho_so', { p_id: nhap.id, p: { ...payload(), tep: tep.map((t) => t.path), thoi_luong: tl } })
-      setKetQua({ ma: r.ma, ten: dongVN(f.ho_ten), sdt: chuanSdt(f.sdt) })
+      setKetQua({ ma: r.ma, ten: dongVN(f.ho_ten), sdt: chuanSdt(f.sdt), email: f.email.trim() })
       try { localStorage.removeItem(KHOA) } catch (e) { /* bỏ qua */ }
       window.scrollTo({ top: 0 })
     } catch (e) {
@@ -397,8 +397,10 @@ export default function Apply() {
           : <Btn kieu="den" co="lg" orb loading={dangChuyen} icon={Check} onClick={gui} disabled={!tep.length}>Gửi hồ sơ</Btn>}
       </div>
       {buoc === 0 && (
-        <Link to="/tra-cuu" className="hang nho" style={{ justifyContent: 'center', color: 'var(--muted-2)', fontWeight: 600, gap: 6 }}>
-          <Search size={14} /> Đã nộp hồ sơ? Tra cứu kết quả
+        <Link to="/tra-cuu" className="the-tra-cuu-nho">
+          <span className="ttc-ic"><Search size={18} strokeWidth={2.6} /></span>
+          <span className="gian"><b>Đã nộp hồ sơ?</b><small>Tra cứu kết quả bằng số điện thoại</small></span>
+          <ArrowRight size={18} />
         </Link>
       )}
     </PortalShell>
@@ -457,7 +459,32 @@ function HoanTat({ kq }) {
           <Btn kieu="trang" co="sm" icon={daChep ? Check : Copy} onClick={chep}>{daChep ? 'Đã sao chép' : 'Sao chép mã'}</Btn>
         </div>
       </div>
-      <div className="bao xanh"><Smartphone size={17} /><div>Lịch phỏng vấn (nếu có) sẽ hiện trong mục tra cứu — bạn có thể xác nhận tham gia ngay tại đó.</div></div>
+      <div className="huong-dan-kq">
+        <p className="hdk-tieu">Nhận kết quả phỏng vấn bằng 1 trong 2 cách</p>
+        <div className="hdk-the">
+          <span className="hdk-so">1</span>
+          <div className="gian">
+            <b><Mail size={16} /> Qua email</b>
+            <p>Nón Sơn gửi kết quả đến <strong>{kq.email}</strong>. Không thấy trong Hộp thư đến? Hãy mở mục <strong>Thư rác (Spam)</strong> hoặc <strong>Quảng cáo</strong>, rồi bấm <strong>“Không phải thư rác”</strong>.</p>
+            <div className="hdk-hop">
+              <span><Inbox size={14} />Hộp thư đến</span>
+              <span className="nhan"><AlertOctagon size={14} />Thư rác</span>
+              <span><Tag size={14} />Quảng cáo</span>
+            </div>
+          </div>
+        </div>
+        <div className="hdk-the">
+          <span className="hdk-so">2</span>
+          <div className="gian">
+            <b><Search size={16} /> Tra cứu ngay tại trang tuyển dụng</b>
+            <p>Bấm <strong>Tra cứu</strong> ở đầu trang, nhập <strong>số điện thoại</strong> đã đăng ký là xem được kết quả, lịch phỏng vấn và thông tin nhận việc.</p>
+            <div className="hdk-gia-lap" aria-hidden="true">
+              <span className="o-nhap"><Smartphone size={15} />{fmtSdt(kq.sdt)}</span>
+              <span className="nut-gl">Tra cứu</span>
+            </div>
+          </div>
+        </div>
+      </div>
       <div className="chan-form" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
         <Link to={'/tra-cuu?ma=' + encodeURIComponent(kq.ma) + '&sdt=' + kq.sdt} className="btn den lg co-orb rong" style={{ textDecoration: 'none' }}>
           Tra cứu hồ sơ <span className="orb"><Search size={17} strokeWidth={2.6} /></span>

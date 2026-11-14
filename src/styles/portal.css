@@ -156,3 +156,36 @@
 .nut-chi-duong { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 46px; padding: 0 18px; border-radius: 999px; background: linear-gradient(135deg, #12A37F 0%, #0E7F63 100%); color: #fff; font-weight: 700; font-size: 14px; text-decoration: none; box-shadow: 0 10px 22px rgba(14,127,99,.25); align-self: flex-start; }
 .tnv-ngay > span { font-size: 12.5px; color: var(--muted-2); font-weight: 600; min-width: 128px; }
 .the-tac-phong .luu-y li svg { background: #FDE6F1; color: #A3004F; }
+
+/* ===== v1.11 · Tra cứu nổi bật + hướng dẫn nhận kết quả ===== */
+.portal-dau .link.nut-tra-cuu { background: #fff; color: var(--ink); border-color: #fff; height: 38px; padding: 0 16px; box-shadow: 0 8px 24px rgba(224,21,126,.35); }
+.portal-dau .link.nut-tra-cuu svg { color: var(--pink); }
+.portal-dau .link.nut-tra-cuu:hover { background: #FFF0F7; color: var(--ink); }
+.the-tra-cuu { display: flex; align-items: center; gap: 14px; margin-top: 22px; max-width: 460px; padding: 14px 14px 14px 14px; border-radius: 24px; text-decoration: none; color: #fff;
+  background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.2); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); transition: background .2s, transform .2s; }
+.the-tra-cuu:hover { background: rgba(255,255,255,.14); transform: translateY(-1px); }
+.the-tra-cuu .ttc-ic, .the-tra-cuu-nho .ttc-ic { width: 46px; height: 46px; flex: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--orb); color: #fff; box-shadow: 0 10px 24px rgba(224,21,126,.45); }
+.the-tra-cuu b { display: block; font-size: 15px; font-weight: 800; }
+.the-tra-cuu small { display: block; font-size: 12.5px; color: rgba(255,255,255,.72); margin-top: 2px; line-height: 1.4; }
+.the-tra-cuu .ttc-mui { width: 36px; height: 36px; flex: none; border-radius: 50%; background: #fff; color: var(--ink); display: flex; align-items: center; justify-content: center; }
+.the-tra-cuu-nho { display: flex; align-items: center; gap: 12px; padding: 12px 16px 12px 12px; border-radius: 22px; text-decoration: none; color: var(--ink); background: linear-gradient(135deg, #FFF0F7 0%, #F5EEFF 100%); box-shadow: inset 0 0 0 1px rgba(224,21,126,.18); }
+.the-tra-cuu-nho .ttc-ic { width: 40px; height: 40px; }
+.the-tra-cuu-nho b { display: block; font-size: 14px; }
+.the-tra-cuu-nho small { display: block; font-size: 12.5px; color: var(--muted-2); }
+.the-tra-cuu-nho > svg { color: var(--pink-deep); flex: none; }
+
+.huong-dan-kq { display: flex; flex-direction: column; gap: 10px; }
+.hdk-tieu { margin: 4px 0 2px; font-size: 13px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.hdk-the { display: flex; gap: 12px; padding: 14px; border-radius: 22px; background: #FBF8FC; box-shadow: inset 0 0 0 1px var(--line); }
+.hdk-so { width: 30px; height: 30px; flex: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #E0157E 0%, #7B2CBF 100%); color: #fff; font-weight: 800; font-size: 14px; }
+.hdk-the b { display: flex; align-items: center; gap: 7px; font-size: 14.5px; color: var(--ink); }
+.hdk-the b svg { color: var(--pink); }
+.hdk-the p { margin: 5px 0 0; font-size: 13.5px; line-height: 1.55; color: var(--ink-2); }
+.hdk-the p strong { color: var(--ink); }
+.hdk-hop { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.hdk-hop span { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: 999px; background: #fff; box-shadow: inset 0 0 0 1px var(--line); font-size: 12.5px; font-weight: 700; color: var(--muted-2); }
+.hdk-hop span.nhan { background: #FFF4E5; color: #A35A00; box-shadow: inset 0 0 0 1.5px #F3C27A; }
+.hdk-gia-lap { display: flex; gap: 8px; margin-top: 10px; align-items: center; }
+.hdk-gia-lap .o-nhap { flex: 1; min-width: 0; display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: 999px; background: #fff; box-shadow: inset 0 0 0 1.5px #F2C6DD; font-size: 14px; font-weight: 700; color: var(--ink); letter-spacing: .03em; }
+.hdk-gia-lap .o-nhap svg { color: var(--pink); flex: none; }
+.hdk-gia-lap .nut-gl { flex: none; height: 40px; padding: 0 16px; border-radius: 999px; display: inline-flex; align-items: center; background: linear-gradient(135deg, #E0157E 0%, #A0189A 58%, #7B2CBF 100%); color: #fff; font-size: 13px; font-weight: 800; }

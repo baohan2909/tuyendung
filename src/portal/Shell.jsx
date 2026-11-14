@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Clock, MapPin, Search, Sparkles } from 'lucide-react'
+import { ArrowRight, Clock, MapPin, Search, Sparkles } from 'lucide-react'
 
 // Khung chung của cổng ứng viên: nền tối + quả cầu, tiêu đề lớn, tấm trắng chứa nội dung
 export function PortalShell({ hero, buoc, loiChao, children, sheetRef, phai, xong }) {
@@ -21,7 +21,7 @@ export function PortalShell({ hero, buoc, loiChao, children, sheetRef, phai, xon
             <Link to="/" className="portal-ten" aria-label="Trang ứng tuyển">NÓN SƠN</Link>
             {phai || (traCuu
               ? <Link to="/" className="link">Ứng tuyển</Link>
-              : buoc != null ? <span className="buoc">Bước {buoc + 1} / 4</span> : <Link to="/tra-cuu" className="link"><Search size={14} />Tra cứu</Link>)}
+              : buoc != null ? <span className="buoc">Bước {buoc + 1} / 4</span> : <Link to="/tra-cuu" className="link nut-tra-cuu"><Search size={15} strokeWidth={2.6} />Tra cứu kết quả</Link>)}
           </header>
           <section className="hero">
             <p className="eyebrow sang">{xong ? 'Hoàn tất' : traCuu ? 'Tra cứu hồ sơ' : 'Đang tuyển dụng'}</p>
@@ -33,6 +33,13 @@ export function PortalShell({ hero, buoc, loiChao, children, sheetRef, phai, xon
               </h1>
             )}
             {loiChao && <p className="loi-chao">{loiChao}</p>}
+            {!traCuu && !xong && (
+              <Link to="/tra-cuu" className="the-tra-cuu">
+                <span className="ttc-ic"><Search size={20} strokeWidth={2.6} /></span>
+                <span className="gian"><b>Đã ứng tuyển? Tra cứu kết quả</b><small>Chỉ cần nhập số điện thoại · xem lịch phỏng vấn & nhận việc</small></span>
+                <span className="ttc-mui"><ArrowRight size={18} /></span>
+              </Link>
+            )}
             <div className="hero-uu-diem">
               <span><Clock size={15} /> Nộp hồ sơ trong 3 phút</span>
               <span><MapPin size={15} /> Hơn 200 cửa hàng</span>
