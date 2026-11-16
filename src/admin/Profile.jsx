@@ -12,6 +12,7 @@ import LichModal from './LichModal'
 import { HanhDongBuoc, MenuGiaiDoan, useDoiGiaiDoan } from './stageActions'
 import TruyVet from './TruyVet'
 import { ThuUngVien } from './Email'
+import { LichSuUngTuyen } from './LichSuUngTuyen'
 
 const IC_HD = { email: Mail, email_phan_hoi: MessageSquare, nop: FileText, trang_thai: Filter, ghi_chu: StickyNote, hen_pv: CalendarPlus, lich: CalendarCheck, danh_gia: ClipboardCheck, phan_cong: UserCheck, sua: Pencil, ung_vien: MessageCircle }
 
@@ -99,6 +100,7 @@ export function HoSoChiTiet({ id, nhung, nhip, onDoi, phai }) {
             <span className="the-tt">{h.tuoi} tuổi · {h.chieu_cao} cm · {h.can_nang} kg</span>
             <span className="the-tt cat" style={{ maxWidth: 260 }}>{h.cho_o}</span>
             <span className="the-tt" style={{ background: GD[h.trang_thai]?.cham || 'var(--pink)', color: '#fff', fontWeight: 700 }}>{GD[h.trang_thai]?.ten}</span>
+            {d.trung_sdt.length > 0 && <span className="the-tt the-lan" title="Số lần ứng tuyển (cùng số điện thoại)">Ứng tuyển lần {1 + d.trung_sdt.filter((x) => new Date(x.nop_luc) < new Date(h.nop_luc)).length}/{d.trung_sdt.length + 1}</span>}
           </div>
         </div>
         <div className="hang" style={{ gap: 16, flexWrap: 'wrap' }}>
@@ -125,10 +127,6 @@ export function HoSoChiTiet({ id, nhung, nhip, onDoi, phai }) {
         </span>}
       </div>
 
-      {d.trung_sdt.length > 0 && (
-        <Bao kieu="vang">Số điện thoại này đã nộp {d.trung_sdt.length} hồ sơ khác: {d.trung_sdt.map((x, i) => <span key={x.id}>{i ? ', ' : ''}<Link to={'/quantri/ung-vien/' + x.id} style={{ fontWeight: 700 }}>{x.ma}</Link> ({x.vi_tri}, {GD[x.trang_thai]?.ten}, {fmtNgay(x.nop_luc)})</span>)}</Bao>
-      )}
-
       <div className="hai-cot">
         <div className="lon cot" style={{ gap: 18 }}>
           <KhuAnhVideo anh={anh} video={video} moAnh={setAnhMo} />
@@ -139,6 +137,7 @@ export function HoSoChiTiet({ id, nhung, nhip, onDoi, phai }) {
         </div>
 
         <div className="nho-cot cot" style={{ gap: 18 }}>
+          <LichSuUngTuyen id={h.id} nhip={h.trang_thai} />
           <TruyVet id={h.id} nhip={d.hoat_dong.length} />
           {d.lich.length > 0 && <section className="card">
             <div className="dau-the"><h2>Lịch phỏng vấn</h2>{q.sua && <Btn kieu="den" co="sm" icon={CalendarPlus} onClick={() => setMoLich({})}>Hẹn</Btn>}</div>

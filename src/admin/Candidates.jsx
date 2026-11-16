@@ -13,6 +13,7 @@ import { HoSoChiTiet, TrinhPhat } from './Profile'
 import ChonNgay, { tinhKhoang } from './ChonNgay'
 import { tenNgan } from './Dashboard'
 import { HanhDongBuoc, MenuGiaiDoan, useDoiGiaiDoan } from './stageActions'
+import { TagLan } from './LichSuUngTuyen'
 
 function CotSX({ nhan, khoa, sapXep, setSapXep, className = '' }) {
   const on = khoa.includes(sapXep)
@@ -28,7 +29,7 @@ function CotSX({ nhan, khoa, sapXep, setSapXep, className = '' }) {
 const SAP_XEP = [{ v: 'moi_nhat', t: 'Mới nhất' }, { v: 'cu_nhat', t: 'Cũ nhất' }, { v: 'diem', t: 'Điểm cao' }, { v: 'ten', t: 'Tên A–Z' }, { v: 'tuoi', t: 'Trẻ nhất' }, { v: 'cap_nhat', t: 'Vừa cập nhật' }]
 
 export const COT_EXCEL = [
-  { k: 'ma', ten: 'Mã hồ sơ', w: 16 }, { k: 'nop_luc', ten: 'Thời gian nộp', w: 18, lay: (r) => fmtNgayGio(r.nop_luc) },
+  { k: 'ma', ten: 'Mã hồ sơ', w: 16 }, { k: 'lan_thu', ten: 'Lần ứng tuyển', w: 10, lay: (r) => (r.so_lan > 1 ? r.lan_thu + '/' + r.so_lan : 1) }, { k: 'nop_luc', ten: 'Thời gian nộp', w: 18, lay: (r) => fmtNgayGio(r.nop_luc) },
   { k: 'trang_thai', ten: 'Giai đoạn', w: 13, lay: (r) => GD[r.trang_thai]?.ten }, { k: 'ho_ten', ten: 'Họ và tên', w: 24 },
   { k: 'sdt', ten: 'Số điện thoại', w: 14 }, { k: 'email', ten: 'Email', w: 24 }, { k: 'ngay_sinh', ten: 'Ngày sinh', w: 12 },
   { k: 'tuoi', ten: 'Tuổi', w: 6 }, { k: 'chieu_cao', ten: 'Chiều cao (cm)', w: 9 }, { k: 'can_nang', ten: 'Cân nặng (kg)', w: 9 },
@@ -41,7 +42,7 @@ export const COT_EXCEL = [
 ]
 
 
-const LOC_TRONG = { vi_tri_id: '', khu_vuc: '', tuoi: '', danh_gia: '', hoc_van: '', ma_nguon: '', phu_trach: '', ngay: '', khoang: { v: '' }, co_video: '', uu_tien: false }
+const LOC_TRONG = { vi_tri_id: '', khu_vuc: '', tuoi: '', danh_gia: '', hoc_van: '', ma_nguon: '', phu_trach: '', ngay: '', khoang: { v: '' }, co_video: '', uu_tien: false, lan: '' }
 const TUOI = [{ v: '', t: 'Mọi độ tuổi' }, { v: '18-22', t: '18 – 22 tuổi' }, { v: '23-27', t: '23 – 27 tuổi' }, { v: '28-35', t: '28 – 35 tuổi' }, { v: '36-99', t: 'Trên 35 tuổi' }]
 const DANH_GIA = [{ v: '', t: 'Tất cả' }, { v: 'chua', t: 'Chưa chấm điểm' }, { v: 'da', t: 'Đã chấm điểm' }, { v: 'cao', t: 'Điểm từ 7 trở lên' }, { v: 'thap', t: 'Điểm dưới 5' }]
 const VIDEO = [{ v: '', t: 'Tất cả' }, { v: 'co', t: 'Có video' }, { v: 'khong', t: 'Chưa có video' }]
@@ -161,7 +162,7 @@ export default function Candidates({ cheDo }) {
     tim: timTre.trim() || null, trang_thai: pv ? (TAB_PV.find((x) => x.v === gd) || TAB_PV[0]).ds : gd ? (gd === 'dang_xu_ly' ? ['moi', 'sang_loc', 'hen_pv', 'da_pv', 'de_xuat', 'can_nhac', 'chua_lien_lac'] : [gd]) : null,
     vi_tri_id: loc.vi_tri_id || null, khu_vuc: loc.khu_vuc || null, tuoi_tu: tuoiTu, tuoi_den: tuoiDen, danh_gia: loc.danh_gia || null,
     hoc_van: loc.hoc_van || null, ma_nguon: loc.ma_nguon || null, phu_trach: loc.phu_trach || null, uu_tien: loc.uu_tien ? true : null,
-    co_video: loc.co_video === 'co' ? true : loc.co_video === 'khong' ? false : null, tu: khoangNgay[0], den: khoangNgay[1], sap_xep: sapXep
+    co_video: loc.co_video === 'co' ? true : loc.co_video === 'khong' ? false : null, ung_tuyen_lai: loc.lan === 'lai' ? true : loc.lan === 'dau' ? false : null, tu: khoangNgay[0], den: khoangNgay[1], sap_xep: sapXep
   }), [timTre, gd, loc, khoangNgay, sapXep, tuoiTu, tuoiDen, pv])
   const L = useDanhSach(p, s.nhip)
   const ds = L.dong
@@ -221,7 +222,7 @@ export default function Candidates({ cheDo }) {
   }
 
   const datLoc = (k) => (v) => setLoc((l) => ({ ...l, [k]: v }))
-  const soLoc = ['vi_tri_id', 'khu_vuc', 'tuoi', 'danh_gia', 'hoc_van', 'ma_nguon', 'phu_trach', 'co_video', 'uu_tien'].filter((k) => loc[k]).length + (loc.khoang?.v ? 1 : 0)
+  const soLoc = ['vi_tri_id', 'khu_vuc', 'tuoi', 'danh_gia', 'hoc_van', 'ma_nguon', 'phu_trach', 'co_video', 'uu_tien', 'lan'].filter((k) => loc[k]).length + (loc.khoang?.v ? 1 : 0)
   const tatCaChon = ds.length > 0 && ds.every((r) => chon.includes(r.id))
 
   // Gom nhóm (theo dữ liệu đã tải)
@@ -244,7 +245,9 @@ export default function Candidates({ cheDo }) {
         {s.coSua ? <button className={'o-chon' + (daChon ? ' on' : '')} onClick={(e) => { e.stopPropagation(); setChon((c) => (daChon ? c.filter((y) => y !== r.id) : [...c, r.id])) }} aria-label={'Chọn ' + r.ho_ten}>{daChon && <Check size={13} strokeWidth={3} />}</button> : <span />}
         <div className="dg-giua">
           <b className="cat">{r.ho_ten}{r.uu_tien && <Star size={12} className="uu-tien-sao" fill="currentColor" />}</b>
-          <span className="cat">{tenNgan(r.vi_tri)} · {r.tuoi} tuổi · {r.chieu_cao}cm/{r.can_nang}kg</span>
+          {r.so_lan > 1
+            ? <div className="dg-meta"><TagLan r={r} onMo={(x) => mo({ id: x.id, trang_thai: x.tt })} /><span className="cat">{tenNgan(r.vi_tri)} · {r.tuoi} tuổi · {r.chieu_cao}cm/{r.can_nang}kg</span></div>
+            : <span className="cat">{tenNgan(r.vi_tri)} · {r.tuoi} tuổi · {r.chieu_cao}cm/{r.can_nang}kg</span>}
           <span className="cat dg-kv">{r.khu_vuc_mong_muon || r.cho_o || '—'}</span>
         </div>
         <div className="dg-anh" onClick={(e) => e.stopPropagation()}>
@@ -276,7 +279,7 @@ export default function Candidates({ cheDo }) {
         <div key={r.id} className="the-uv" data-id={r.id} onClick={() => mo(r)}>
           <div className="anh">
             {r.anh ? <AnhKho path={r.anh} alt={r.ho_ten} /> : <div className="hang" style={{ height: '100%', justifyContent: 'center' }}><Avatar ten={r.ho_ten} co="xl" /></div>}
-            <div className="tren"><StageTag ma={r.trang_thai} />{r.diem_tb != null && <Diem v={r.diem_tb} />}</div>
+            <div className="tren"><StageTag ma={r.trang_thai} />{r.diem_tb != null && <Diem v={r.diem_tb} />}<span onClick={(e) => e.stopPropagation()}><TagLan r={r} onMo={(x) => mo({ id: x.id, trang_thai: x.tt })} /></span></div>
             <div className="duoi"><b className="cat" style={{ display: 'block' }}>{r.ho_ten} {r.uu_tien && <Star size={13} fill="#F5A524" color="#F5A524" />}</b><span>{r.tuoi} tuổi · {r.chieu_cao}cm · {r.khu_vuc_mong_muon || r.cho_o}</span></div>
           </div>
           <div className="chan">
@@ -339,6 +342,7 @@ export default function Candidates({ cheDo }) {
         <NutLoc nhan="Tuổi" giaTri={loc.tuoi} chon={datLoc('tuoi')} ds={TUOI} />
         <NutLoc nhan="Đánh giá" giaTri={loc.danh_gia} chon={datLoc('danh_gia')} ds={DANH_GIA} />
         <ChonNgay giaTri={loc.khoang} onDoi={(v) => setLoc((l) => ({ ...l, khoang: v }))} />
+        <NutLoc nhan="Số lần nộp" giaTri={loc.lan || ''} chon={datLoc('lan')} ds={[{ v: '', t: 'Tất cả' }, { v: 'lai', t: 'Ứng tuyển lại (≥ 2 lần)' }, { v: 'dau', t: 'Nộp lần đầu' }]} />
         <NutLoc nhan="Video" giaTri={loc.co_video} chon={datLoc('co_video')} ds={VIDEO} />
         <NutLoc nhan="Học vấn" giaTri={loc.hoc_van} chon={datLoc('hoc_van')} ds={[{ v: '', t: 'Mọi trình độ' }, ...(goiY?.hoc_van || []).map((k) => ({ v: k.ten, t: k.ten, n: k.n }))]} />
         <NutLoc nhan="Kênh" giaTri={loc.ma_nguon} chon={datLoc('ma_nguon')} rong={260} ds={[{ v: '', t: 'Mọi kênh / mã QR' }, ...s.dm.nguon.map((n) => ({ v: n.ma, t: n.ten }))]} />
