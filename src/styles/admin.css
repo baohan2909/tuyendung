@@ -784,3 +784,5 @@ a.lich-dong:hover { background: rgba(255,255,255,.12); color: #fff; }
 .logo-app { width: 40px; height: 40px; flex: none; display: block; filter: drop-shadow(0 8px 18px rgba(224,21,126,.42)); }
 .logo-app.sm { width: 34px; height: 34px; filter: drop-shadow(0 5px 12px rgba(224,21,126,.3)); }
 .sidebar.gon .logo-app { width: 36px; height: 36px; }
+.btn.nut-xoa-hs { color: #C62828; }
+.btn.nut-xoa-hs:hover { background: #FFECEC; color: #B71C1C; }

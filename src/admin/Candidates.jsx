@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, Download, Film, Play, Mic, Store, Image as ImageIc, Layers, LayoutList, Search, Star, UserCheck, X, Check, ArrowRight, Maximize2 } from 'lucide-react'
-import { rpc } from '../lib/api'
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, Download, Film, Play, Mic, Store, Image as ImageIc, Layers, LayoutList, Search, Star, UserCheck, X, Check, ArrowRight, Maximize2, Trash2 } from 'lucide-react'
+import { dsTep, rpc, xoaTep } from '../lib/api'
 import { useAsync, useDebounced, useLS, useMedia, usePhim } from '../lib/hooks'
 import { congNgay, fmtGiay, fmtNgayGio, fmtSdt, fmtThoiDiem, ngayVN } from '../lib/format'
 import { GIAI_DOAN, GD, GD_MO } from '../lib/stages'
 import { xuatExcel } from '../lib/excel'
-import { AnhKho, AnhNho, Avatar, Btn, Diem, Empty, Field, IconBtn, Menu, Segment, Skeleton, StageTag, useToast } from '../components/ui'
+import { AnhKho, AnhNho, Avatar, Btn, Diem, Empty, Field, IconBtn, Menu, Segment, Skeleton, StageTag, useToast, useXacNhan, Bao } from '../components/ui'
 import { useStaff } from './context'
 import LichModal from './LichModal'
 import { HoSoChiTiet, TrinhPhat } from './Profile'
@@ -136,6 +136,7 @@ export default function Candidates({ cheDo }) {
   const s = useStaff()
   const nav = useNavigate()
   const bao = useToast()
+  const xacNhan = useXacNhan()
   const rongLon = useMedia('(min-width: 1280px)')
   const [qs, setQs] = useSearchParams()
   const [kieu, setKieu] = useLS('ns-td-kieu-xem', 'bang')
@@ -209,6 +210,23 @@ export default function Candidates({ cheDo }) {
     if (e.key === 'ArrowUp' || e.key === 'k') { e.preventDefault(); dichChuyen(-1) }
     if (e.key === 'x' && xemId && s.coSua) setChon((c) => (c.includes(xemId) ? c.filter((y) => y !== xemId) : [...c, xemId]))
   }, banLam && !moTo && !henCho && !xemVideo)
+
+  async function xoaNhieu() {
+    const ds2 = ds.filter((r) => chon.includes(r.id))
+    const ok = await xacNhan({
+      tieuDe: 'Xóa vĩnh viễn ' + chon.length + ' hồ sơ?',
+      moTa: ds2.slice(0, 3).map((r) => r.ho_ten).join(', ') + (ds2.length > 3 ? ' và ' + (ds2.length - 3) + ' người khác' : ''),
+      noiDung: <Bao kieu="loi">Toàn bộ thông tin, ảnh, video, lịch, phiếu chấm và email của các hồ sơ này sẽ bị xóa, không khôi phục được. Bản sao vẫn được lưu trong Nhật ký.</Bao>,
+      nut: 'Xóa vĩnh viễn', nguyHiem: true
+    })
+    if (!ok) return
+    try {
+      const n = await rpc('td_xoa_ho_so', { p_ids: chon })
+      for (const id of chon) { try { await xoaTep(await dsTep(id)) } catch { /* bỏ qua */ } }
+      bao('Đã xóa ' + n + ' hồ sơ')
+      setChon([]); L.lamMoi(); s.taiDem()
+    } catch (e) { bao(e.message, 'loi') }
+  }
 
   async function xuat(chiChon) {
     setDangXuat(true)
@@ -410,6 +428,7 @@ export default function Candidates({ cheDo }) {
             </>}
           </Menu>
           {s.vaiTro !== 'phong_van' && <Btn kieu="trang" co="sm" icon={Download} onClick={() => xuat(true)}>Excel</Btn>}
+          {s.laToiCao && <Btn kieu="trang" co="sm" icon={Trash2} className="nut-xoa-hs" onClick={xoaNhieu}>Xóa</Btn>}
           <button className="icon-btn sm kinh" onClick={() => setChon([])} aria-label="Bỏ chọn"><X size={16} /></button>
         </div>
       )}

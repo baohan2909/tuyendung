@@ -71,9 +71,8 @@ export function HoSoChiTiet({ id, nhung, nhip, onDoi, phai }) {
     const ok = await xacNhan({ tieuDe: 'Xóa vĩnh viễn hồ sơ này?', moTa: h.ho_ten + ' · ' + h.ma, noiDung: <Bao kieu="loi">Toàn bộ thông tin, ảnh, video, lịch và phiếu chấm sẽ bị xóa và không khôi phục được.</Bao>, nut: 'Xóa vĩnh viễn', nguyHiem: true })
     if (!ok) return
     try {
-      const tep = await dsTep(h.id)
-      await xoaTep(tep)
       await rpc('td_xoa_ho_so', { p_ids: [h.id] })
+      try { await xoaTep(await dsTep(h.id)) } catch { /* tệp còn sót không ảnh hưởng */ }
       bao('Đã xóa hồ sơ')
       s.taiDem()
       nav('/quantri/ung-vien')
@@ -120,6 +119,7 @@ export function HoSoChiTiet({ id, nhung, nhip, onDoi, phai }) {
         <a className="btn trang md" href={'sms:' + h.sdt}><MessageSquare size={16} />SMS</a>
         {h.email && <a className="btn trang md" href={'mailto:' + h.email}><Mail size={16} />Email</a>}
         <Btn kieu="trang" co="md" icon={Copy} onClick={() => navigator.clipboard?.writeText(h.sdt).then(() => bao('Đã sao chép SĐT'))}>Sao chép</Btn>
+        {s.laToiCao && <Btn kieu="trang" co="md" icon={Trash2} className="nut-xoa-hs" onClick={xoaHan}>Xóa hồ sơ</Btn>}
         {!nhung && <span className="day hang" style={{ gap: 6 }}>
           <IconBtn icon={ChevronLeft} nhan="Hồ sơ trước (←)" disabled={!truoc} onClick={() => nav('/quantri/ung-vien/' + truoc)} />
           {vt >= 0 && <span className="nho muted so">{vt + 1}/{thuTu.length}</span>}
@@ -213,7 +213,6 @@ export function HoSoChiTiet({ id, nhung, nhip, onDoi, phai }) {
                   </div>
                 </details>
                 {h.ly_do_loai && <Bao kieu="vang">Lý do không đạt: {h.ly_do_loai}</Bao>}
-                {s.laQT && <Btn kieu="do" co="sm" icon={Trash2} onClick={xoaHan} style={{ alignSelf: 'flex-start' }}>Xóa vĩnh viễn hồ sơ</Btn>}
               </div>
             </section>
           )}
