@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, Download, Film, Play, Mic, Store, Image as ImageIc, Layers, LayoutList, Search, Star, UserCheck, X, Check, ArrowRight, Maximize2, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, Download, Film, Play, Mic, Store, Image as ImageIc, Layers, LayoutList, Search, Star, UserCheck, X, Check, ArrowRight, Maximize2, Trash2, PanelRightClose, PanelRightOpen } from 'lucide-react'
 import { dsTep, rpc, xoaTep } from '../lib/api'
 import { useAsync, useDebounced, useLS, useMedia, usePhim } from '../lib/hooks'
 import { congNgay, fmtGiay, fmtNgayGio, fmtSdt, fmtThoiDiem, ngayVN } from '../lib/format'
@@ -50,7 +50,7 @@ const NHOM = [{ v: '', t: 'Không nhóm' }, { v: 'gd', t: 'Theo giai đoạn' },
 const MOI_TRANG = 60
 
 // Một nút lọc dạng viên thuốc: chưa chọn = trắng, đã chọn = đen kèm giá trị + nút bỏ
-function NutLoc({ nhan, giaTri, ds, chon, rong = 230, children, tim }) {
+export function NutLoc({ nhan, giaTri, ds, chon, rong = 230, children, tim }) {
   const [q, setQ] = useState('')
   const coGiaTri = giaTri !== '' && giaTri != null
   const hien = coGiaTri ? (ds?.find((x) => String(x.v) === String(giaTri))?.t ?? giaTri) : nhan
@@ -140,6 +140,7 @@ export default function Candidates({ cheDo }) {
   const rongLon = useMedia('(min-width: 1280px)')
   const [qs, setQs] = useSearchParams()
   const [kieu, setKieu] = useLS('ns-td-kieu-xem', 'bang')
+  const [anCT, setAnCT] = useLS('ns-td-an-chi-tiet', false)
   const [tim, setTim] = useState(qs.get('tim') || '')
   const timTre = useDebounced(tim, 300)
   const gd = qs.get('gd') || ''
@@ -170,7 +171,8 @@ export default function Candidates({ cheDo }) {
   const dem = L.dem
   const tongTatCa = Object.values(dem).reduce((a, b) => a + b, 0)
   const dangXuLy = ['moi', 'sang_loc', 'hen_pv', 'da_pv', 'de_xuat', 'can_nhac', 'chua_lien_lac'].reduce((a, k) => a + (dem[k] || 0), 0)
-  const banLam = rongLon && kieu === 'bang' && !pv
+  const coBan = rongLon && kieu === 'bang' && !pv
+  const banLam = coBan && !anCT
 
   useEffect(() => { setChon([]) }, [JSON.stringify(p)])
   useEffect(() => { try { sessionStorage.setItem('ns-td-thu-tu', JSON.stringify(ds.map((r) => r.id))) } catch (e) { /* bỏ qua */ } }, [ds])
@@ -191,7 +193,10 @@ export default function Candidates({ cheDo }) {
   const datGD = (v) => { const q = new URLSearchParams(qs); if (v) q.set('gd', v); else q.delete('gd'); q.delete('tim'); setQs(q, { replace: true }) }
   const mo = (r) => {
     if (pv) return nav('/quantri/ung-vien/' + r.id + (GD_MO.includes(r.trang_thai) || r.trang_thai === 'dat' ? '/cham' : ''))
-    if (banLam) return setXemId(r.id)
+    if (coBan) {
+      if (banLam && xemId === r.id) return setAnCT(true) // bấm lại hồ sơ đang xem → thu gọn chi tiết
+      setXemId(r.id); return setAnCT(false)
+    }
     if (rongLon) return setMoTo(r.id)
     nav('/quantri/ung-vien/' + r.id)
   }
@@ -273,6 +278,9 @@ export default function Candidates({ cheDo }) {
           {!(r.anh_ds?.length || r.anh) && <Avatar ten={r.ho_ten} co="lg" />}
         </div>
         {r.video ? <NutVideo v={r.video} onClick={(e) => { e.stopPropagation(); setXemVideo({ v: r.video, ten: r.ho_ten }) }} /> : <span className="dg-vid trong" title="Chưa có video"><Film size={15} /></span>}
+        <span className="dg-x dg-sdt">{fmtSdt(r.sdt)}</span>
+        <span className="dg-x dg-kvx cat" title={r.cho_o || ''}>{r.khu_vuc_mong_muon || r.cho_o || '—'}</span>
+        <span className="dg-x dg-pt cat">{r.phu_trach_ten || <i className="muted">—</i>}</span>
         <div className="dg-phai">
           <span className="dg-gd"><StageTag ma={r.trang_thai} /></span>
           <span className="dg-gio" title={fmtNgayGio(r.nop_luc)}>{fmtThoiDiem(r.nop_luc)}</span>
@@ -309,12 +317,15 @@ export default function Candidates({ cheDo }) {
       ))}
     </div>
   ) : (
-    <div className="ds-gon">
+    <div className={'ds-gon' + (!banLam && rongLon && kieu === 'bang' ? ' rong-het' : '')}>
       <div className="ds-dau dg-dau">
         {s.coSua ? <button className={'o-chon' + (tatCaChon ? ' on' : '')} onClick={() => setChon(tatCaChon ? [] : ds.map((r) => r.id))} aria-label="Chọn tất cả đã tải">{tatCaChon && <Check size={13} strokeWidth={3} />}</button> : <span />}
         <CotSX nhan={<>Ứng viên <em>{ds.length}/{L.tong}</em></>} khoa={['ten']} sapXep={sapXep} setSapXep={setSapXep} />
         <span className="h-anh">Ảnh</span>
         <span className="h-vid">Video</span>
+        <span className="dg-x">Điện thoại</span>
+        <span className="dg-x">Khu vực</span>
+        <span className="dg-x">Phụ trách</span>
         <span className="h-gd">{banLam ? 'Trạng thái' : 'Giai đoạn'}</span>
         <CotSX className="h-gio" nhan="Nộp lúc" khoa={['moi_nhat', 'cu_nhat']} sapXep={sapXep} setSapXep={setSapXep} />
         <CotSX className="h-diem" nhan="Điểm" khoa={['diem']} sapXep={sapXep} setSapXep={setSapXep} />
@@ -336,6 +347,9 @@ export default function Candidates({ cheDo }) {
           <span className="eyebrow">{pv ? 'Phỏng vấn' : 'Ứng viên'}</span>
           <h1><span><b>{L.tong}</b> {pv ? (TAB_PV.find((x) => x.v === gd) || TAB_PV[0]).t.toLowerCase() : 'hồ sơ'}</span>{pv ? <Link to="/quantri/phong-van/lich" className="dem-phu" style={{ textDecoration: 'none', background: 'var(--soft)', color: 'var(--ink-2)' }}>Lịch hẹn (tùy chọn) →</Link> : <><span className="dem-phu"><i />{gd ? (gd === 'dang_xu_ly' ? 'Đang xử lý' : GD[gd]?.ten) : (dem.moi || 0) + ' chờ xử lý'}</span></>}</h1>
         </div>
+        {coBan && <button type="button" className={'nut-chi-tiet' + (anCT ? '' : ' on')} onClick={() => setAnCT(!anCT)} title={anCT ? 'Hiện khung chi tiết bên phải' : 'Thu gọn chi tiết — danh sách toàn màn hình'}>
+          {anCT ? <PanelRightOpen size={17} /> : <PanelRightClose size={17} />}<span>{anCT ? 'Hiện chi tiết' : 'Thu gọn chi tiết'}</span>
+        </button>}
         <Segment trang ds={[{ v: 'bang', t: 'Danh sách', icon: LayoutList }, { v: 'the', t: 'Thẻ ảnh', icon: ImageIc }]} giaTri={kieu} onChon={setKieu} />
         {s.vaiTro !== 'phong_van' && <Btn kieu="den" orb="trai" icon={Download} loading={dangXuat} onClick={() => xuat(false)}>Xuất Excel</Btn>}
       </header>
@@ -410,7 +424,7 @@ export default function Candidates({ cheDo }) {
         {banLam && (
           <div className="ban-phai">
             {xemId ? <HoSoChiTiet key={xemId} id={xemId} nhung nhip={nhipCT} onDoi={() => { L.lamMoi(); s.taiDem() }}
-              phai={<IconBtn icon={Maximize2} nhan="Mở trang riêng" kieu="kinh" onClick={() => nav('/quantri/ung-vien/' + xemId)} />} /> : <div className="card"><Empty icon={Search} tieuDe="Chọn một ứng viên ở danh sách" /></div>}
+              phai={<><IconBtn icon={Maximize2} nhan="Mở trang riêng" kieu="kinh" onClick={() => nav('/quantri/ung-vien/' + xemId)} /><IconBtn icon={PanelRightClose} nhan="Thu gọn chi tiết — xem danh sách toàn màn hình" kieu="kinh" onClick={() => setAnCT(true)} /></>} /> : <div className="card"><Empty icon={Search} tieuDe="Chọn một ứng viên ở danh sách" /></div>}
           </div>
         )}
       </div>

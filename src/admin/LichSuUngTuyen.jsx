@@ -12,7 +12,7 @@ export const KQ_LAN = {
   dat: { ten: 'Được duyệt', mau: '#12A37F' },
   khong: { ten: 'Không duyệt', mau: '#E05252' },
   rut: { ten: 'Đã rút', mau: '#B9B2BF' },
-  dang: { ten: 'Đang xét', mau: '#E8930C' }
+  dang: { ten: 'Đang xét', mau: '#E0820B' }
 }
 export const nhomKQ = (tt) => (['dat', 'nhan_viec'].includes(tt) ? 'dat' : tt === 'khong_dat' ? 'khong' : tt === 'rut' ? 'rut' : 'dang')
 

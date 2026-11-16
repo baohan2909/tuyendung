@@ -1,169 +1,494 @@
-import { useMemo, useState } from 'react'
-import { Download, Lock, Timer } from 'lucide-react'
-import { rpc } from '../lib/api'
-import { useAsync } from '../lib/hooks'
-import { congNgay, fmtDiem, ngayVN, phanTram } from '../lib/format'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { AlertTriangle, ArrowDown, ArrowUp, CalendarDays, ChevronLeft, ChevronRight, Download, Lock, Search, Store, Users, X } from 'lucide-react'
+import { docBang, rpc } from '../lib/api'
+import { useAsync, useDebounced, usePhim } from '../lib/hooks'
+import { congNgay, fmtDiem, fmtSdt, khongDau, ngayVN, phanTram, thu } from '../lib/format'
 import { xuatExcel } from '../lib/excel'
-import { Btn, Empty, Field, Segment, Skeleton, useToast } from '../components/ui'
+import { doanKhuVuc, KV_CHINH, KV_CHUA_RO, tenKV } from '../lib/khuVuc'
+import { GD } from '../lib/stages'
+import { Btn, Empty, IconBtn, Segment, Skeleton, useToast } from '../components/ui'
 import { useStaff } from './context'
+import { NutLoc } from './Candidates'
+import { HoSoChiTiet } from './Profile'
 
-const MAU_NOP = '#D6006C'
-const MAU_DAT = '#3B6FE0'
+/* ---------- Nhóm trạng thái dùng chung cho toàn bộ báo cáo ----------
+   cho   : chưa có kết quả cuối (mới, phỏng vấn, chờ kết quả, cân nhắc, chưa liên lạc…)
+   duyet : trúng tuyển — đã duyệt, CHƯA xác nhận nhận việc (có ngày nhận việc dự kiến)
+   nhan  : đã thực tế nhận việc (đã bấm “Nhận việc”, có hồ sơ nhân viên)
+   khong : không đạt · rut: ứng viên rút hồ sơ */
+export const NHOM = {
+  cho: { ten: 'Chờ xử lý', mau: '#E0820B', bg: '#FFF3E0', fg: '#8A4B00' },
+  duyet: { ten: 'Đã duyệt · chờ nhận việc', ngan: 'Đã duyệt', mau: '#3B6FE0', bg: '#EAF0FD', fg: '#2E5BC9' },
+  nhan: { ten: 'Đã nhận việc', mau: '#12A37F', bg: '#E3F5EE', fg: '#0E7F63' },
+  khong: { ten: 'Không đạt', mau: '#E05252', bg: '#FDECEC', fg: '#B42318' },
+  rut: { ten: 'Rút hồ sơ', mau: '#CFC9D4', bg: '#F4F1F5', fg: '#6F6777' }
+}
+const THU_TU = ['cho', 'duyet', 'nhan', 'khong', 'rut']
+const nhomCua = (tt) => (tt === 'nhan_viec' ? 'nhan' : tt === 'dat' ? 'duyet' : tt === 'khong_dat' ? 'khong' : tt === 'rut' ? 'rut' : 'cho')
 
-function khoang(ma) {
-  const h = ngayVN()
-  const [y, m] = h.split('-').map(Number)
-  const dauThang = (yy, mm) => yy + '-' + String(mm).padStart(2, '0') + '-01'
-  if (ma === '7') return [congNgay(h, -6), h]
-  if (ma === '30') return [congNgay(h, -29), h]
-  if (ma === '90') return [congNgay(h, -89), h]
-  if (ma === 'thang') return [dauThang(y, m), h]
-  if (ma === 'thang_truoc') { const yy = m === 1 ? y - 1 : y, mm = m === 1 ? 12 : m - 1; return [dauThang(yy, mm), congNgay(dauThang(y, m), -1)] }
-  return null
+const KHOANG = [
+  { v: 'hom_nay', t: 'Hôm nay' }, { v: '7', t: '7 ngày' }, { v: 'thang', t: 'Tháng này' }, { v: 'thang_truoc', t: 'Tháng trước' },
+  { v: '30', t: '30 ngày' }, { v: '90', t: '90 ngày' }, { v: 'nam', t: 'Năm nay' }, { v: 'tuy_chon', t: 'Tùy chọn' }
+]
+function khoang(ma, hn) {
+  const [y, m] = hn.split('-').map(Number)
+  const dau = (yy, mm) => yy + '-' + String(mm).padStart(2, '0') + '-01'
+  if (ma === 'hom_nay') return [hn, hn]
+  if (ma === '7') return [congNgay(hn, -6), hn]
+  if (ma === '30') return [congNgay(hn, -29), hn]
+  if (ma === '90') return [congNgay(hn, -89), hn]
+  if (ma === 'nam') return [y + '-01-01', hn]
+  if (ma === 'thang_truoc') { const yy = m === 1 ? y - 1 : y, mm = m === 1 ? 12 : m - 1; return [dau(yy, mm), congNgay(dau(y, m), -1)] }
+  return [dau(y, m), hn]
+}
+const dm = (s) => (s ? s.slice(8, 10) + '/' + s.slice(5, 7) : '—')
+const dmy = (s) => (s ? s.slice(8, 10) + '/' + s.slice(5, 7) + '/' + s.slice(0, 4) : '')
+
+function TagNhom({ n, quaHan }) {
+  const x = NHOM[n]
+  if (quaHan) return <span className="bc-tt qua-han"><AlertTriangle size={11} strokeWidth={2.6} />Quá hẹn</span>
+  return <span className="bc-tt" style={{ background: x.bg, color: x.fg }}><i style={{ background: x.mau }} />{x.ngan || x.ten}</span>
 }
 
-function HaiCot({ ds }) {
-  const [hv, setHv] = useState(null)
-  const max = Math.max(1, ...ds.map((x) => x.n))
-  const nhanMoi = Math.ceil(ds.length / 10)
+// Gắn khu vực, cửa hàng, nhóm trạng thái cho mỗi dòng
+function lamGiau(ds, chMap, hn) {
+  return (ds || []).map((r) => {
+    const ch = r.ch ? chMap.get(r.ch) : null
+    const kv = ch?.khu_vuc || doanKhuVuc(r.kvm) || doanKhuVuc(r.o) || KV_CHUA_RO
+    const nhom = nhomCua(r.tt)
+    const ngayNV = r.tn || r.dk || null
+    return { ...r, kv, chTen: ch?.ten || r.ch || null, nhom, ngayNV, quaHan: nhom === 'duyet' && !!r.dk && r.dk < hn, duKien: nhom === 'duyet' && !!r.dk && r.dk >= hn }
+  })
+}
+// Mỗi người (SĐT) chỉ giữ hồ sơ mới nhất trong tập
+function motNguoi(ds) {
+  const m = new Map()
+  for (const r of ds) { const c = m.get(r.sdt); if (!c || r.lan > c.lan) m.set(r.sdt, r) }
+  return [...m.values()]
+}
+const demNhom = (ds) => ds.reduce((a, r) => { a[r.nhom] = (a[r.nhom] || 0) + 1; return a }, {})
+
+/* ---------- Thanh tỉ lệ xếp chồng ---------- */
+function ThanhTiLe({ dem, cao = 8 }) {
+  const tong = THU_TU.reduce((a, k) => a + (dem[k] || 0), 0)
+  if (!tong) return <div className="bc-thanh trong" style={{ height: cao }} />
   return (
-    <div className="bieu-do">
-      <div className="chu-giai" style={{ marginBottom: 6 }}><span><i style={{ background: MAU_NOP }} />Hồ sơ nộp</span><span><i style={{ background: MAU_DAT }} />Đạt</span></div>
-      <div className="bd-cot" style={{ height: 170, gap: ds.length > 45 ? 2 : 6 }} onMouseLeave={() => setHv(null)}>
-        {ds.map((x, i) => (
-          <div key={x.ngay} className="c" onMouseEnter={() => setHv(i)} style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: 2 }} aria-label={x.ngay + ': ' + x.n + ' nộp, ' + x.dat + ' đạt'}>
-            {hv === i && <span className="goi-y-bd" style={{ left: '50%', top: 4, transform: 'translate(-50%, -100%)' }}>{x.ngay.slice(8, 10)}/{x.ngay.slice(5, 7)}: <b>{x.n}</b> nộp · <b>{x.dat}</b> đạt</span>}
-            <span className="t" style={{ width: 'min(45%, 11px)', height: (x.n / max) * 100 + '%', background: MAU_NOP, opacity: hv == null || hv === i ? 1 : 0.55 }} />
-            <span className="t" style={{ width: 'min(45%, 11px)', height: (x.dat / max) * 100 + '%', background: MAU_DAT, opacity: hv == null || hv === i ? 1 : 0.55 }} />
+    <div className="bc-thanh" style={{ height: cao }}>
+      {THU_TU.filter((k) => dem[k]).map((k) => <i key={k} title={NHOM[k].ten + ': ' + dem[k]} style={{ flexGrow: dem[k], background: NHOM[k].mau }} />)}
+    </div>
+  )
+}
+
+/* ---------- Biểu đồ xu hướng: hồ sơ nộp & đạt theo ngày / tuần ---------- */
+function XuHuong({ ds, tu, den }) {
+  const [hv, setHv] = useState(null)
+  const soNgay = Math.round((new Date(den) - new Date(tu)) / 864e5) + 1
+  const theoTuan = soNgay > 62
+  const cot = useMemo(() => {
+    const m = new Map()
+    const khoa = (ngay) => {
+      if (!theoTuan) return ngay
+      const d = new Date(ngay + 'T00:00:00Z'); const t = (d.getUTCDay() + 6) % 7
+      return congNgay(ngay, -t)
+    }
+    for (let i = 0, n = theoTuan ? Math.ceil(soNgay / 7) + 1 : soNgay; i < n; i++) {
+      const ng = theoTuan ? khoa(congNgay(tu, i * 7)) : congNgay(tu, i)
+      if (ng > den) break
+      if (!m.has(ng)) m.set(ng, { k: ng, nop: 0, dat: 0 })
+    }
+    for (const r of ds) {
+      const o = m.get(khoa(r.nop)); if (!o) continue
+      o.nop++; if (r.nhom === 'duyet' || r.nhom === 'nhan') o.dat++
+    }
+    return [...m.values()]
+  }, [ds, tu, den, theoTuan, soNgay])
+  const max = Math.max(1, ...cot.map((x) => x.nop))
+  const buoc = Math.ceil(cot.length / 12)
+  if (soNgay < 2) return <p className="nho muted" style={{ padding: '18px 0' }}>Chọn khoảng từ 2 ngày trở lên để xem xu hướng.</p>
+  return (
+    <div className="bc-xu">
+      <div className="bc-xu-cot" onMouseLeave={() => setHv(null)}>
+        {[0.5, 1].map((g) => <span key={g} className="bc-luoi" style={{ bottom: g * 100 + '%' }}><em>{Math.round(max * g)}</em></span>)}
+        {cot.map((x, i) => (
+          <div key={x.k} className={'c' + (hv === i ? ' hv' : '')} onMouseEnter={() => setHv(i)}>
+            <span className="t nop" style={{ height: (x.nop / max) * 100 + '%' }} />
+            <span className="t dat" style={{ height: (x.dat / max) * 100 + '%' }} />
+            {hv === i && <span className="goi-y-bd">{theoTuan ? 'Tuần ' + dm(x.k) : thu(x.k, true) + ' ' + dm(x.k)}<br /><b>{x.nop}</b> hồ sơ · <b>{x.dat}</b> đạt</span>}
           </div>
         ))}
       </div>
-      <div className="bd-day" />
-      <div className="hang" style={{ gap: ds.length > 45 ? 2 : 6, marginTop: 6 }}>
-        {ds.map((x, i) => <span key={x.ngay} className="muted" style={{ flex: 1, minWidth: 0, textAlign: 'center', fontSize: 10.5, whiteSpace: 'nowrap', visibility: i % nhanMoi === 0 ? 'visible' : 'hidden' }}>{x.ngay.slice(8, 10)}/{x.ngay.slice(5, 7)}</span>)}
-      </div>
+      <div className="bc-xu-nhan">{cot.map((x, i) => <span key={x.k}>{i % buoc === 0 ? dm(x.k) : ''}</span>)}</div>
     </div>
   )
 }
 
-function BangSo({ cot, dong }) {
+/* ---------- Lịch nhận việc ---------- */
+function LichNhanViec({ thang, setThang, ds, hn, ngayChon, setNgayChon, dangTai }) {
+  const [y, m] = thang.split('-').map(Number)
+  const dau = thang + '-01'
+  const lui = (new Date(dau + 'T00:00:00Z').getUTCDay() + 6) % 7
+  const batDau = congNgay(dau, -lui)
+  const soNgayThang = new Date(Date.UTC(y, m, 0)).getUTCDate()
+  const soO = Math.ceil((lui + soNgayThang) / 7) * 7
+  const theoNgay = useMemo(() => {
+    const g = new Map()
+    for (const r of ds) { if (!r.ngayNV) continue; const o = g.get(r.ngayNV) || { n: 0, nhan: 0, du: 0, qua: 0 }; o.n++; if (r.nhom === 'nhan') o.nhan++; else if (r.quaHan) o.qua++; else o.du++; g.set(r.ngayNV, o) }
+    return g
+  }, [ds])
+  const maxN = Math.max(1, ...[...theoNgay.values()].map((x) => x.n))
+  const tongThang = [...theoNgay.entries()].filter(([k]) => k.startsWith(thang)).reduce((a, [, v]) => a + v.n, 0)
+  const doiThang = (b) => { const d = new Date(Date.UTC(y, m - 1 + b, 1)); setThang(d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0')); setNgayChon(null) }
   return (
-    <div style={{ overflowX: 'auto' }} className="cuon-mong">
-      <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 13.5, minWidth: 520 }}>
-        <thead><tr>{cot.map((c, i) => <th key={i} style={{ textAlign: i ? 'right' : 'left', fontSize: 11, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--muted)', fontWeight: 700, padding: '0 10px 10px' }}>{c}</th>)}</tr></thead>
-        <tbody>{dong.map((r, j) => <tr key={j}>{r.map((v, i) => <td key={i} className="so" style={{ textAlign: i ? 'right' : 'left', padding: '11px 10px', borderTop: '1px solid var(--line)', fontWeight: i ? 700 : 600 }}>{v}</td>)}</tr>)}</tbody>
-      </table>
-    </div>
+    <section className="card bc-lich">
+      <div className="bc-the-dau">
+        <h2><CalendarDays size={17} />Lịch nhận việc</h2>
+        <span className="bc-dem-nho">{tongThang} người trong tháng</span>
+        <span className="gian" />
+        <div className="bc-thang">
+          <IconBtn icon={ChevronLeft} nhan="Tháng trước" co="sm" onClick={() => doiThang(-1)} />
+          <b>Tháng {m}/{y}</b>
+          <IconBtn icon={ChevronRight} nhan="Tháng sau" co="sm" onClick={() => doiThang(1)} />
+          {thang !== hn.slice(0, 7) && <button type="button" className="bc-hom-nay" onClick={() => { setThang(hn.slice(0, 7)); setNgayChon(hn) }}>Hôm nay</button>}
+        </div>
+      </div>
+      <div className="bc-lich-chu">
+        <span><i style={{ background: NHOM.duyet.mau }} />Dự kiến</span>
+        <span><i style={{ background: NHOM.nhan.mau }} />Đã nhận việc</span>
+        <span><i style={{ background: NHOM.khong.mau }} />Quá hẹn chưa xác nhận</span>
+      </div>
+      <div className={'bc-lich-luoi' + (dangTai ? ' dang-tai' : '')}>
+        {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((t) => <span key={t} className="bc-thu">{t}</span>)}
+        {Array.from({ length: soO }, (_, i) => {
+          const ng = congNgay(batDau, i)
+          const o = theoNgay.get(ng)
+          const ngoai = !ng.startsWith(thang)
+          const muc = o ? 0.1 + 0.32 * (o.n / maxN) : 0
+          return (
+            <button key={ng} type="button" disabled={!o && ngoai}
+              className={'bc-o' + (ngoai ? ' ngoai' : '') + (ng === hn ? ' hom-nay' : '') + (ngayChon === ng ? ' chon' : '') + (o ? ' co' : '') + (i % 7 >= 5 ? ' cuoi-tuan' : '')}
+              style={o ? { '--muc': muc } : null}
+              onClick={() => setNgayChon(ngayChon === ng ? null : ng)}
+              aria-label={dm(ng) + (o ? ': ' + o.n + ' người nhận việc' : '')}>
+              <span className="bc-o-ngay">{Number(ng.slice(8, 10))}</span>
+              {o && <b className="bc-o-so">{o.n}</b>}
+              {o && <span className="bc-o-cham">{o.du > 0 && <i style={{ background: NHOM.duyet.mau }} />}{o.nhan > 0 && <i style={{ background: NHOM.nhan.mau }} />}{o.qua > 0 && <i style={{ background: NHOM.khong.mau }} />}</span>}
+            </button>
+          )
+        })}
+      </div>
+    </section>
   )
 }
+
+function DongNguoi({ r, onMo, hienNgay }) {
+  return (
+    <button type="button" className="bc-nguoi" onClick={() => onMo(r.id)}>
+      <span className="bc-av" style={{ background: NHOM[r.nhom].bg, color: NHOM[r.nhom].fg }}>{String(r.ten || '?').trim().split(/\s+/).pop()[0]}</span>
+      <span className="gian">
+        <b className="cat">{r.ten}</b>
+        <small className="cat">{r.chTen ? <><Store size={11} />{r.chTen}</> : 'Chưa có cửa hàng'} · {tenKV(r.kv)}</small>
+      </span>
+      <span className="bc-nguoi-phai">
+        {hienNgay && <small>{thu(r.ngayNV, true)} {dm(r.ngayNV)}</small>}
+        {r.gio && !hienNgay && <small>{r.gio}</small>}
+        <TagNhom n={r.nhom} quaHan={r.quaHan} />
+      </span>
+    </button>
+  )
+}
+
+/* ---------- Bảng danh sách chi tiết ---------- */
+const COT = [
+  { k: 'ten', t: 'Ứng viên', lay: (r) => khongDau(r.ten) },
+  { k: 'sdt', t: 'Điện thoại' },
+  { k: 'vt', t: 'Vị trí' },
+  { k: 'kv', t: 'Khu vực' },
+  { k: 'chTen', t: 'Cửa hàng' },
+  { k: 'nop', t: 'Ngày nộp' },
+  { k: 'nhom', t: 'Trạng thái', lay: (r) => THU_TU.indexOf(r.nhom) },
+  { k: 'ngayNV', t: 'Nhận việc' },
+  { k: 'diem', t: 'Điểm', lay: (r) => (r.diem == null ? -1 : Number(r.diem)) }
+]
 
 export default function Reports() {
   const s = useStaff()
   const bao = useToast()
-  const [ma, setMa] = useState('30')
-  const [tuy, setTuy] = useState(() => khoang('30'))
-  const [tu, den] = ma === 'tuy_chon' ? tuy : khoang(ma)
-  const { data: d, loading } = useAsync(() => rpc('td_bao_cao', { p_tu: tu, p_den: den }), [tu, den, s.nhip])
-  const t = d?.tong || {}
-  const tongNguon = useMemo(() => Math.max(1, ...(d?.nguon || []).map((x) => x.nop)), [d])
-  const tongKV = useMemo(() => Math.max(1, ...(d?.khu_vuc || []).map((x) => x.n)), [d])
+  const hn = ngayVN()
+  const [ma, setMa] = useState('thang')
+  const [tuy, setTuy] = useState(() => khoang('30', hn))
+  const [moc, setMoc] = useState('nop')
+  const [kv, setKv] = useState('')
+  const [ch, setCh] = useState('')
+  const [vt, setVt] = useState('')
+  const [xem, setXem] = useState('')
+  const [tim, setTim] = useState('')
+  const [moiNguoi, setMoiNguoi] = useState(true)
+  const [sx, setSx] = useState({ k: 'nop', giam: true })
+  const [soHien, setSoHien] = useState(60)
+  const [thang, setThang] = useState(hn.slice(0, 7))
+  const [ngayChon, setNgayChon] = useState(null)
+  const [moHS, setMoHS] = useState(null)
+  const [nhip, setNhip] = useState(0)
+  const timTre = useDebounced(tim, 200)
+  const dsRef = useRef(null)
+  const [tu, den] = ma === 'tuy_chon' ? tuy : khoang(ma, hn)
+
+  const { data: chDs } = useAsync(() => docBang('cua_hang', [['ten', true]]), [])
+  const chMap = useMemo(() => new Map((chDs || []).map((c) => [c.ma, c])), [chDs])
+  const { data: d, loading } = useAsync(() => (tu && den ? rpc('td_bc_du_lieu', { p: { tu, den, moc } }) : null), [tu, den, moc, s.nhip, nhip])
+  // Lịch: lấy theo ngày nhận việc của cả lưới tháng (độc lập với khoảng thời gian bên trên)
+  const lichTu = useMemo(() => { const dau = thang + '-01'; return congNgay(dau, -((new Date(dau + 'T00:00:00Z').getUTCDay() + 6) % 7)) }, [thang])
+  const { data: dl, loading: taiLich } = useAsync(() => rpc('td_bc_du_lieu', { p: { tu: lichTu, den: congNgay(lichTu, 41), moc: 'nhan_viec' } }), [lichTu, s.nhip, nhip])
+  const { data: dq } = useAsync(() => rpc('td_bc_du_lieu', { p: { tu: congNgay(hn, -60), den: congNgay(hn, 30), moc: 'nhan_viec' } }), [hn, s.nhip, nhip])
+
+  usePhim(['Escape'], () => setMoHS(null), !!moHS)
+  useEffect(() => { setSoHien(60) }, [xem, kv, ch, vt, timTre, moiNguoi, tu, den, moc])
+
+  const loc = (ds) => ds.filter((r) => (!kv || r.kv === kv) && (!ch || r.ch === ch) && (!vt || String(r.vt) === String(vt)))
+  const tat = useMemo(() => loc(lamGiau(d?.dong, chMap, hn)), [d, chMap, hn, kv, ch, vt]) // eslint-disable-line react-hooks/exhaustive-deps
+  const nguoi = useMemo(() => motNguoi(tat), [tat])
+  const lichDs = useMemo(() => loc(lamGiau(dl?.dong, chMap, hn)), [dl, chMap, hn, kv, ch, vt]) // eslint-disable-line react-hooks/exhaustive-deps
+  const sapToi = useMemo(() => loc(lamGiau(dq?.dong, chMap, hn)), [dq, chMap, hn, kv, ch, vt]) // eslint-disable-line react-hooks/exhaustive-deps
+  const dem = useMemo(() => demNhom(nguoi), [nguoi])
+  const duKien = nguoi.filter((r) => r.duKien).length
+  const quaHan = nguoi.filter((r) => r.quaHan).length
+  const coKQ = (dem.duyet || 0) + (dem.nhan || 0) + (dem.khong || 0)
+
+  // Khu vực
+  const theoKV = useMemo(() => {
+    const g = new Map()
+    for (const r of nguoi) { const o = g.get(r.kv) || { kv: r.kv, n: 0, dem: {} }; o.n++; o.dem[r.nhom] = (o.dem[r.nhom] || 0) + 1; g.set(r.kv, o) }
+    return [...g.values()].sort((a, b) => (a.kv === KV_CHUA_RO) - (b.kv === KV_CHUA_RO) || b.n - a.n)
+  }, [nguoi])
+  const maxKV = Math.max(1, ...theoKV.map((x) => x.n))
+  // Cửa hàng có người nhận việc
+  const theoCH = useMemo(() => {
+    const g = new Map()
+    for (const r of nguoi) { if (!r.ch || !['duyet', 'nhan'].includes(r.nhom)) continue; const o = g.get(r.ch) || { ma: r.ch, ten: r.chTen, kv: r.kv, duyet: 0, nhan: 0 }; o[r.nhom]++; g.set(r.ch, o) }
+    return [...g.values()].sort((a, b) => b.duyet + b.nhan - (a.duyet + a.nhan)).slice(0, 8)
+  }, [nguoi])
+
+  // Danh sách chi tiết
+  const nguon = moiNguoi ? nguoi : tat
+  const tenVT = (id) => s.tenVT(Number(id))
+  const dsXem = useMemo(() => {
+    const q = khongDau(timTre.trim())
+    let r = nguon.filter((x) => !xem || (xem === 'du_kien' ? x.duKien : xem === 'qua_han' ? x.quaHan : x.nhom === xem))
+    if (q) { const so = q.replace(/\D/g, ''); r = r.filter((x) => khongDau(x.ten).includes(q) || (so.length >= 3 && x.sdt?.includes(so)) || khongDau(x.ma || '').includes(q) || khongDau(x.chTen || '').includes(q)) }
+    const c = COT.find((x) => x.k === sx.k) || COT[5]
+    const lay = c.lay || ((x) => (c.k === 'vt' ? tenVT(x.vt) : x[c.k] ?? ''))
+    return [...r].sort((a, b) => { const A = lay(a), B = lay(b); const kq = A < B ? -1 : A > B ? 1 : 0; return sx.giam ? -kq : kq })
+  }, [nguon, xem, timTre, sx]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const ngayDs = useMemo(() => (ngayChon ? lichDs.filter((r) => r.ngayNV === ngayChon).sort((a, b) => (a.gio || '').localeCompare(b.gio || '')) : null), [ngayChon, lichDs])
+  const quaHanDs = useMemo(() => motNguoi(sapToi).filter((r) => r.quaHan).sort((a, b) => a.dk.localeCompare(b.dk)), [sapToi])
+  const sapToiDs = useMemo(() => motNguoi(sapToi).filter((r) => r.ngayNV >= hn && r.ngayNV <= congNgay(hn, 13)).sort((a, b) => a.ngayNV.localeCompare(b.ngayNV) || (a.gio || '').localeCompare(b.gio || '')), [sapToi, hn])
+
   if (s.vaiTro === 'phong_van') return <div className="card"><Empty icon={Lock} tieuDe="Báo cáo dành cho bộ phận tuyển dụng" /></div>
+
+  const chonXem = (v) => { setXem(xem === v ? '' : v); setTimeout(() => dsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 30) }
+  const coLoc = kv || ch || vt
+  const kvDs = [{ v: '', t: 'Tất cả khu vực' }, ...KV_CHINH.map((k) => ({ v: k, t: tenKV(k) })),
+    ...[...new Set((chDs || []).map((c) => c.khu_vuc).filter((k) => k && !KV_CHINH.includes(k)))].map((k) => ({ v: k, t: k })), { v: KV_CHUA_RO, t: KV_CHUA_RO }]
+  const chLoc = [{ v: '', t: 'Tất cả cửa hàng' }, ...(chDs || []).filter((c) => c.hoat_dong && (!kv || c.khu_vuc === kv)).map((c) => ({ v: c.ma, t: c.ten }))]
+  const vtDs = [{ v: '', t: 'Tất cả vị trí' }, ...s.dm.viTri.map((v) => ({ v: v.id, t: v.ten }))]
+  const nhanKhoang = dmy(tu) + (tu !== den ? ' – ' + dmy(den) : '')
 
   async function xuat() {
     try {
       await xuatExcel('NS-bao-cao-tuyen-dung-' + tu + '_' + den + '.xlsx', [
-        { ten: 'Tổng quan', cot: [{ k: 'a', ten: 'Chỉ số', w: 28 }, { k: 'b', ten: 'Giá trị', w: 12 }], dong: [
-          { a: 'Khoảng thời gian', b: tu + ' → ' + den }, { a: 'Hồ sơ nộp', b: t.nop }, { a: 'Đã xem hồ sơ', b: t.sang_loc }, { a: 'Vào phỏng vấn', b: t.hen_pv },
-          { a: 'Đã phỏng vấn', b: t.da_pv }, { a: 'Đạt', b: t.dat }, { a: 'Nhận việc', b: t.nhan_viec }, { a: 'Không đạt', b: t.khong_dat }, { a: 'Dự bị', b: t.du_bi },
-          { a: 'Đang xử lý', b: t.dang_xu_ly }, { a: 'TB ngày nộp → phỏng vấn', b: d.thoi_gian?.nop_den_pv }, { a: 'TB ngày nộp → đạt', b: d.thoi_gian?.nop_den_dat }] },
-        { ten: 'Theo vị trí', cot: [{ k: 'ten', ten: 'Vị trí', w: 26 }, { k: 'nop', ten: 'Nộp' }, { k: 'hen_pv', ten: 'Hẹn PV' }, { k: 'da_pv', ten: 'Đã PV' }, { k: 'dat', ten: 'Đạt' }, { k: 'nhan_viec', ten: 'Nhận việc' }, { k: 'diem_tb', ten: 'Điểm TB' }], dong: d.vi_tri },
-        { ten: 'Theo nguồn', cot: [{ k: 'ten', ten: 'Nguồn thông tin', w: 46 }, { k: 'nop', ten: 'Nộp' }, { k: 'dat', ten: 'Đạt' }], dong: d.nguon },
-        { ten: 'Theo kênh QR', cot: [{ k: 'ma', ten: 'Mã', w: 14 }, { k: 'ten', ten: 'Kênh', w: 30 }, { k: 'nop', ten: 'Nộp' }, { k: 'dat', ten: 'Đạt' }], dong: d.kenh },
-        { ten: 'Theo ngày', cot: [{ k: 'ngay', ten: 'Ngày', w: 12 }, { k: 'n', ten: 'Nộp' }, { k: 'dat', ten: 'Đạt' }], dong: d.theo_ngay },
-        { ten: 'Người phỏng vấn', cot: [{ k: 'ho_ten', ten: 'Người phỏng vấn', w: 24 }, { k: 'so_phieu', ten: 'Số phiếu' }, { k: 'diem_tb', ten: 'Điểm TB' }, { k: 'dat', ten: 'Đề xuất đạt' }], dong: d.nguoi_cham }
+        { ten: 'Tổng quan', cot: [{ k: 'a', ten: 'Chỉ số', w: 34 }, { k: 'b', ten: 'Giá trị', w: 16 }], dong: [
+          { a: 'Khoảng thời gian', b: nhanKhoang }, { a: 'Tính theo', b: moc === 'nop' ? 'Ngày nộp hồ sơ' : 'Ngày nhận việc' },
+          { a: 'Bộ lọc', b: [kv && tenKV(kv), ch && chMap.get(ch)?.ten, vt && tenVT(vt)].filter(Boolean).join(' · ') || 'Không' },
+          { a: 'Ứng viên (người, không trùng)', b: nguoi.length }, { a: 'Hồ sơ (kể cả nộp lại)', b: tat.length },
+          ...THU_TU.map((k) => ({ a: NHOM[k].ten, b: dem[k] || 0 })),
+          { a: 'Dự kiến nhận việc (từ hôm nay)', b: duKien }, { a: 'Quá hẹn chưa xác nhận nhận việc', b: quaHan },
+          { a: 'Tỉ lệ đạt (đạt / đã có kết quả)', b: phanTram((dem.duyet || 0) + (dem.nhan || 0), coKQ) + '%' }] },
+        { ten: 'Theo khu vực', cot: [{ k: 'kv', ten: 'Khu vực', w: 28 }, { k: 'n', ten: 'Ứng viên' }, ...THU_TU.map((k) => ({ k, ten: NHOM[k].ten, w: 14 }))],
+          dong: theoKV.map((x) => ({ kv: x.kv, n: x.n, ...Object.fromEntries(THU_TU.map((k) => [k, x.dem[k] || 0])) })) },
+        { ten: 'Danh sách', cot: [{ k: 'ma', ten: 'Mã hồ sơ', w: 16 }, { k: 'ten', ten: 'Họ tên', w: 24 }, { k: 'sdt', ten: 'Điện thoại', w: 13 }, { k: 'vtTen', ten: 'Vị trí', w: 20 },
+          { k: 'kv', ten: 'Khu vực', w: 22 }, { k: 'chTen', ten: 'Cửa hàng', w: 24 }, { k: 'nopVN', ten: 'Ngày nộp', w: 12 }, { k: 'ttTen', ten: 'Trạng thái', w: 22 },
+          { k: 'ttCT', ten: 'Giai đoạn chi tiết', w: 18 }, { k: 'dkVN', ten: 'Nhận việc dự kiến', w: 14 }, { k: 'tnVN', ten: 'Nhận việc thực tế', w: 14 }, { k: 'diem', ten: 'Điểm PV' }, { k: 'lanTxt', ten: 'Lần ứng tuyển' }, { k: 'ld', ten: 'Lý do không đạt', w: 30 }],
+          dong: dsXem.map((r) => ({ ...r, vtTen: tenVT(r.vt), nopVN: dmy(r.nop), ttTen: r.quaHan ? 'Quá hẹn chưa xác nhận' : NHOM[r.nhom].ten, ttCT: GD[r.tt]?.ten, dkVN: dmy(r.dk), tnVN: dmy(r.tn), lanTxt: r.sl > 1 ? r.lan + '/' + r.sl : 1 })) },
+        { ten: 'Lịch nhận việc', cot: [{ k: 'ngay', ten: 'Ngày', w: 12 }, { k: 'ten', ten: 'Họ tên', w: 24 }, { k: 'sdt', ten: 'Điện thoại', w: 13 }, { k: 'chTen', ten: 'Cửa hàng', w: 24 }, { k: 'kv', ten: 'Khu vực', w: 22 }, { k: 'gio', ten: 'Giờ' }, { k: 'ttTen', ten: 'Trạng thái', w: 22 }],
+          dong: lichDs.filter((r) => r.ngayNV?.startsWith(thang)).sort((a, b) => a.ngayNV.localeCompare(b.ngayNV)).map((r) => ({ ...r, ngay: dmy(r.ngayNV), ttTen: r.quaHan ? 'Quá hẹn chưa xác nhận' : NHOM[r.nhom].ten })) }
       ])
-      bao('Đã xuất báo cáo')
     } catch (e) { bao(e.message, 'loi') }
   }
 
-  const Chi = ({ nhan, so, phu, cham, nen }) => (
-    <div className="kpi"><span className="blob" style={{ background: nen }} /><span className="nhan"><i style={{ background: cham }} />{nhan}</span><span className="so-lon"><b>{so ?? '—'}</b>{phu && <span className="delta trung">{phu}</span>}</span></div>
+  const O = ({ k, nhan, so, phu, mau, on, tat: off }) => (
+    <button type="button" className={'bc-chi-so' + (on ? ' on' : '') + (off ? ' tat' : '')} onClick={off ? undefined : () => chonXem(k)} disabled={off} style={{ '--mau': mau }}>
+      <span className="bc-cs-nhan">{mau && <i />}{nhan}</span>
+      <b>{so}</b>
+      {phu && <small>{phu}</small>}
+    </button>
   )
+
   return (
-    <>
-      <header className="trang-dau">
-        <div className="tieu"><span className="eyebrow">Báo cáo</span><h1>Hiệu quả <b>tuyển dụng</b></h1><p className="phu">{tu.split('-').reverse().join('/')} – {den.split('-').reverse().join('/')}</p></div>
+    <div className="bc">
+      <header className="trang-dau bc-dau">
+        <div className="tieu"><span className="eyebrow">Báo cáo</span><h1>Tình hình <b>tuyển dụng</b></h1></div>
         <Btn kieu="den" orb="trai" icon={Download} onClick={xuat} disabled={!d}>Xuất Excel</Btn>
       </header>
-      <div className="hang wrap" style={{ gap: 10 }}>
-        <div className="loc-cuon" style={{ maxWidth: '100%' }}><Segment trang ds={[{ v: '7', t: '7 ngày' }, { v: '30', t: '30 ngày' }, { v: 'thang', t: 'Tháng này' }, { v: 'thang_truoc', t: 'Tháng trước' }, { v: '90', t: '90 ngày' }, { v: 'tuy_chon', t: 'Tùy chọn' }]} giaTri={ma} onChon={(v) => { if (v === 'tuy_chon') setTuy([tu, den]); setMa(v) }} /></div>
-        {ma === 'tuy_chon' && <div className="hang" style={{ gap: 8 }}>
-          <Field kieu="gon" nhan="Từ" type="date" value={tuy[0]} max={tuy[1]} onChange={(e) => setTuy([e.target.value, tuy[1]])} />
-          <Field kieu="gon" nhan="Đến" type="date" value={tuy[1]} min={tuy[0]} onChange={(e) => setTuy([tuy[0], e.target.value])} />
-        </div>}
+
+      <div className="bc-loc">
+        <div className="loc-cuon"><Segment trang ds={KHOANG} giaTri={ma} onChon={(v) => { if (v === 'tuy_chon') setTuy([tu, den]); setMa(v) }} /></div>
+        {ma === 'tuy_chon' && <span className="bc-tuy">
+          <input type="date" value={tuy[0] || ''} max={tuy[1] || undefined} onChange={(e) => setTuy([e.target.value, tuy[1]])} aria-label="Từ ngày" />
+          <span>→</span>
+          <input type="date" value={tuy[1] || ''} min={tuy[0] || undefined} onChange={(e) => setTuy([tuy[0], e.target.value])} aria-label="Đến ngày" />
+        </span>}
+        <span className="bc-moc" role="tablist" aria-label="Tính theo">
+          <em>Tính theo</em>
+          <button type="button" className={moc === 'nop' ? 'on' : ''} onClick={() => setMoc('nop')} title="Đếm hồ sơ nộp trong khoảng thời gian">Ngày nộp</button>
+          <button type="button" className={moc === 'nhan_viec' ? 'on' : ''} onClick={() => setMoc('nhan_viec')} title="Đếm người có ngày nhận việc (dự kiến hoặc thực tế) trong khoảng thời gian">Ngày nhận việc</button>
+        </span>
+        <NutLoc nhan="Khu vực" giaTri={kv} ds={kvDs} chon={(v) => { setKv(v); setCh('') }} rong={250} />
+        <NutLoc nhan="Cửa hàng" giaTri={ch} ds={chLoc} chon={setCh} rong={300} tim />
+        <NutLoc nhan="Vị trí" giaTri={vt} ds={vtDs} chon={setVt} rong={240} />
+        {coLoc && <button type="button" className="nl-xoa" onClick={() => { setKv(''); setCh(''); setVt('') }}><X size={14} />Bỏ lọc</button>}
       </div>
 
-      {loading && !d ? <div className="kpis">{[0, 1, 2, 3].map((i) => <div key={i} className="kpi"><Skeleton h={14} w="60%" /><Skeleton h={36} w="40%" /></div>)}</div> : <>
-        <section className="kpis">
-          <Chi nhan="Hồ sơ nộp" so={t.nop} cham="#D6006C" nen="#FDEBF3" phu={(t.dang_xu_ly || 0) + ' đang xử lý'} />
-          <Chi nhan="Đã phỏng vấn" so={t.da_pv} cham="#7B2CBF" nen="#EFE8FB" phu={phanTram(t.da_pv, t.nop) + '%'} />
-          <Chi nhan="Đạt" so={t.dat} cham="#12A37F" nen="#E6F6F0" phu={phanTram(t.dat, t.da_pv) + '% số PV'} />
-          <Chi nhan="Nhận việc" so={t.nhan_viec} cham="#17111A" nen="#F1EDF3" phu={phanTram(t.nhan_viec, t.nop) + '% hồ sơ'} />
-        </section>
-        <div className="hai-cot">
-          <section className="card lon">
-            <div className="dau-the"><h2>Hồ sơ theo ngày</h2></div>
-            {(d.theo_ngay || []).length ? <HaiCot ds={d.theo_ngay} /> : <p className="nho muted">Khoảng thời gian quá dài để vẽ theo ngày.</p>}
-          </section>
-          <section className="card-dark nho-cot">
-            <div className="glow hong" style={{ width: 220, height: 220, right: -70, top: -90, opacity: 0.5, filter: 'blur(60px)' }} />
-            <h2 style={{ marginBottom: 18 }}><Timer size={17} style={{ verticalAlign: -3, marginRight: 6 }} />Tốc độ xử lý</h2>
-            <div className="cot" style={{ gap: 18 }}>
-              <div><div style={{ fontSize: 40, fontWeight: 800, lineHeight: 1 }}>{d.thoi_gian?.nop_den_pv != null ? fmtDiem(d.thoi_gian.nop_den_pv) : '—'}<small style={{ fontSize: 14, fontWeight: 600, opacity: 0.7 }}> ngày</small></div><p className="nho" style={{ opacity: 0.7 }}>Trung bình từ lúc nộp đến buổi phỏng vấn đầu tiên</p></div>
-              <div><div style={{ fontSize: 40, fontWeight: 800, lineHeight: 1 }}>{d.thoi_gian?.nop_den_dat != null ? fmtDiem(d.thoi_gian.nop_den_dat) : '—'}<small style={{ fontSize: 14, fontWeight: 600, opacity: 0.7 }}> ngày</small></div><p className="nho" style={{ opacity: 0.7 }}>Trung bình từ lúc nộp đến khi có kết quả đạt</p></div>
-              <div className="hang wrap" style={{ gap: 8 }}><span className="tag" style={{ background: 'rgba(255,255,255,.12)', color: '#fff' }}>{t.khong_dat || 0} không đạt</span><span className="tag" style={{ background: 'rgba(255,255,255,.12)', color: '#fff' }}>{t.du_bi || 0} dự bị</span></div>
+      {!d && loading ? <div className="card"><Skeleton h={90} /></div> : (
+        <section className={'card bc-tong' + (loading ? ' dang-tai' : '')}>
+          <div className="bc-tong-dau">
+            <span><b>{nhanKhoang}</b> · {moc === 'nop' ? 'tính theo ngày nộp hồ sơ' : 'tính theo ngày nhận việc'}{coLoc ? ' · đang lọc' : ''}</span>
+            <span className="muted" title="Một người nộp nhiều lần chỉ tính 1 lần, theo hồ sơ mới nhất">Mỗi người tính 1 lần · {tat.length} hồ sơ{tat.length > nguoi.length ? ' (' + (tat.length - nguoi.length) + ' nộp lại)' : ''}</span>
+          </div>
+          <div className="bc-chi-so-hang">
+            <O k="" nhan={<><Users size={13} />Ứng viên</>} so={nguoi.length} phu={moc === 'nop' ? 'người đã đăng ký' : 'người có lịch nhận việc'} on={!xem} />
+            <O k="cho" nhan="Chờ xử lý" mau={NHOM.cho.mau} so={dem.cho || 0} phu={phanTram(dem.cho || 0, nguoi.length) + '% chưa có kết quả'} on={xem === 'cho'} tat={moc !== 'nop'} />
+            <O k="duyet" nhan="Đã duyệt" mau={NHOM.duyet.mau} so={dem.duyet || 0} phu={duKien + ' dự kiến' + (quaHan ? ' · ' + quaHan + ' quá hẹn' : '')} on={xem === 'duyet'} />
+            <O k="nhan" nhan="Đã nhận việc" mau={NHOM.nhan.mau} so={dem.nhan || 0} phu="đã xác nhận đi làm" on={xem === 'nhan'} />
+            <O k="khong" nhan="Không đạt" mau={NHOM.khong.mau} so={dem.khong || 0} phu={(dem.rut || 0) + ' rút hồ sơ'} on={xem === 'khong'} tat={moc !== 'nop'} />
+            <div className="bc-chi-so ti-le">
+              <span className="bc-cs-nhan">Tỉ lệ đạt</span>
+              <b>{coKQ ? phanTram((dem.duyet || 0) + (dem.nhan || 0), coKQ) + '%' : '—'}</b>
+              <small>{(dem.duyet || 0) + (dem.nhan || 0)}/{coKQ} người đã có kết quả</small>
             </div>
-          </section>
-        </div>
+          </div>
+          <ThanhTiLe dem={dem} cao={6} />
+          <div className="bc-chu-giai">{THU_TU.map((k) => <span key={k}><i style={{ background: NHOM[k].mau }} />{NHOM[k].ten} <b>{dem[k] || 0}</b></span>)}</div>
+        </section>
+      )}
+
+      <div className="bc-hai">
+        <LichNhanViec thang={thang} setThang={setThang} ds={lichDs} hn={hn} ngayChon={ngayChon} setNgayChon={setNgayChon} dangTai={taiLich} />
+        <section className="card bc-ben">
+          {ngayChon ? <>
+            <div className="bc-the-dau">
+              <h2>{thu(ngayChon)} · {dmy(ngayChon)}</h2>
+              <span className="bc-dem-nho">{ngayDs.length} người</span>
+              <span className="gian" />
+              <IconBtn icon={X} nhan="Bỏ chọn ngày" co="sm" onClick={() => setNgayChon(null)} />
+            </div>
+            {ngayDs.length ? <div className="bc-ds-nguoi">{ngayDs.map((r) => <DongNguoi key={r.id} r={r} onMo={setMoHS} />)}</div>
+              : <Empty icon={CalendarDays} tieuDe="Không có ai nhận việc ngày này" />}
+          </> : <>
+            {quaHanDs.length > 0 && <>
+              <div className="bc-the-dau"><h2 className="do"><AlertTriangle size={16} />Quá hẹn · chưa xác nhận nhận việc</h2><span className="bc-dem-nho do">{quaHanDs.length}</span></div>
+              <p className="nho muted bc-goi-y">Đã qua ngày nhận việc dự kiến nhưng chưa bấm “Nhận việc”. Mở hồ sơ để xác nhận hoặc cập nhật.</p>
+              <div className="bc-ds-nguoi">{quaHanDs.slice(0, 5).map((r) => <DongNguoi key={r.id} r={r} onMo={setMoHS} hienNgay />)}</div>
+              {quaHanDs.length > 5 && <button type="button" className="bc-them" onClick={() => chonXem('qua_han')}>Xem tất cả {quaHanDs.length} người →</button>}
+            </>}
+            <div className="bc-the-dau" style={quaHanDs.length ? { marginTop: 14 } : null}><h2>Sắp nhận việc · 14 ngày tới</h2><span className="bc-dem-nho">{sapToiDs.length}</span></div>
+            {sapToiDs.length ? <div className="bc-ds-nguoi">{sapToiDs.map((r) => <DongNguoi key={r.id} r={r} onMo={setMoHS} hienNgay />)}</div>
+              : <Empty icon={CalendarDays} tieuDe="Chưa có lịch nhận việc sắp tới">Bấm một ngày trên lịch để xem chi tiết.</Empty>}
+          </>}
+        </section>
+      </div>
+
+      <div className="bc-hai bc-hai-2">
         <section className="card">
-          <div className="dau-the"><h2>Theo vị trí</h2></div>
-          <BangSo cot={['Vị trí', 'Nộp', 'Hẹn PV', 'Đã PV', 'Đạt', 'Nhận việc', 'Tỉ lệ đạt', 'Điểm TB']} dong={(d.vi_tri || []).map((v) => [v.ten, v.nop, v.hen_pv, v.da_pv, v.dat, v.nhan_viec, phanTram(v.dat, v.nop) + '%', v.diem_tb != null ? fmtDiem(v.diem_tb) : '—'])} />
+          <div className="bc-the-dau"><h2>Theo khu vực</h2><span className="bc-dem-nho">bấm để lọc</span></div>
+          <div className="bc-kv">
+            <div className="bc-kv-dong dau"><span>Khu vực</span><span>Ứng viên</span><span>Tình trạng</span><span>Đạt</span><span>Nhận việc</span><span>Tỉ lệ đạt</span></div>
+            {theoKV.map((x) => {
+              const dat = (x.dem.duyet || 0) + (x.dem.nhan || 0); const kq = dat + (x.dem.khong || 0)
+              return (
+                <button key={x.kv} type="button" className={'bc-kv-dong' + (kv === x.kv ? ' on' : '')} onClick={() => { setKv(kv === x.kv ? '' : x.kv); setCh('') }}>
+                  <span className="cat">{x.kv === KV_CHUA_RO ? <i className="muted">{KV_CHUA_RO}</i> : tenKV(x.kv)}</span>
+                  <b>{x.n}</b>
+                  <span className="bc-kv-thanh"><span style={{ width: (x.n / maxKV) * 100 + '%' }}><ThanhTiLe dem={x.dem} cao={10} /></span></span>
+                  <span>{dat || '—'}</span>
+                  <span>{x.dem.nhan || '—'}</span>
+                  <span className="bc-pt">{kq ? phanTram(dat, kq) + '%' : '—'}</span>
+                </button>
+              )
+            })}
+            {!theoKV.length && <p className="nho muted" style={{ padding: 12 }}>Chưa có dữ liệu.</p>}
+          </div>
+          <p className="nho muted bc-goi-y" style={{ marginTop: 10 }}>Người đã có cửa hàng tính theo khu vực cửa hàng; người chưa có cửa hàng tính theo khu vực mong muốn / nơi ở đã khai.</p>
         </section>
-        <div className="hai-cot">
-          <section className="card lon">
-            <div className="dau-the"><h2>Nguồn thông tin</h2><span className="chu-giai"><span><i style={{ background: MAU_NOP }} />Nộp</span><span><i style={{ background: MAU_DAT }} />Đạt</span></span></div>
-            <div className="cot" style={{ gap: 14 }}>
-              {(d.nguon || []).map((x) => (
-                <div key={x.ten}>
-                  <div className="hang" style={{ fontSize: 13, marginBottom: 6 }}><span className="gian cat" style={{ fontWeight: 600, color: 'var(--ink-2)' }}>{x.ten}</span><b className="so">{x.nop}</b><span className="nho muted so" style={{ minWidth: 92, textAlign: 'right' }}>{x.dat} đạt · {phanTram(x.dat, x.nop)}%</span></div>
-                  <div className="thanh" style={{ height: 8 }}><i style={{ width: (x.nop / tongNguon) * 100 + '%', background: MAU_NOP }} /></div>
-                  <div className="thanh" style={{ height: 8, marginTop: 3, background: 'transparent' }}><i style={{ width: (x.dat / tongNguon) * 100 + '%', background: MAU_DAT }} /></div>
-                </div>
-              ))}
-              {!(d.nguon || []).length && <p className="nho muted">Chưa có dữ liệu.</p>}
-            </div>
-          </section>
-          <section className="card nho-cot">
-            <div className="dau-the"><h2>Khu vực mong muốn · top 10</h2></div>
-            <div className="cot" style={{ gap: 12 }}>
-              {(d.khu_vuc || []).map((x) => (
-                <div key={x.ten} className="hang" style={{ gap: 10, fontSize: 13 }}><span className="cat" style={{ width: 110, fontWeight: 600, color: 'var(--ink-2)' }}>{x.ten}</span><span className="thanh gian"><i style={{ width: (x.n / tongKV) * 100 + '%' }} /></span><b className="so" style={{ width: 28, textAlign: 'right' }}>{x.n}</b></div>
-              ))}
-              {!(d.khu_vuc || []).length && <p className="nho muted">Chưa có dữ liệu.</p>}
-            </div>
-          </section>
+        <section className="card">
+          {moc === 'nop' && <>
+            <div className="bc-the-dau"><h2>Xu hướng hồ sơ</h2><span className="bc-chu-giai nho-gon"><span><i style={{ background: '#C9C2CF' }} />Hồ sơ nộp</span><span><i style={{ background: NHOM.duyet.mau }} />Đạt</span></span></div>
+            <XuHuong ds={tat} tu={tu} den={den} />
+          </>}
+          <div className="bc-the-dau" style={moc === 'nop' ? { marginTop: 16 } : null}><h2>Cửa hàng nhận người</h2><span className="bc-dem-nho">bấm để lọc</span></div>
+          {theoCH.length ? <div className="bc-ch">{theoCH.map((x) => (
+            <button key={x.ma} type="button" className={'bc-ch-dong' + (ch === x.ma ? ' on' : '')} onClick={() => setCh(ch === x.ma ? '' : x.ma)}>
+              <span className="gian cat"><b>{x.ten}</b><small>{tenKV(x.kv)}</small></span>
+              {x.duyet > 0 && <span className="bc-tt" style={{ background: NHOM.duyet.bg, color: NHOM.duyet.fg }}>{x.duyet} chờ nhận</span>}
+              {x.nhan > 0 && <span className="bc-tt" style={{ background: NHOM.nhan.bg, color: NHOM.nhan.fg }}>{x.nhan} đã nhận</span>}
+            </button>))}</div> : <p className="nho muted" style={{ padding: '6px 0' }}>Chưa có ứng viên đạt được phân về cửa hàng trong khoảng này.</p>}
+        </section>
+      </div>
+
+      <section className="card bc-bang-the" ref={dsRef}>
+        <div className="bc-the-dau wrap">
+          <h2>Danh sách chi tiết</h2>
+          <span className="bc-dem-nho">{dsXem.length} {moiNguoi ? 'người' : 'hồ sơ'}</span>
+          <span className="gian" />
+          <label className="bc-tim"><Search size={15} /><input placeholder="Tìm tên, SĐT, mã, cửa hàng…" value={tim} onChange={(e) => setTim(e.target.value)} />{tim && <button type="button" onClick={() => setTim('')} aria-label="Xóa tìm"><X size={13} /></button>}</label>
+          <button type="button" className={'bc-cong-tac' + (moiNguoi ? ' on' : '')} onClick={() => setMoiNguoi(!moiNguoi)} title="Bật: mỗi người 1 dòng (hồ sơ mới nhất). Tắt: hiện mọi lần nộp."><i />Mỗi người 1 dòng</button>
         </div>
-        <div className="hai-cot">
-          <section className="card lon">
-            <div className="dau-the"><h2>Kênh / mã QR</h2></div>
-            {(d.kenh || []).length ? <BangSo cot={['Kênh', 'Mã', 'Nộp', 'Đạt', 'Tỉ lệ']} dong={d.kenh.map((k) => [k.ten, k.ma, k.nop, k.dat, phanTram(k.dat, k.nop) + '%'])} /> : <p className="nho muted">Chưa có hồ sơ đến từ link/QR có mã kênh. Tạo mã trong Cài đặt → Nguồn & QR.</p>}
-          </section>
-          <section className="card nho-cot">
-            <div className="dau-the"><h2>Người phỏng vấn</h2></div>
-            {(d.nguoi_cham || []).length ? <BangSo cot={['Người', 'Phiếu', 'Điểm TB', 'Đề xuất đạt']} dong={d.nguoi_cham.map((n) => [n.ho_ten, n.so_phieu, n.diem_tb != null ? fmtDiem(n.diem_tb) : '—', n.dat])} /> : <p className="nho muted">Chưa có phiếu chấm trong khoảng này.</p>}
-          </section>
+        <div className="bc-tab">
+          {[['', 'Tất cả', nguon.length], ['cho', 'Chờ xử lý', nguon.filter((r) => r.nhom === 'cho').length], ['duyet', 'Đã duyệt', nguon.filter((r) => r.nhom === 'duyet').length],
+            ['du_kien', 'Dự kiến nhận việc', nguon.filter((r) => r.duKien).length], ['qua_han', 'Quá hẹn', nguon.filter((r) => r.quaHan).length], ['nhan', 'Đã nhận việc', nguon.filter((r) => r.nhom === 'nhan').length],
+            ['khong', 'Không đạt', nguon.filter((r) => r.nhom === 'khong').length], ['rut', 'Rút hồ sơ', nguon.filter((r) => r.nhom === 'rut').length]]
+            .filter(([v, , n]) => !v || n || xem === v).map(([v, t, n]) => (
+              <button key={v || 'tat'} type="button" className={xem === v ? 'on' : ''} onClick={() => setXem(v)} style={v && NHOM[v] ? { '--mau': NHOM[v].mau } : v === 'du_kien' ? { '--mau': NHOM.duyet.mau } : v === 'qua_han' ? { '--mau': NHOM.khong.mau } : null}>
+                {v && <i />}{t}<b>{n}</b>
+              </button>
+            ))}
         </div>
-      </>}
-    </>
+        <div className="bc-bang cuon-mong">
+          <table>
+            <thead><tr>{COT.map((c) => (
+              <th key={c.k} className={'c-' + c.k}>
+                <button type="button" className={sx.k === c.k ? 'on' : ''} onClick={() => setSx(sx.k === c.k ? { k: c.k, giam: !sx.giam } : { k: c.k, giam: ['nop', 'ngayNV', 'diem'].includes(c.k) })}>
+                  {c.t}{sx.k === c.k && (sx.giam ? <ArrowDown size={12} /> : <ArrowUp size={12} />)}
+                </button>
+              </th>))}</tr></thead>
+            <tbody>
+              {dsXem.slice(0, soHien).map((r) => (
+                <tr key={r.id} onClick={() => setMoHS(r.id)}>
+                  <td className="c-ten"><b className="cat">{r.ten}</b>{r.sl > 1 && <span className="bc-lan" title={'Ứng tuyển lần ' + r.lan + '/' + r.sl}>Lần {r.lan}</span>}</td>
+                  <td className="c-sdt so">{fmtSdt(r.sdt)}</td>
+                  <td className="c-vt cat">{tenVT(r.vt)}</td>
+                  <td className="c-kv cat">{r.kv === KV_CHUA_RO ? <span className="muted">—</span> : tenKV(r.kv)}</td>
+                  <td className="c-chTen cat">{r.chTen || <span className="muted">—</span>}</td>
+                  <td className="c-nop so">{dmy(r.nop)}</td>
+                  <td className="c-nhom"><TagNhom n={r.nhom} quaHan={r.quaHan} />{r.nhom === 'cho' && r.tt !== 'moi' && <small className="bc-gd">{GD[r.tt]?.ngan || GD[r.tt]?.ten}</small>}</td>
+                  <td className="c-ngayNV so">{r.ngayNV ? <>{dmy(r.ngayNV)}<small>{r.tn ? 'thực tế' : 'dự kiến'}</small></> : <span className="muted">—</span>}</td>
+                  <td className="c-diem so">{r.diem != null ? fmtDiem(r.diem) : <span className="muted">—</span>}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {!dsXem.length && <Empty icon={Search} tieuDe="Không có ứng viên phù hợp">Thử đổi khoảng thời gian hoặc bỏ bớt bộ lọc.</Empty>}
+        </div>
+        {dsXem.length > soHien && <div className="bc-chan"><Btn kieu="trang" co="sm" onClick={() => setSoHien(soHien + 100)}>Hiện thêm ({dsXem.length - soHien})</Btn></div>}
+      </section>
+
+      {moHS && (
+        <div className="man-ho-so" onMouseDown={(e) => { if (e.target === e.currentTarget) setMoHS(null) }}>
+          <div className="mhs-hop">
+            <HoSoChiTiet key={moHS} id={moHS} nhung onDoi={() => setNhip((n) => n + 1)} phai={<IconBtn icon={X} nhan="Đóng" kieu="kinh" onClick={() => setMoHS(null)} />} />
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
