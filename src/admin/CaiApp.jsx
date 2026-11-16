@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Download, Share, PlusSquare, MoreVertical, MonitorDown, Check, Copy, Compass, X, Smartphone, Monitor } from 'lucide-react'
 import { useCaiApp } from '../lib/caiApp'
-import { Modal, NonIcon, useToast } from '../components/ui'
+import { Modal, useToast } from '../components/ui'
 import { useLS } from '../lib/hooks'
 
 const BUOC = {
@@ -50,7 +50,7 @@ export function HuongDanCai({ mo, dong }) {
     <Modal mo={mo} dong={dong} tieuDe="Tải ứng dụng NS Tuyển dụng" moTa="Mở nhanh như app, cửa sổ riêng, không cần gõ địa chỉ web">
       <div className="cai-app">
         <div className="cai-dau">
-          <span className="cai-icon"><NonIcon size={30} stroke={2.2} /></span>
+          <img className="cai-icon" src="/app-128.png" alt="" width="54" height="54" />
           <div className="gian"><b>NS Tuyển dụng</b><small>tuyendungns.nonson.vn · Nón Sơn</small></div>
           {a.daCai && <span className="cai-da"><Check size={13} strokeWidth={3} />Đã cài</span>}
         </div>
@@ -113,7 +113,7 @@ export function GoiYCaiApp() {
   return (
     <>
       <div className="goi-y-cai">
-        <span className="cai-icon nho"><NonIcon size={20} stroke={2.2} /></span>
+        <img className="cai-icon nho" src="/app-128.png" alt="" width="40" height="40" />
         <div className="gian"><b>Tải ứng dụng NS Tuyển dụng</b><small>Mở nhanh như một app trên máy</small></div>
         <button type="button" className="nut-cai" onClick={async () => { if (a.coNutCai) { const kq = await a.cai(); if (kq) return } setMo(true) }}><Download size={15} strokeWidth={2.5} />Cài</button>
         <button type="button" className="dong-x" aria-label="Ẩn gợi ý" onClick={() => setAn(true)}><X size={15} /></button>

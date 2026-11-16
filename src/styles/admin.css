@@ -751,9 +751,8 @@ a.lich-dong:hover { background: rgba(255,255,255,.12); color: #fff; }
 .nav-cai svg { color: #FF8CC0; }
 .cai-app { display: flex; flex-direction: column; gap: 14px; }
 .cai-dau { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 18px; background: #FAF8FB; }
-.cai-icon { width: 54px; height: 54px; border-radius: 15px; flex: none; display: inline-flex; align-items: center; justify-content: center; color: #fff;
-  background: linear-gradient(135deg, #F0258E 0%, #B0179A 55%, #6A24B8 100%); box-shadow: 0 10px 24px rgba(176,23,154,.35), inset 0 1px 0 rgba(255,255,255,.35); }
-.cai-icon.nho { width: 40px; height: 40px; border-radius: 12px; }
+.cai-icon { width: 54px; height: 54px; border-radius: 0; flex: none; display: block; filter: drop-shadow(0 8px 16px rgba(176,23,154,.32)); }
+.cai-icon.nho { width: 40px; height: 40px; }
 .cai-dau b { display: block; font-size: 16px; font-weight: 800; }
 .cai-dau small { font-size: 12px; color: var(--muted); }
 .cai-da { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 800; color: #0E7F63; background: #E3F5EE; padding: 5px 10px; border-radius: 999px; }
