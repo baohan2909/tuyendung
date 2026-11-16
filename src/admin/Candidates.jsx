@@ -301,9 +301,13 @@ export default function Candidates({ cheDo }) {
           <span className={'dg-diem' + (r.diem_tb == null ? ' trong' : '')}>{r.diem_tb != null ? <Diem v={r.diem_tb} /> : '—'}</span>
         </div>
         <div className="dg-nhanh" onClick={(e) => e.stopPropagation()}>
-          {s.coCham && GD_MO.includes(r.trang_thai) && <button type="button" className="nut-pv-nho" title="Phỏng vấn ngay — mở phiếu" onClick={() => nav('/quantri/ung-vien/' + r.id + '/cham')}><Mic size={15} /><span className="chu">{['da_pv', 'de_xuat', 'du_bi', 'can_nhac'].includes(r.trang_thai) ? 'Phiếu' : r.trang_thai === 'chua_lien_lac' ? 'Gọi lại' : 'Phỏng vấn'}</span></button>}
-          {s.coSua && GD_MO.includes(r.trang_thai) && <button type="button" className="nut-loai-nho" title="Loại hồ sơ" aria-label="Loại" onClick={() => doiGD([r.id], 'khong_dat', [r])}><X size={14} strokeWidth={3} /></button>}
-          {r.trang_thai === 'dat' && s.coSua && <button type="button" className="nut-pv-nho xanh" title="Xác nhận nhận việc" onClick={() => doiGD([r.id], 'nhan_viec', [r])}><Store size={15} /><span className="chu">Nhận việc</span></button>}
+          <span className="nh-chinh">
+  {s.coCham && GD_MO.includes(r.trang_thai) && <button type="button" className="nut-pv-nho" title="Phỏng vấn ngay — mở phiếu" onClick={() => nav('/quantri/ung-vien/' + r.id + '/cham')}><Mic size={15} /><span className="chu">{['da_pv', 'de_xuat', 'du_bi', 'can_nhac'].includes(r.trang_thai) ? 'Phiếu' : r.trang_thai === 'chua_lien_lac' ? 'Gọi lại' : 'Phỏng vấn'}</span></button>}
+            {r.trang_thai === 'dat' && s.coSua && <button type="button" className="nut-pv-nho xanh" title="Xác nhận nhận việc" onClick={() => doiGD([r.id], 'nhan_viec', [r])}><Store size={15} /><span className="chu">Nhận việc</span></button>}
+          </span>
+          <span className="nh-x">
+            {s.coSua && GD_MO.includes(r.trang_thai) && <button type="button" className="nut-loai-nho" title="Loại hồ sơ" aria-label="Loại" onClick={() => doiGD([r.id], 'khong_dat', [r])}><X size={14} strokeWidth={3} /></button>}
+          </span>
         </div>
       </div>
     )
