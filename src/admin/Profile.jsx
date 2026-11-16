@@ -93,7 +93,9 @@ export function HoSoChiTiet({ id, nhung, nhip, onDoi, phai }) {
         </button>
         <div className="gian" style={{ flex: '1 1 260px' }}>
           <p className="eyebrow sang" style={{ marginBottom: 6 }}>{h.ma} · nộp {fmtNgayGio(h.nop_luc)}</p>
-          <h1>{h.ho_ten} {h.uu_tien && <Star size={22} fill="#F5A524" color="#F5A524" style={{ verticalAlign: 2 }} />}</h1>
+          <h1>{h.ho_ten} {q.sua
+            ? <button type="button" className={'nut-sao lon' + (h.uu_tien ? ' on' : '')} onClick={() => capNhat({ uu_tien: !h.uu_tien }, h.uu_tien ? 'Đã bỏ ưu tiên' : 'Đã đánh dấu ưu tiên')} title={h.uu_tien ? 'Bỏ ưu tiên' : 'Đánh dấu ưu tiên'} aria-label="Ưu tiên"><Star size={22} fill={h.uu_tien ? 'currentColor' : 'none'} /></button>
+            : h.uu_tien && <Star size={22} fill="#F5A524" color="#F5A524" style={{ verticalAlign: 2 }} />}</h1>
           <div className="hang wrap" style={{ gap: 8, marginTop: 10 }}>
             <span className="the-tt">{h.vi_tri}</span>
             <span className="the-tt">{h.tuoi} tuổi · {h.chieu_cao} cm · {h.can_nang} kg</span>

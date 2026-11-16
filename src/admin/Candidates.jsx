@@ -216,6 +216,13 @@ export default function Candidates({ cheDo }) {
     if (e.key === 'x' && xemId && s.coSua) setChon((c) => (c.includes(xemId) ? c.filter((y) => y !== xemId) : [...c, xemId]))
   }, banLam && !moTo && !henCho && !xemVideo)
 
+  async function doiSao(r) {
+    const v = !r.uu_tien
+    L.sua((d) => d.map((x) => (x.id === r.id ? { ...x, uu_tien: v } : x)))
+    try { await rpc('td_cap_nhat_ho_so', { p_id: r.id, p: { uu_tien: v } }); bao(v ? 'Đã đánh dấu ưu tiên ' + r.ho_ten : 'Đã bỏ ưu tiên'); if (xemId === r.id) setNhipCT((n) => n + 1) }
+    catch (e) { L.sua((d) => d.map((x) => (x.id === r.id ? { ...x, uu_tien: !v } : x))); bao(e.message, 'loi') }
+  }
+
   async function xoaNhieu() {
     const ds2 = ds.filter((r) => chon.includes(r.id))
     const ok = await xacNhan({
@@ -267,7 +274,9 @@ export default function Candidates({ cheDo }) {
       <div key={r.id} data-id={r.id} className={'dg' + (daChon ? ' chon' : '') + (dangXem ? ' dang-xem' : '')} onClick={() => mo(r)}>
         {s.coSua ? <button className={'o-chon' + (daChon ? ' on' : '')} onClick={(e) => { e.stopPropagation(); setChon((c) => (daChon ? c.filter((y) => y !== r.id) : [...c, r.id])) }} aria-label={'Chọn ' + r.ho_ten}>{daChon && <Check size={13} strokeWidth={3} />}</button> : <span />}
         <div className="dg-giua">
-          <b className="cat">{r.ho_ten}{r.uu_tien && <Star size={12} className="uu-tien-sao" fill="currentColor" />}</b>
+          <b className="cat">{r.ho_ten}{s.coSua
+            ? <button type="button" className={'nut-sao' + (r.uu_tien ? ' on' : '')} onClick={(e) => { e.stopPropagation(); doiSao(r) }} title={r.uu_tien ? 'Bỏ ưu tiên' : 'Đánh dấu ưu tiên'} aria-label="Ưu tiên"><Star size={14} fill={r.uu_tien ? 'currentColor' : 'none'} /></button>
+            : r.uu_tien && <Star size={12} className="uu-tien-sao" fill="currentColor" />}</b>
           {r.so_lan > 1
             ? <div className="dg-meta"><TagLan r={r} onMo={(x) => mo({ id: x.id, trang_thai: x.tt })} /><span className="cat">{tenNgan(r.vi_tri)} · {r.tuoi} tuổi · {r.chieu_cao}cm/{r.can_nang}kg</span></div>
             : <span className="cat">{tenNgan(r.vi_tri)} · {r.tuoi} tuổi · {r.chieu_cao}cm/{r.can_nang}kg</span>}
