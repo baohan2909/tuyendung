@@ -991,3 +991,16 @@ a.lich-dong:hover { background: rgba(255,255,255,.12); color: #fff; }
 @keyframes bcXo { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
 .bc-chip-ngay { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border: none; border-radius: 999px; background: #EAF0FD; color: #2E5BC9; font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
 @media (max-width: 900px) { .bc-goc-nhin { grid-template-columns: 1fr; gap: 8px; } }
+/* STT + avatar trước tên ứng viên */
+.dg-giua.co-av { flex-direction: row; align-items: center; gap: 10px; }
+.dg-chu { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.dg-giua > .dg-stt { flex: none; min-width: 22px; text-align: right; font-size: 11.5px; font-weight: 800; color: #B5ADBB; font-variant-numeric: tabular-nums; }
+.dg-giua > .dg-av { flex: none; display: inline-flex; font-size: inherit; color: inherit; }
+.dg-giua > .dg-av .av { width: 44px; height: 44px; font-size: 15px; font-weight: 800; box-shadow: 0 0 0 2px #fff, 0 4px 12px rgba(23,17,26,.12); cursor: zoom-in; }
+.dg-giua > .dg-av .av img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.dg.dang-xem .dg-giua > .dg-stt, .dg.chon .dg-giua > .dg-stt { color: var(--pink-deep); }
+@media (max-width: 640px) { .dg-giua > .dg-av .av { width: 40px; height: 40px; } .dg-giua > .dg-stt { min-width: 16px; } }
+/* Bàn làm việc: avatar tròn thay cột ảnh để tên không bị cắt */
+.ban-lam .ds-gon .dg, .ban-lam .ds-gon .dg-dau { grid-template-columns: 22px minmax(0, 1fr) 46px 92px 36px; }
+.ban-lam .ds-gon .dg-anh, .ban-lam .ds-gon .dg-dau .h-anh { display: none; }
+@media (max-width: 640px) { .ds-gon .dg-giua > .dg-av { display: none; } }

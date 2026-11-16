@@ -173,6 +173,7 @@ export default function Candidates({ cheDo }) {
   const dangXuLy = ['moi', 'sang_loc', 'hen_pv', 'da_pv', 'de_xuat', 'can_nhac', 'chua_lien_lac'].reduce((a, k) => a + (dem[k] || 0), 0)
   const coBan = rongLon && kieu === 'bang' && !pv
   const banLam = coBan && !anCT
+  const sttMap = useMemo(() => new Map(ds.map((r, i) => [r.id, i + 1])), [ds])
 
   useEffect(() => { setChon([]) }, [JSON.stringify(p)])
   useEffect(() => { try { sessionStorage.setItem('ns-td-thu-tu', JSON.stringify(ds.map((r) => r.id))) } catch (e) { /* bỏ qua */ } }, [ds])
@@ -273,7 +274,10 @@ export default function Candidates({ cheDo }) {
     return (
       <div key={r.id} data-id={r.id} className={'dg' + (daChon ? ' chon' : '') + (dangXem ? ' dang-xem' : '')} onClick={() => mo(r)}>
         {s.coSua ? <button className={'o-chon' + (daChon ? ' on' : '')} onClick={(e) => { e.stopPropagation(); setChon((c) => (daChon ? c.filter((y) => y !== r.id) : [...c, r.id])) }} aria-label={'Chọn ' + r.ho_ten}>{daChon && <Check size={13} strokeWidth={3} />}</button> : <span />}
-        <div className="dg-giua">
+        <div className="dg-giua co-av">
+          <span className="dg-stt">{sttMap.get(r.id)}</span>
+          <span className="dg-av" onClick={(e) => e.stopPropagation()}><Avatar ten={r.ho_ten} path={r.anh} co="md" phong /></span>
+          <div className="dg-chu">
           <b className="cat">{r.ho_ten}{s.coSua
             ? <button type="button" className={'nut-sao' + (r.uu_tien ? ' on' : '')} onClick={(e) => { e.stopPropagation(); doiSao(r) }} title={r.uu_tien ? 'Bỏ ưu tiên' : 'Đánh dấu ưu tiên'} aria-label="Ưu tiên"><Star size={14} fill={r.uu_tien ? 'currentColor' : 'none'} /></button>
             : r.uu_tien && <Star size={12} className="uu-tien-sao" fill="currentColor" />}</b>
@@ -281,6 +285,7 @@ export default function Candidates({ cheDo }) {
             ? <div className="dg-meta"><TagLan r={r} onMo={(x) => mo({ id: x.id, trang_thai: x.tt })} /><span className="cat">{tenNgan(r.vi_tri)} · {r.tuoi} tuổi · {r.chieu_cao}cm/{r.can_nang}kg</span></div>
             : <span className="cat">{tenNgan(r.vi_tri)} · {r.tuoi} tuổi · {r.chieu_cao}cm/{r.can_nang}kg</span>}
           <span className="cat dg-kv">{r.khu_vuc_mong_muon || r.cho_o || '—'}</span>
+          </div>
         </div>
         <div className="dg-anh" onClick={(e) => e.stopPropagation()}>
           {(r.anh_ds?.length ? r.anh_ds : r.anh ? [r.anh] : []).slice(0, 2).map((a, k) => <AnhNho key={k} path={a} alt={r.ho_ten + ' ' + (k + 1)} onClick={() => mo(r)} />)}
