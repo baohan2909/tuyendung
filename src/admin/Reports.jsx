@@ -263,7 +263,6 @@ function DongNguoi({ r, onMo, hienNgay }) {
 /* ---------- Bảng danh sách chi tiết ---------- */
 const COT = [
   { k: 'ten', t: 'Ứng viên', lay: (r) => khongDau(r.ten) },
-  { k: 'sdt', t: 'Điện thoại' },
   { k: 'vt', t: 'Vị trí' },
   { k: 'kv', t: 'Khu vực' },
   { k: 'chTen', t: 'Cửa hàng' },
@@ -579,8 +578,7 @@ export default function Reports() {
               {dsXem.slice(0, soHien).map((r, i) => (
                 <tr key={r.id} onClick={() => setMoHS(r.id)}>
                   <td className="c-stt so">{i + 1}</td>
-                  <td className="c-ten"><span className="bc-ten-o"><span onClick={(e) => e.stopPropagation()}><Avatar ten={r.ten} path={r.anh} co="sm" phong /></span><b className="cat">{r.ten}</b>{r.sl > 1 && <span className="bc-lan" title={'Ứng tuyển lần ' + r.lan + '/' + r.sl}>Lần {r.lan}</span>}</span></td>
-                  <td className="c-sdt so">{fmtSdt(r.sdt)}</td>
+                  <td className="c-ten"><span className="bc-ten-o"><span onClick={(e) => e.stopPropagation()}><Avatar ten={r.ten} path={r.anh} co="sm" phong /></span><span className="bc-ten-chu"><b className="cat">{r.ten}</b><small>{fmtSdt(r.sdt)}{r.sl > 1 && <em className="bc-lan" title={'Ứng tuyển lần ' + r.lan + '/' + r.sl}>Lần {r.lan}</em>}</small></span></span></td>
                   <td className="c-vt cat">{tenVT(r.vt)}</td>
                   <td className="c-kv cat">{r.kv === KV_CHUA_RO ? <span className="muted">—</span> : tenKV(r.kv)}</td>
                   <td className="c-chTen cat">{r.chTen || <span className="muted">—</span>}</td>
