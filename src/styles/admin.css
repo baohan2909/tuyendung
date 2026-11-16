@@ -781,3 +781,6 @@ a.lich-dong:hover { background: rgba(255,255,255,.12); color: #fff; }
 .goi-y-cai .nut-cai { display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 16px; border: none; border-radius: 999px; cursor: pointer; font: inherit; font-size: 13.5px; font-weight: 800; color: #fff; background: var(--nut-chinh); box-shadow: 0 8px 18px rgba(176,23,154,.28); flex: none; }
 .goi-y-cai .dong-x { width: 30px; height: 30px; border: none; border-radius: 50%; background: rgba(23,17,26,.05); color: var(--muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex: none; }
 .dn-cai { display: inline-flex; align-items: center; justify-content: center; gap: 7px; align-self: center; margin-top: 4px; height: 38px; padding: 0 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,.22); background: rgba(255,255,255,.08); color: #fff; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.logo-app { width: 40px; height: 40px; flex: none; display: block; filter: drop-shadow(0 8px 18px rgba(224,21,126,.42)); }
+.logo-app.sm { width: 34px; height: 34px; filter: drop-shadow(0 5px 12px rgba(224,21,126,.3)); }
+.sidebar.gon .logo-app { width: 36px; height: 36px; }

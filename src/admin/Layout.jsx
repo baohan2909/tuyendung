@@ -5,7 +5,7 @@ import { BarChart3, Briefcase, CalendarDays, Columns3, LayoutGrid, LogOut, Menu 
 import { useStaff } from './context'
 import { VAI_TRO } from '../lib/stages'
 import { chuCai } from '../lib/format'
-import { Modal, NonIcon, Spinner, Btn } from '../components/ui'
+import { Modal, Spinner, Btn } from '../components/ui'
 import Login from './Login'
 import { GoiYCaiApp, HuongDanCai, MucCaiApp } from './CaiApp'
 import { useCaiApp } from '../lib/caiApp'
@@ -59,7 +59,7 @@ export default function AdminLayout() {
     <div className="admin">
       <nav className={'sidebar' + (gon ? ' gon' : '')} aria-label="Menu chính">
         <div className="glow hong" style={{ width: 220, height: 220, left: -90, bottom: -60, opacity: 0.45 }} />
-        <div className="sb-brand"><span className="orb"><NonIcon size={20} /></span><div className="an-gon"><b>NS TUYỂN DỤNG</b><span>Nón Sơn</span></div>
+        <div className="sb-brand"><img className="logo-app" src="/app-128.png" alt="NS Tuyển dụng" width="40" height="40" /><div className="an-gon"><b>NS TUYỂN DỤNG</b><span>Nón Sơn</span></div>
           <button type="button" className="sb-gon" onClick={() => setGon(!gon)} aria-label={gon ? 'Mở rộng menu' : 'Thu gọn menu'} title={gon ? 'Mở rộng menu' : 'Thu gọn menu'}>{gon ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}</button>
         </div>
         <div className="sb-cuon">
@@ -81,7 +81,7 @@ export default function AdminLayout() {
       </nav>
 
       <header className="topbar">
-        <span className="orb sm"><NonIcon size={17} /></span>
+        <img className="logo-app sm" src="/app-128.png" alt="NS Tuyển dụng" width="34" height="34" />
         <span className="ten cat">{tieuDe}</span>
         <button className="icon-btn sm" onClick={() => nav('/quantri/cai-dat')} aria-label="Tài khoản"><span className="av sm" style={{ background: 'var(--ink)', color: '#fff' }}>{chuCai(s.toi.ho_ten)}</span></button>
       </header>
