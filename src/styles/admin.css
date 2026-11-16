@@ -1086,3 +1086,29 @@ a.lich-dong:hover { background: rgba(255,255,255,.12); color: #fff; }
   .ds-gon .dg-nhanh .nh-chinh, .ds-gon .dg-nhanh .nh-x { display: contents; }
   .ds-gon .dg-nhanh .nh-chinh .nut-pv-nho { width: auto; }
 }
+/* Bảng báo cáo: luôn vừa khung, co giãn theo bề rộng, không bao giờ mất cột ở mép phải */
+.bc-bang { overflow-x: hidden; container: bcb / inline-size; margin: 0 -4px; }
+.bc-bang table { table-layout: fixed; width: 100%; min-width: 0; }
+.bc-bang th, .bc-bang td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-left: 8px; padding-right: 8px; }
+.bc-bang td { max-width: none; }
+.bc-bang th button { margin-left: -6px; padding: 0 6px; max-width: 100%; overflow: hidden; }
+.bc-bang th .th-o { max-width: 100%; }
+.bc-bang .c-stt { width: 40px; }
+.bc-bang .c-ten { min-width: 0; }
+.bc-bang .c-ten b { max-width: none; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.bc-bang .c-sdt { width: 112px; }
+.bc-bang .c-vt { width: 156px; }
+.bc-bang .c-kv { width: 128px; }
+.bc-bang .c-chTen { width: 140px; }
+.bc-bang .c-nop { width: 104px; }
+.bc-bang .c-nhom { width: 128px; }
+.bc-bang .c-ngayNV { width: 104px; }
+.bc-bang .c-diem { width: 58px; }
+.bc-bang .c-nhom .bc-tt { max-width: 100%; }
+/* Ẩn dần cột ít quan trọng khi khung hẹp — không bao giờ tràn hay cắt cột ở mép phải */
+@container bcb (max-width: 1220px) { .bc-bang .c-sdt { display: none; } }
+@container bcb (max-width: 1100px) { .bc-bang .c-chTen { display: none; } }
+@container bcb (max-width: 960px) { .bc-bang .c-ngayNV { display: none; } }
+@container bcb (max-width: 840px) { .bc-bang .c-vt { display: none; } }
+@container bcb (max-width: 640px) { .bc-bang .c-kv, .bc-bang .c-nop { display: none; } .bc-bang .c-stt { width: 30px; } }
+@container bcb (max-width: 440px) { .bc-bang .c-diem { display: none; } .bc-bang .c-ten .av { display: none; } }
