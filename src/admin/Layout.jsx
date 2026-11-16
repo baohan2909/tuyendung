@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useLS } from '../lib/hooks'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { BarChart3, Briefcase, CalendarDays, Columns3, LayoutGrid, LogOut, Menu as MenuIc, Settings, Users, ExternalLink, Zap, UserCheck, History, PanelLeftClose, PanelLeftOpen, Mic } from 'lucide-react'
+import { BarChart3, Briefcase, CalendarDays, Columns3, LayoutGrid, LogOut, Menu as MenuIc, Settings, Users, ExternalLink, Zap, UserCheck, History, PanelLeftClose, PanelLeftOpen, Mic, Download } from 'lucide-react'
 import { useStaff } from './context'
 import { VAI_TRO } from '../lib/stages'
 import { chuCai } from '../lib/format'
 import { Modal, NonIcon, Spinner, Btn } from '../components/ui'
 import Login from './Login'
+import { GoiYCaiApp, HuongDanCai, MucCaiApp } from './CaiApp'
+import { useCaiApp } from '../lib/caiApp'
 
 function dsMuc(s) {
   return [
@@ -28,6 +30,8 @@ function dsMuc(s) {
 export default function AdminLayout() {
   const s = useStaff()
   const [moThem, setMoThem] = useState(false)
+  const [moCai, setMoCai] = useState(false)
+  const caiApp = useCaiApp()
   const [gon, setGon] = useLS('ns-td-menu-gon', false)
   const loc = useLocation()
   const nav = useNavigate()
@@ -66,6 +70,7 @@ export default function AdminLayout() {
               <m.ic size={19} strokeWidth={2} /><span className="an-gon">{m.ten}</span>{m.badge > 0 && <span className="badge">{m.badge > 99 ? '99+' : m.badge}</span>}
             </NavLink>
           ))}
+        <MucCaiApp gon={gon} />
         <a className="nav-item" href="/" target="_blank" rel="noreferrer" title={gon ? 'Trang ứng tuyển' : undefined}><ExternalLink size={19} /><span className="an-gon">Trang ứng tuyển</span></a>
         </div>
         <div className="sb-user">
@@ -82,6 +87,7 @@ export default function AdminLayout() {
       </header>
 
       <main className="admin-main">
+        <GoiYCaiApp />
         <Outlet />
       </main>
 
@@ -100,10 +106,12 @@ export default function AdminLayout() {
           {muc.filter((m) => m.to).slice(4).map((m) => (
             <Btn key={m.to} kieu="mem" co="lg" icon={m.ic} className="rong" style={{ justifyContent: 'flex-start' }} onClick={() => { setMoThem(false); nav(m.to) }}>{m.ten}</Btn>
           ))}
+          {!caiApp.daCai && <Btn co="lg" icon={Download} className="rong nut-cai-mb" style={{ justifyContent: 'flex-start' }} onClick={async () => { setMoThem(false); if (caiApp.coNutCai && await caiApp.cai()) return; setMoCai(true) }}>Tải ứng dụng</Btn>}
           <Btn co="lg" icon={ExternalLink} className="rong" style={{ justifyContent: 'flex-start' }} onClick={() => window.open('/', '_blank')}>Trang ứng tuyển</Btn>
           <Btn kieu="do" co="lg" icon={LogOut} className="rong" style={{ justifyContent: 'flex-start' }} onClick={() => { setMoThem(false); s.thoat() }}>Đăng xuất</Btn>
         </div>
       </Modal>
+      <HuongDanCai mo={moCai} dong={() => setMoCai(false)} />
     </div>
   )
 }

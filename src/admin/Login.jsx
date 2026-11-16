@@ -1,7 +1,9 @@
 import { useState } from 'react'
-import { Eye, EyeOff, LogIn } from 'lucide-react'
+import { Download, Eye, EyeOff, LogIn } from 'lucide-react'
 import { dangNhap, daCauHinh } from '../lib/api'
 import { Bao, Field, Spinner } from '../components/ui'
+import { HuongDanCai } from './CaiApp'
+import { useCaiApp } from '../lib/caiApp'
 
 export default function Login() {
   const [ma, setMa] = useState(() => localStorage.getItem('ns-td-ma') || '')
@@ -9,6 +11,8 @@ export default function Login() {
   const [hien, setHien] = useState(false)
   const [dang, setDang] = useState(false)
   const [loi, setLoi] = useState(null)
+  const [moCai, setMoCai] = useState(false)
+  const caiApp = useCaiApp()
 
   async function vao(e) {
     e.preventDefault()
@@ -51,8 +55,10 @@ export default function Login() {
             Đăng nhập <span className="orb">{dang ? <Spinner size={16} /> : <LogIn size={18} strokeWidth={2.4} />}</span>
           </button>
           <p style={{ marginTop: 10, fontSize: 12, color: 'rgba(255,255,255,.55)', textAlign: 'center' }}>Quên mật khẩu? Liên hệ quản trị hệ thống</p>
+          {!caiApp.daCai && <button type="button" className="dn-cai" onClick={async () => { if (caiApp.coNutCai && await caiApp.cai()) return; setMoCai(true) }}><Download size={15} strokeWidth={2.4} />Tải ứng dụng về máy</button>}
         </div>
       </form>
+      <HuongDanCai mo={moCai} dong={() => setMoCai(false)} />
     </div>
   )
 }

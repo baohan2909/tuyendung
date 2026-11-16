@@ -745,3 +745,40 @@ a.lich-dong:hover { background: rgba(255,255,255,.12); color: #fff; }
 .ls-nt-dong + .ls-nt-dong { margin-top: 6px; }
 .ls-nt-dong b { font-size: 13px; display: block; }
 .ls-nt-dong small { font-size: 11.5px; color: var(--muted); }
+
+/* ===== Tải ứng dụng (PWA) ===== */
+.nav-cai { width: 100%; border: none; background: none; font: inherit; cursor: pointer; text-align: left; }
+.nav-cai svg { color: #FF8CC0; }
+.cai-app { display: flex; flex-direction: column; gap: 14px; }
+.cai-dau { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 18px; background: #FAF8FB; }
+.cai-icon { width: 54px; height: 54px; border-radius: 15px; flex: none; display: inline-flex; align-items: center; justify-content: center; color: #fff;
+  background: linear-gradient(135deg, #F0258E 0%, #B0179A 55%, #6A24B8 100%); box-shadow: 0 10px 24px rgba(176,23,154,.35), inset 0 1px 0 rgba(255,255,255,.35); }
+.cai-icon.nho { width: 40px; height: 40px; border-radius: 12px; }
+.cai-dau b { display: block; font-size: 16px; font-weight: 800; }
+.cai-dau small { font-size: 12px; color: var(--muted); }
+.cai-da { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 800; color: #0E7F63; background: #E3F5EE; padding: 5px 10px; border-radius: 999px; }
+.cai-nut-lon { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 18px 10px 10px; border: none; border-radius: 999px; cursor: pointer; text-align: left; color: #fff; font: inherit;
+  background: var(--nut-chinh); box-shadow: 0 14px 30px rgba(176,23,154,.32); transition: transform .15s; }
+.cai-nut-lon:hover { transform: translateY(-1px); }
+.cai-nut-lon .orb { background: rgba(255,255,255,.2); width: 42px; height: 42px; }
+.cai-nut-lon b { display: block; font-size: 15px; }
+.cai-nut-lon small { font-size: 12px; opacity: .85; }
+.cai-tab { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: #F4F1F5; }
+.cai-tab button { flex: 1; height: 34px; border: none; border-radius: 999px; background: none; font: inherit; font-size: 12.5px; font-weight: 700; color: var(--muted); cursor: pointer; white-space: nowrap; }
+.cai-tab button.on { background: #fff; color: var(--chon-chu); box-shadow: 0 2px 8px rgba(23,17,26,.08); }
+.cai-ten-nt { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.cai-buoc { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.cai-buoc li { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px; background: #fff; box-shadow: 0 0 0 1px #F0EBF2; }
+.cai-buoc .so { width: 26px; height: 26px; border-radius: 50%; flex: none; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #fff; background: var(--nut-chinh); }
+.cai-buoc b { display: block; font-size: 14px; font-weight: 700; }
+.cai-buoc small { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.45; }
+.cai-buoc .ic { width: 36px; height: 36px; border-radius: 11px; flex: none; display: inline-flex; align-items: center; justify-content: center; background: var(--chon-nen); color: var(--chon-chu); }
+.cai-ghi { margin: 0; font-size: 12px; color: var(--muted); text-align: center; }
+
+.goi-y-cai { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding: 10px 10px 10px 12px; border-radius: 20px;
+  background: linear-gradient(135deg, #FFF0F7 0%, #F6EEFF 100%); box-shadow: inset 0 0 0 1px rgba(224,21,126,.14); }
+.goi-y-cai b { display: block; font-size: 14px; font-weight: 800; }
+.goi-y-cai small { display: block; font-size: 12px; color: var(--muted); }
+.goi-y-cai .nut-cai { display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 16px; border: none; border-radius: 999px; cursor: pointer; font: inherit; font-size: 13.5px; font-weight: 800; color: #fff; background: var(--nut-chinh); box-shadow: 0 8px 18px rgba(176,23,154,.28); flex: none; }
+.goi-y-cai .dong-x { width: 30px; height: 30px; border: none; border-radius: 50%; background: rgba(23,17,26,.05); color: var(--muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.dn-cai { display: inline-flex; align-items: center; justify-content: center; gap: 7px; align-self: center; margin-top: 4px; height: 38px; padding: 0 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,.22); background: rgba(255,255,255,.08); color: #fff; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
