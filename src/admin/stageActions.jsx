@@ -8,8 +8,9 @@ import { GIAI_DOAN, GD, GD_MO, GD_SANG_LOC } from '../lib/stages'
 import { Bao, Btn, Chips, Field, Menu, Modal, Spinner, Switch, useToast } from '../components/ui'
 import { useStaff } from './context'
 import { GuiThuModal } from './Email'
+import { LY_DO_NHOM, LyDoTuChoi } from './LyDo'
 
-export const LY_DO_LOAI = ['Chưa phù hợp ngoại hình, tác phong', 'Giao tiếp chưa phù hợp', 'Khu vực quá xa', 'Không đúng độ tuổi', 'Không liên lạc được', 'Thu nhập không phù hợp', 'Ứng viên từ chối', 'Hồ sơ chưa đủ ảnh/video', 'Trùng hồ sơ']
+export const LY_DO_LOAI = LY_DO_NHOM.flatMap((n) => n.ds)
 
 export function MenuGiaiDoan({ nut, chon, hienTai }) {
   return (
@@ -48,7 +49,7 @@ export function useDoiGiaiDoan({ xong, henPV }) {
       let n = 0
       if (['dat', 'khong_dat', 'du_bi'].includes(tt)) {
         // Kết quả (kể cả loại ngay từ "Chờ xử lý") — một đường duy nhất, có ghi nhận ai/khi nào
-        for (const id of ids) { await rpc('td_ket_qua_pv', { p_id: id, p: { ket_qua: tt, ghi_chu: ghiChu || null } }); n++ }
+        for (const id of ids) { await rpc('td_ket_qua_pv', { p_id: id, p: { ket_qua: tt, ghi_chu: ghiChu || null, ly_do: tt === 'khong_dat' ? ghiChu || null : null } }); n++ }
         bao((tt === 'khong_dat' ? 'Đã loại' : 'Đã chốt: ' + GD[tt].ten) + (n > 1 ? ' (' + n + ' hồ sơ)' : ''))
       } else if (tt === 'hen_pv' && rows?.every((r) => GD_SANG_LOC.includes(r.trang_thai))) {
         for (const id of ids) { await rpc('td_bat_dau_pv', { p_id: id }); n++ }
@@ -89,11 +90,12 @@ export function useDoiGiaiDoan({ xong, henPV }) {
   const giaoDien = (
     <>
       <Modal mo={!!hoi} dong={() => setHoi(null)} tieuDe={hoi?.tt === 'du_bi' ? 'Đưa vào danh sách dự bị' : 'Loại hồ sơ'}
-        moTa={(hoi && hoi.ids.length > 1 ? hoi.ids.length + ' hồ sơ · ' : '') + 'Lý do chỉ lưu nội bộ, ứng viên không thấy.'}
+        moTa={hoi && hoi.ids.length > 1 ? hoi.ids.length + ' hồ sơ được chọn' : (hoi?.rows?.[0]?.ho_ten || '')}
         chan={<><Btn kieu="trong" onClick={() => setHoi(null)}>Hủy</Btn><Btn kieu="den" loading={dang} onClick={() => lam(hoi.ids, hoi.tt, hoi.rows, lyDo)}>Xác nhận</Btn></>}>
         <div className="cot" style={{ gap: 12 }}>
-          {hoi?.tt !== 'du_bi' && <Chips ds={LY_DO_LOAI} giaTri={lyDo} onChon={setLyDo} co="sm" />}
-          <Field nhan="Ghi chú"><textarea rows={2} value={lyDo} onChange={(e) => setLyDo(e.target.value)} placeholder="Có thể bỏ trống" /></Field>
+          {hoi && (hoi.tt !== 'du_bi'
+            ? <LyDoTuChoi key={hoi.ids.join()} giaTri={lyDo} onDoi={setLyDo} />
+            : <Field nhan="Ghi chú"><textarea rows={2} value={lyDo} onChange={(e) => setLyDo(e.target.value)} placeholder="Có thể bỏ trống" /></Field>)}
           {hoi?.tt === 'khong_dat' && s.coCham && (
             <label className="hang gui-email-loai"><Switch on={guiEmail} nhan="Gửi email" onDoi={setGuiEmail} /><span className="gian"><b>Gửi email thông báo “Chưa phù hợp”</b><small>{hoi.ids.length > 1 ? 'Tự xếp hàng theo chế độ mặc định (có thể hủy trong mục Email từng hồ sơ)' : 'Bước tiếp theo: xem lại nội dung và chọn gửi ngay / gửi sau'}</small></span></label>
           )}

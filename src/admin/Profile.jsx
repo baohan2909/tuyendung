@@ -11,6 +11,7 @@ import { useStaff } from './context'
 import LichModal from './LichModal'
 import { HanhDongBuoc, MenuGiaiDoan, useDoiGiaiDoan } from './stageActions'
 import TruyVet from './TruyVet'
+import { TheTuyenDung } from './DieuChinh'
 import { ThuUngVien } from './Email'
 import { LichSuUngTuyen } from './LichSuUngTuyen'
 
@@ -139,6 +140,9 @@ export function HoSoChiTiet({ id, nhung, nhip, onDoi, phai }) {
         </div>
 
         <div className="nho-cot cot" style={{ gap: 18 }}>
+          <TheTuyenDung h={h} coSua={q.sua} onDoi={() => { reload(true); s.taiDem(); onDoi?.() }}>
+            {['dat', 'nhan_viec', 'khong_dat'].includes(h.trang_thai) && <NhanViec h={h} />}
+          </TheTuyenDung>
           <LichSuUngTuyen id={h.id} nhip={h.trang_thai} />
           <TruyVet id={h.id} nhip={d.hoat_dong.length} />
           {d.lich.length > 0 && <section className="card">
@@ -200,7 +204,6 @@ export function HoSoChiTiet({ id, nhung, nhip, onDoi, phai }) {
                     </form>
                   </div>
                 </div>
-                {['dat', 'nhan_viec', 'de_xuat', 'khong_dat'].includes(h.trang_thai) && <NhanViec h={h} />}
                 <details className="mo-rong">
                   <summary>Người xử lý & lịch hẹn <span className="muted nho">(khi có nhiều người tuyển dụng)</span></summary>
                   <div className="cot" style={{ gap: 12, paddingTop: 12 }}>
@@ -214,7 +217,6 @@ export function HoSoChiTiet({ id, nhung, nhip, onDoi, phai }) {
                     <Btn kieu="trang" co="sm" icon={CalendarPlus} onClick={() => setMoLich({})} style={{ alignSelf: 'flex-start' }}>Hẹn lịch phỏng vấn (tùy chọn)</Btn>
                   </div>
                 </details>
-                {h.ly_do_loai && <Bao kieu="vang">Lý do không đạt: {h.ly_do_loai}</Bao>}
               </div>
             </section>
           )}
@@ -326,18 +328,12 @@ function NhanViec({ h }) {
   const s = useStaff()
   const bao = useToast()
   const { data: dsCh } = useAsync(() => (h.cua_hang_du_kien ? docBang('cua_hang', [['ten', true]]) : Promise.resolve([])), [h.cua_hang_du_kien])
-  if (h.trang_thai === 'khong_dat') {
-    const tin = tinKhongDat(s.dm.caiDat.mau_tin_khong_dat, h)
-    return <Btn kieu="trang" co="sm" icon={Copy} onClick={() => navigator.clipboard?.writeText(tin).then(() => bao('Đã sao chép tin báo chưa phù hợp'))}>Sao chép tin báo ứng viên</Btn>
-  }
-  if (!h.noi_lam_viec && !h.ngay_nhan_viec) return null
-  const tin = tinDat(s.dm.caiDat.mau_tin_dat, h, h, (dsCh || []).find((c) => c.ma === h.cua_hang_du_kien), s.dm.caiDat)
+  const tin = h.trang_thai === 'khong_dat' ? tinKhongDat(s.dm.caiDat.mau_tin_khong_dat, h)
+    : (h.noi_lam_viec || h.ngay_nhan_viec) ? tinDat(s.dm.caiDat.mau_tin_dat, h, h, (dsCh || []).find((c) => c.ma === h.cua_hang_du_kien), s.dm.caiDat) : null
+  if (!tin || h.trang_thai === 'nhan_viec') return null
   return (
-    <div className="cot" style={{ gap: 4, background: 'var(--ok-bg)', borderRadius: 22, padding: '12px 14px' }}>
-      <b style={{ fontSize: 13.5, color: 'var(--ok)' }}>{h.trang_thai === 'nhan_viec' ? 'Đã nhận việc' : 'Nhận việc dự kiến'}</b>
-      <span style={{ fontSize: 14, fontWeight: 700 }}>{h.noi_lam_viec || 'Chưa chọn cửa hàng'}</span>
-      <span className="nho muted-2">{h.ngay_nhan_viec ? fmtNgay(h.ngay_nhan_viec + 'T12:00:00+07:00') : 'Chưa có ngày'}{h.gio_nhan_viec ? ' · lúc ' + String(h.gio_nhan_viec).slice(0, 5) : ''}{h.ghi_chu_nhan_viec ? ' · ' + h.ghi_chu_nhan_viec : ''}</span>
-      {h.trang_thai === 'dat' && <div style={{ marginTop: 6 }}><Btn kieu="trang" co="sm" icon={Copy} onClick={() => navigator.clipboard?.writeText(tin).then(() => bao('Đã sao chép tin báo trúng tuyển'))}>Sao chép tin báo ứng viên</Btn></div>}
+    <div className="ttd-nut">
+      <Btn kieu="trang" co="sm" icon={Copy} onClick={() => navigator.clipboard?.writeText(tin).then(() => bao(h.trang_thai === 'khong_dat' ? 'Đã sao chép tin báo chưa phù hợp' : 'Đã sao chép tin báo trúng tuyển'))}>Sao chép tin báo ứng viên</Btn>
     </div>
   )
 }

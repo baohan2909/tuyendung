@@ -9,7 +9,8 @@ import { GD, KET_LUAN } from '../lib/stages'
 import { Avatar, Bao, Btn, Chips, Diem, Empty, Field, IconBtn, KetLuanTag, Lightbox, Ring, Skeleton, StageTag, useToast } from '../components/ui'
 import { useStaff } from './context'
 import { BangThongTin, KhuAnhVideo } from './Profile'
-import { ChonCuaHang, LY_DO_LOAI, NhanViecModal } from './stageActions'
+import { ChonCuaHang, NhanViecModal } from './stageActions'
+import { LyDoTuChoi } from './LyDo'
 import { GuiThuModal } from './Email'
 
 export function tinhDiem(tieuChi, diem) {
@@ -37,6 +38,7 @@ export default function Scorecard() {
   const { data: d, loading, error, reload } = useAsync(() => rpc('td_chi_tiet', { p_id: id }), [id])
   const [diem, setDiem] = useState({})
   const [nhanXet, setNhanXet] = useState('')
+  const [lyDo, setLyDo] = useState(null)
   const [ketLuan, setKetLuan] = useState(null)
   const [nv, setNv] = useState({ cua_hang_ma: '', ngay_nhan_viec: congNgay(ngayVN(), 1), gio_nhan_viec: '08:00', gio_ket_thuc: '16:00', gioi_tinh: '', ghi_chu_nhan_viec: '' })
   const [trangThaiLuu, setTrangThaiLuu] = useState(null)
@@ -66,6 +68,7 @@ export default function Scorecard() {
     if (['dat', 'khong_dat', 'can_nhac', 'chua_lien_lac'].includes(h.trang_thai) && !p?.ket_luan) setKetLuan(h.trang_thai)
     setNv((x) => ({ ...x, gioi_tinh: gioiTinhHS(h) }))
     if (h.cua_hang_du_kien || h.ngay_nhan_viec) setNv({ cua_hang_ma: h.cua_hang_du_kien || '', ngay_nhan_viec: h.ngay_nhan_viec || congNgay(ngayVN(), 1), gio_nhan_viec: h.gio_nhan_viec ? String(h.gio_nhan_viec).slice(0, 5) : '08:00', gio_ket_thuc: h.gio_ket_thuc ? String(h.gio_ket_thuc).slice(0, 5) : '16:00', gioi_tinh: gioiTinhHS(h), ghi_chu_nhan_viec: h.ghi_chu_nhan_viec || '' })
+    setLyDo(h.ly_do_loai || '')
     daNap.current = true
   }, [d])
 
@@ -98,7 +101,7 @@ export default function Scorecard() {
     try {
       if (duTieuChi) await rpc('td_luu_danh_gia', { p_ho_so_id: id, p: { diem, nhan_xet: nhanXet, ket_luan: ketLuan, gui: true } })
       else await rpc('td_luu_danh_gia', { p_ho_so_id: id, p: { diem, nhan_xet: nhanXet, ket_luan: ketLuan } })
-      await rpc('td_ket_qua_pv', { p_id: id, p: { ket_qua: ketLuan, ghi_chu: nhanXet ? nhanXet.slice(0, 300) : null, ...(ketLuan === 'dat' ? nv : {}) } })
+      await rpc('td_ket_qua_pv', { p_id: id, p: { ket_qua: ketLuan, ghi_chu: ketLuan === 'khong_dat' ? (lyDo || null) : nhanXet ? nhanXet.slice(0, 300) : null, ly_do: ketLuan === 'khong_dat' ? (lyDo || null) : null, ...(ketLuan === 'dat' ? nv : {}) } })
       setDaGui(duTieuChi)
       bao('Đã hoàn tất phỏng vấn: ' + KET_LUAN[ketLuan].ten)
       if (ketLuan === 'dat' || ketLuan === 'khong_dat') setMoThu(ketLuan)
@@ -230,8 +233,7 @@ export default function Scorecard() {
             )}
             {ketLuan === 'khong_dat' && (
               <div className="cot" style={{ gap: 8 }}>
-                <span className="nhan-nhom">Lý do (chỉ lưu nội bộ)</span>
-                <Chips ds={LY_DO_LOAI} giaTri={nhanXet} onChon={(v) => { doi.current = true; setNhanXet(v) }} co="sm" />
+                {lyDo != null && <LyDoTuChoi key={h.id} giaTri={lyDo} onDoi={setLyDo} />}
               </div>
             )}
 
