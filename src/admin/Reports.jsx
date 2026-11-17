@@ -126,6 +126,43 @@ function ChonNhieu({ nhan, icon: Ic, ds, giaTri, onDoi, tim, rong = 290, nut, ca
   )
 }
 
+/* ---------- Lọc theo cột (ngày) ---------- */
+const trongKhoang = (v, f) => (!f.tu || (!!v && v >= f.tu)) && (!f.den || (!!v && v <= f.den))
+const coLocCot = (f) => !!f && !!(f.loai || f.tu || f.den)
+const NHANH_NGAY = [['hom_nay', 'Hôm nay'], ['ngay_mai', 'Ngày mai'], ['tuan', 'Tuần này'], ['tuan_truoc', 'Tuần trước'], ['thang', 'Tháng này'], ['thang_truoc', 'Tháng trước']]
+const nhanLocCot = (f, loai) => [loai?.find((x) => x[0] === f.loai)?.[1], f.tu || f.den ? (f.tu === f.den ? dm(f.tu) : (f.tu ? dm(f.tu) : '…') + ' – ' + (f.den ? dm(f.den) : '…')) : null].filter(Boolean).join(' · ')
+function LocCot({ nhan, loai, gt, onDoi, hn }) {
+  const f = gt || {}
+  const co = coLocCot(gt)
+  const dat = (x) => { const m = { ...f, ...x }; onDoi(coLocCot(m) ? m : null) }
+  const nhanh = NHANH_NGAY.find(([v]) => { const [a, b] = khoang(v, hn); return f.tu === a && f.den === b })?.[0]
+  return (
+    <Menu canh="trai" rong={300} nut={<button type="button" className={'th-loc' + (co ? ' on' : '')} aria-label={nhan}><Filter size={12} /></button>}>
+      {(dong) => <div className="bc-lc">
+        <div className="bc-cn-dau"><b>{nhan}</b>{co && <button type="button" className="bc-cn-bo" onClick={() => onDoi(null)}>Bỏ lọc</button>}</div>
+        {loai && <div className="bc-lc-loai">
+          {[['', 'Tất cả'], ...loai].map(([v, t]) => <button key={v || 'tat'} type="button" className={(f.loai || '') === v ? 'on' : ''} onClick={() => dat({ loai: v })}>{t}</button>)}
+        </div>}
+        <div className="tieu">Khoảng ngày</div>
+        <div className="bc-lc-nhanh">
+          {NHANH_NGAY.map(([v, t]) => <button key={v} type="button" className={nhanh === v ? 'on' : ''} onClick={() => { const [a, b] = khoang(v, hn); nhanh === v ? dat({ tu: '', den: '' }) : dat({ tu: a, den: b }) }}>{t}</button>)}
+        </div>
+        <div className="bc-ky-tu">
+          <input type="date" value={f.tu || ''} onChange={(e) => dat({ tu: e.target.value })} aria-label="Từ ngày" />
+          <span>→</span>
+          <input type="date" value={f.den || ''} onChange={(e) => dat({ den: e.target.value })} aria-label="Đến ngày" />
+        </div>
+        <div className="bc-cn-chan"><button type="button" className="bc-cn-xong" onClick={dong}>Xong</button></div>
+      </div>}
+    </Menu>
+  )
+}
+const LOAI_PV = [['thuc_te', 'Đã phỏng vấn'], ['du_kien', 'Có lịch, chưa PV'], ['doi', 'Đổi lịch'], ['chua', 'Chưa có lịch']]
+const LOAI_NV = [['nhan', 'Đã nhận việc'], ['du_kien', 'Dự kiến'], ['qua_han', 'Quá hẹn'], ['chua', 'Chưa có ngày']]
+const DIEM_MUC = [{ v: 'cao', t: 'Từ 8 điểm' }, { v: 'kha', t: '6.5 – dưới 8' }, { v: 'thap', t: 'Dưới 6.5' }, { v: 'chua', t: 'Chưa chấm' }]
+const mucDiem = (d) => (d == null ? 'chua' : Number(d) >= 8 ? 'cao' : Number(d) >= 6.5 ? 'kha' : 'thap')
+const LAN_UT = [{ v: 'dau', t: 'Ứng tuyển lần đầu' }, { v: 'lai', t: 'Nộp lại (từ lần 2)' }]
+
 /* ---------- Chọn kỳ báo cáo: khoảng thời gian + mốc tính ---------- */
 function ChonKy({ ma, setMa, tuy, setTuy, tu, den, moc, setMoc }) {
   const nhan = ma === 'tuy_chon' && tu === den ? 'Ngày ' + dm(tu) : KHOANG.find((k) => k.v === ma)?.t
@@ -337,6 +374,11 @@ export default function Reports() {
   const [vt, setVt] = useState([])
   const [tt, setTt] = useState([])
   const [pt, setPt] = useState([])
+  const [cNop, setCNop] = useState(null)
+  const [cPv, setCPv] = useState(null)
+  const [cNv, setCNv] = useState(null)
+  const [cDiem, setCDiem] = useState([])
+  const [cLan, setCLan] = useState([])
   const [xem, setXem] = useState('')
   const [lichLoai, setLichLoai] = useLS('ns-td-bc-lich-loai', 'nv')
   const [tim, setTim] = useState('')
@@ -361,20 +403,25 @@ export default function Reports() {
   const { data: dq } = useAsync(() => rpc('td_bc_du_lieu', { p: { tu: congNgay(hn, -60), den: congNgay(hn, 30), moc: 'nhan_viec' } }), [hn, s.nhip, nhip])
 
   usePhim(['Escape'], () => setMoHS(null), !!moHS)
-  useEffect(() => { setSoHien(60) }, [xem, kv, ch, vt, tt, pt, timTre, moiNguoi, tu, den, moc])
+  useEffect(() => { setSoHien(60) }, [xem, kv, ch, vt, tt, pt, cNop, cPv, cNv, cDiem, cLan, timTre, moiNguoi, tu, den, moc])
   useEffect(() => { setXem(''); setSx({ k: moc === 'phong_van' ? 'ngayPV' : moc === 'nhan_viec' ? 'ngayNV' : 'nop', giam: true }) }, [moc])
   useEffect(() => { setNgayChon(null) }, [lichLoai])
 
   const hop = (r, bo) => (bo === 'kv' || !kv.length || kv.includes(r.kv)) && (bo === 'ch' || !ch.length || ch.includes(r.ch)) && (bo === 'vt' || !vt.length || vt.includes(String(r.vt)))
     && (bo === 'tt' || !tt.length || tt.includes(r.nhom)) && (bo === 'pt' || !pt.length || pt.includes(r.pt || ''))
-  const loc = (ds) => ds.filter((r) => hop(r))
+    && (bo === 'diem' || !cDiem.length || cDiem.includes(mucDiem(r.diem))) && (bo === 'lan' || !cLan.length || cLan.includes(r.sl > 1 ? 'lai' : 'dau'))
+    && (bo === 'lich' || hopNgay(r))
+  const hopNgay = (r) => (!cNop || trongKhoang(r.nop, cNop))
+    && (!cPv || ((!cPv.loai || (cPv.loai === 'thuc_te' ? !!r.pvt : cPv.loai === 'du_kien' ? !!r.pvd && !r.pvt : cPv.loai === 'doi' ? r.dl > 0 : !r.pvd && !r.pvt)) && trongKhoang(r.ngayPV, cPv)))
+    && (!cNv || ((!cNv.loai || (cNv.loai === 'nhan' ? r.nhom === 'nhan' : cNv.loai === 'du_kien' ? r.duKien : cNv.loai === 'qua_han' ? r.quaHan : !r.ngayNV)) && trongKhoang(r.ngayNV, cNv)))
+  const loc = (ds, bo) => ds.filter((r) => hop(r, bo))
   const tatGoc = useMemo(() => lamGiau(d?.dong, chMap, hn), [d, chMap, hn])
   // Đếm số người theo từng lựa chọn (đã áp các bộ lọc khác) — hiện cạnh mỗi lựa chọn
   const demTheo = (bo, khoa) => { const m = new Map(); for (const r of motNguoi(tatGoc.filter((x) => hop(x, bo)))) { const k = khoa(r); if (k != null) m.set(k, (m.get(k) || 0) + 1) } return m }
-  const tat = useMemo(() => loc(tatGoc), [tatGoc, kv, ch, vt, tt, pt]) // eslint-disable-line react-hooks/exhaustive-deps
+  const tat = useMemo(() => loc(tatGoc), [tatGoc, kv, ch, vt, tt, pt, cNop, cPv, cNv, cDiem, cLan]) // eslint-disable-line react-hooks/exhaustive-deps
   const nguoi = useMemo(() => motNguoi(tat), [tat])
-  const lichDs = useMemo(() => loc(lamGiau(dl?.dong, chMap, hn)), [dl, chMap, hn, kv, ch, vt, tt, pt]) // eslint-disable-line react-hooks/exhaustive-deps
-  const sapToi = useMemo(() => loc(lamGiau(dq?.dong, chMap, hn)), [dq, chMap, hn, kv, ch, vt, tt, pt]) // eslint-disable-line react-hooks/exhaustive-deps
+  const lichDs = useMemo(() => loc(lamGiau(dl?.dong, chMap, hn), 'lich'), [dl, chMap, hn, kv, ch, vt, tt, pt, cDiem, cLan]) // eslint-disable-line react-hooks/exhaustive-deps
+  const sapToi = useMemo(() => loc(lamGiau(dq?.dong, chMap, hn), 'lich'), [dq, chMap, hn, kv, ch, vt, tt, pt, cDiem, cLan]) // eslint-disable-line react-hooks/exhaustive-deps
   const dem = useMemo(() => demNhom(nguoi), [nguoi])
   const duKien = nguoi.filter((r) => r.duKien).length
   const quaHan = nguoi.filter((r) => r.quaHan).length
@@ -420,7 +467,7 @@ export default function Reports() {
   if (s.vaiTro === 'phong_van') return <div className="card"><Empty icon={Lock} tieuDe="Báo cáo dành cho bộ phận tuyển dụng" /></div>
 
   const chonXem = (v) => { setXem(xem === v ? '' : v); setTimeout(() => dsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 30) }
-  const coLoc = kv.length + ch.length + vt.length + tt.length + pt.length > 0
+  const coLoc = kv.length + ch.length + vt.length + tt.length + pt.length + cDiem.length + cLan.length > 0 || !!(cNop || cPv || cNv)
   const dKV = demTheo('kv', (r) => r.kv), dCH = demTheo('ch', (r) => r.ch), dVT = demTheo('vt', (r) => String(r.vt))
   const kvDs = [...new Set([...KV_CHINH, ...(chDs || []).map((c) => c.khu_vuc).filter(Boolean), ...dKV.keys()])]
     .map((k) => ({ v: k, t: k === KV_CHUA_RO ? KV_CHUA_RO : tenKV(k), n: dKV.get(k) || 0 })).sort((a, b) => b.n - a.n || (a.v === KV_CHUA_RO) - (b.v === KV_CHUA_RO))
@@ -429,8 +476,10 @@ export default function Reports() {
   const vtDs = s.dm.viTri.map((v) => ({ v: String(v.id), t: v.ten, n: dVT.get(String(v.id)) || 0 }))
   const dTT = demTheo('tt', (r) => r.nhom), dPT = demTheo('pt', (r) => r.pt || '')
   const ttDs = THU_TU.map((k) => ({ v: k, t: NHOM[k].ten, n: dTT.get(k) || 0 }))
+  const dDiem = demTheo('diem', (r) => mucDiem(r.diem)), dLan = demTheo('lan', (r) => (r.sl > 1 ? 'lai' : 'dau'))
+  const diemDs = DIEM_MUC.map((x) => ({ ...x, n: dDiem.get(x.v) || 0 })), lanDs = LAN_UT.map((x) => ({ ...x, n: dLan.get(x.v) || 0 }))
   const ptDs = [...s.dm.nhanSu.filter((n) => n.hoat_dong || dPT.has(n.id)).map((n) => ({ v: n.id, t: n.ho_ten, n: dPT.get(n.id) || 0 })), { v: '', t: 'Chưa phân công', n: dPT.get('') || 0 }].sort((a, b) => b.n - a.n)
-  const boLoc = () => { setKv([]); setCh([]); setVt([]); setTt([]); setPt([]) }
+  const boLoc = () => { setKv([]); setCh([]); setVt([]); setTt([]); setPt([]); setCNop(null); setCPv(null); setCNv(null); setCDiem([]); setCLan([]) }
   const nhanKhoang = dmy(tu) + (tu !== den ? ' – ' + dmy(den) : '')
 
   async function xuat() {
@@ -485,6 +534,11 @@ export default function Reports() {
           {vt.map((v) => <button key={'vt' + v} type="button" onClick={() => setVt(vt.filter((x) => x !== v))}><Briefcase size={12} />{tenVT(v)}<X size={12} /></button>)}
           {tt.map((v) => <button key={'tt' + v} type="button" onClick={() => setTt(tt.filter((x) => x !== v))}><CircleDot size={12} />{NHOM[v].ten}<X size={12} /></button>)}
           {pt.map((v) => <button key={'pt' + v} type="button" onClick={() => setPt(pt.filter((x) => x !== v))}><UserCheck size={12} />{v ? s.tenNS(v) : 'Chưa phân công'}<X size={12} /></button>)}
+          {cLan.map((v) => <button key={'lan' + v} type="button" onClick={() => setCLan(cLan.filter((x) => x !== v))}><Users size={12} />{LAN_UT.find((x) => x.v === v)?.t}<X size={12} /></button>)}
+          {cNop && <button type="button" onClick={() => setCNop(null)}><CalendarDays size={12} />Nộp {nhanLocCot(cNop)}<X size={12} /></button>}
+          {cPv && <button type="button" onClick={() => setCPv(null)}><CalendarClock size={12} />PV {nhanLocCot(cPv, LOAI_PV)}<X size={12} /></button>}
+          {cNv && <button type="button" onClick={() => setCNv(null)}><Store size={12} />Nhận việc {nhanLocCot(cNv, LOAI_NV)}<X size={12} /></button>}
+          {cDiem.map((v) => <button key={'d' + v} type="button" onClick={() => setCDiem(cDiem.filter((x) => x !== v))}>Điểm {DIEM_MUC.find((x) => x.v === v)?.t.toLowerCase()}<X size={12} /></button>)}
           <button type="button" className="bo-het" onClick={boLoc}>Bỏ lọc tất cả</button>
         </div>
       )}
@@ -669,6 +723,13 @@ export default function Reports() {
                   <button type="button" className={sx.k === c.k ? 'on' : ''} onClick={() => setSx(sx.k === c.k ? { k: c.k, giam: !sx.giam } : { k: c.k, giam: ['nop', 'ngayPV', 'ngayNV', 'diem'].includes(c.k) })}>
                     {c.t}{sx.k === c.k && (sx.giam ? <ArrowDown size={12} /> : <ArrowUp size={12} />)}
                   </button>
+                  {c.k === 'ten' && <ChonNhieu nhan="Lọc ứng viên" ds={[...lanDs, ...ptDs.map((x) => ({ ...x, v: 'pt:' + x.v, t: 'Phụ trách: ' + x.t }))]} giaTri={[...cLan, ...pt.map((v) => 'pt:' + v)]}
+                    onDoi={(a) => { setCLan(a.filter((v) => !v.startsWith('pt:'))); setPt(a.filter((v) => v.startsWith('pt:')).map((v) => v.slice(3))) }} canh="trai" rong={290}
+                    nut={(co) => <button type="button" className={'th-loc' + (co ? ' on' : '')} aria-label="Lọc ứng viên"><Filter size={12} /></button>} />}
+                  {c.k === 'nop' && <LocCot nhan="Lọc ngày nộp" gt={cNop} onDoi={setCNop} hn={hn} />}
+                  {c.k === 'ngayPV' && <LocCot nhan="Lọc phỏng vấn" loai={LOAI_PV} gt={cPv} onDoi={setCPv} hn={hn} />}
+                  {c.k === 'ngayNV' && <LocCot nhan="Lọc nhận việc" loai={LOAI_NV} gt={cNv} onDoi={setCNv} hn={hn} />}
+                  {c.k === 'diem' && <ChonNhieu nhan="Lọc điểm phỏng vấn" ds={diemDs} giaTri={cDiem} onDoi={setCDiem} canh="phai" rong={240} nut={(co) => <button type="button" className={'th-loc' + (co ? ' on' : '')} aria-label="Lọc điểm"><Filter size={12} /></button>} />}
                   {c.k === 'vt' && <ChonNhieu nhan="Lọc vị trí" ds={vtDs} giaTri={vt} onDoi={setVt} canh="trai" rong={260} nut={(co) => <button type="button" className={'th-loc' + (co ? ' on' : '')} aria-label="Lọc vị trí"><Filter size={12} /></button>} />}
                   {c.k === 'kv' && <ChonNhieu nhan="Lọc khu vực" ds={kvDs} giaTri={kv} onDoi={setKv} canh="trai" rong={270} nut={(co) => <button type="button" className={'th-loc' + (co ? ' on' : '')} aria-label="Lọc khu vực"><Filter size={12} /></button>} />}
                   {c.k === 'chTen' && <ChonNhieu nhan="Lọc cửa hàng" ds={chLoc} giaTri={ch} onDoi={setCh} canh="trai" rong={310} tim nut={(co) => <button type="button" className={'th-loc' + (co ? ' on' : '')} aria-label="Lọc cửa hàng"><Filter size={12} /></button>} />}
