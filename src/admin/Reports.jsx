@@ -24,7 +24,7 @@ export const NHOM = {
   khong: { ten: 'Không đạt', mau: '#E05252', bg: '#FDECEC', fg: '#B42318' },
   rut: { ten: 'Rút hồ sơ', mau: '#CFC9D4', bg: '#F4F1F5', fg: '#6F6777' }
 }
-const THU_TU = ['cho', 'duyet', 'nhan', 'nghi', 'kden', 'khong', 'rut']
+const THU_TU = ['cho', 'duyet', 'nhan', 'nghi', 'kden', 'khong']
 const DA_DAT = ['duyet', 'nhan', 'nghi', 'kden']
 const DA_LAM = ['nhan', 'nghi']
 const NGHI_SOM = 3
@@ -43,11 +43,11 @@ const XEM_FN = {
   pv_doi: (r) => r.dl > 0
 }
 const TAB = {
-  nop: [['', 'Tất cả'], ['cho', 'Chờ xử lý', NHOM.cho.mau], ['duyet', 'Chờ nhận việc', NHOM.duyet.mau], ['qua_han', 'Quá hẹn', NHOM.khong.mau], ['nhan', 'Đang làm việc', NHOM.nhan.mau], ['nghi', 'Đã nghỉ việc', NHOM.nghi.mau], ['kden', 'Không đến', NHOM.kden.mau], ['khong', 'Không đạt', NHOM.khong.mau], ['rut', 'Rút hồ sơ', NHOM.rut.mau]],
+  nop: [['', 'Tất cả'], ['cho', 'Chờ xử lý', NHOM.cho.mau], ['duyet', 'Chờ nhận việc', NHOM.duyet.mau], ['qua_han', 'Quá hẹn', NHOM.khong.mau], ['nhan', 'Đang làm việc', NHOM.nhan.mau], ['nghi', 'Đã nghỉ việc', NHOM.nghi.mau], ['kden', 'Không đến', NHOM.kden.mau], ['khong', 'Không đạt', NHOM.khong.mau]],
   phong_van: [['', 'Tất cả'], ['pv_xong', 'Đã phỏng vấn', MAU_PV.xong], ['pv_chua', 'Chưa phỏng vấn', MAU_PV.chua], ['pv_dat', 'Đạt', NHOM.nhan.mau], ['pv_khong', 'Không đạt', NHOM.khong.mau], ['pv_doi', 'Đổi lịch', MAU_PV.doi]],
   nhan_viec: [['', 'Tất cả'], ['duyet', 'Chờ nhận việc', NHOM.duyet.mau], ['qua_han', 'Quá hẹn', NHOM.khong.mau], ['kden', 'Không đến', NHOM.kden.mau], ['nhan', 'Đang làm việc', NHOM.nhan.mau], ['nghi', 'Đã nghỉ việc', NHOM.nghi.mau], ['nghi_som', 'Nghỉ sớm ≤ 3 ngày', NHOM.kden.mau]]
 }
-const nhomCua = (tt) => (tt === 'nhan_viec' ? 'nhan' : tt === 'nghi_viec' ? 'nghi' : tt === 'khong_den' ? 'kden' : tt === 'dat' ? 'duyet' : tt === 'khong_dat' ? 'khong' : tt === 'rut' ? 'rut' : 'cho')
+const nhomCua = (tt) => (tt === 'nhan_viec' ? 'nhan' : tt === 'nghi_viec' ? 'nghi' : tt === 'khong_den' ? 'kden' : tt === 'dat' ? 'duyet' : tt === 'khong_dat' ? 'khong' : tt === 'rut' ? 'khong' : 'cho')
 
 const KHOANG = [
   { v: 'hom_nay', t: 'Hôm nay' }, { v: 'ngay_mai', t: 'Ngày mai' }, { v: 'tuan', t: 'Tuần này' }, { v: 'tuan_truoc', t: 'Tuần trước' },
@@ -562,7 +562,7 @@ export default function Reports() {
             <O k="cho" nhan="Chờ xử lý" mau={NHOM.cho.mau} so={dem.cho || 0} phu={phanTram(dem.cho || 0, nguoi.length) + '% chưa có kết quả'} on={xem === 'cho'} />
             <O k="duyet" nhan="Chờ nhận việc" mau={NHOM.duyet.mau} so={dem.duyet || 0} phu={duKien + ' dự kiến' + (quaHan ? ' · ' + quaHan + ' quá hẹn' : '')} on={xem === 'duyet'} />
             <O k="nhan" nhan="Đang làm việc" mau={NHOM.nhan.mau} so={dem.nhan || 0} phu={(dem.nghi || 0) + ' đã nghỉ · ' + (dem.kden || 0) + ' không đến'} on={xem === 'nhan'} />
-            <O k="khong" nhan="Không đạt" mau={NHOM.khong.mau} so={dem.khong || 0} phu={(dem.rut || 0) + ' rút hồ sơ'} on={xem === 'khong'} />
+            <O k="khong" nhan="Không đạt" mau={NHOM.khong.mau} so={dem.khong || 0} phu={phanTram(dem.khong || 0, nguoi.length) + '% số hồ sơ'} on={xem === 'khong'} />
             <div className="bc-chi-so ti-le">
               <span className="bc-cs-nhan">Tỉ lệ đạt</span>
               <b>{coKQ ? phanTram(soDat, coKQ) + '%' : '—'}</b>

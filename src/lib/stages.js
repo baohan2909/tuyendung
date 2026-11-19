@@ -13,12 +13,12 @@ export const GIAI_DOAN = [
   { ma: 'khong_den', ten: 'Không đến nhận việc', ngan: 'Không đến', mo_ta: 'Đạt nhưng không đến theo lịch', bg: '#FCEDEC', fg: '#A63A35', cham: '#D9675F' },
   { ma: 'du_bi', ten: 'Dự bị', bg: '#EEF1F5', fg: '#475A70', cham: '#7A8CA3', cu: true },
   { ma: 'khong_dat', ten: 'Không đạt', bg: '#F4F1F5', fg: '#8C8494', cham: '#B9B2BF' },
-  { ma: 'rut', ten: 'Rút hồ sơ', bg: '#F4F1F5', fg: '#8C8494', cham: '#B9B2BF' }
+  { ma: 'rut', ten: 'Rút hồ sơ', bg: '#F4F1F5', fg: '#8C8494', cham: '#B9B2BF', cu: true }
 ]
 export const GD = Object.fromEntries(GIAI_DOAN.map((g) => [g.ma, g]))
 export const GD_DANG_XU_LY = ['moi', 'sang_loc', 'hen_pv', 'da_pv', 'de_xuat', 'can_nhac', 'chua_lien_lac']
 export const GD_COT = ['moi', 'hen_pv', 'dat', 'nhan_viec']
-export const GD_KET_THUC = ['khong_dat', 'rut']
+export const GD_KET_THUC = ['khong_dat']
 export const GD_SAU_TUYEN = ['dat', 'nhan_viec', 'nghi_viec', 'khong_den']
 export const GD_SANG_LOC = ['moi', 'sang_loc']
 // Còn mở: có thể bấm Phỏng vấn / Loại

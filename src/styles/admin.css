@@ -1301,67 +1301,39 @@ a.lich-dong:hover { background: rgba(255,255,255,.12); color: #fff; }
 .nv-o-so { width: 80px; height: 34px; padding: 0 10px; border: none; border-radius: 10px; background: #F6F3F8; font: inherit; font-size: 14px; font-weight: 800; text-align: center; }
 .nv-ly-do { display: flex; flex-direction: column; gap: 10px; }
 
-/* ===== Quy trình: thanh trạng thái cuộn ngang + danh sách theo trạng thái ===== */
-@keyframes qt-len { from { opacity: 0; transform: translateY(8px); } }
-.qt-thanh { background: var(--card); border-radius: var(--r-card); box-shadow: var(--shadow); padding: 16px 18px 12px; min-width: 0; }
-.qt-thanh-dau { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; padding: 0 4px 10px; }
-.qt-thanh-dau b { font-size: 15px; font-weight: 800; color: var(--ink); }
-.qt-thanh-dau span { font-size: 12.5px; color: var(--muted); }
-.qt-ray-boc { position: relative; }
-.qt-ray { display: flex; gap: 20px; overflow-x: auto; scroll-behavior: smooth; scrollbar-width: none; padding: 2px 2px 8px; overscroll-behavior-x: contain; }
-.qt-ray::-webkit-scrollbar { display: none; }
-.qt-nhom { display: flex; flex-direction: column; gap: 8px; flex: none; }
-.qt-nhom + .qt-nhom { padding-left: 20px; border-left: 1px dashed #E6DFEA; }
-.qt-nhom-ten { padding-left: 4px; font-size: 10.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #A79FAE; }
-.qt-nhom-ds { display: flex; gap: 8px; }
-.qt-the { position: relative; flex: none; min-width: 150px; height: 82px; display: flex; flex-direction: column; justify-content: space-between; padding: 12px 14px; border: none; border-radius: 20px; background: #F7F4F9; color: var(--ink); text-align: left; font: inherit; cursor: pointer;
-  transition: background .2s, transform .2s var(--ease), box-shadow .25s, color .2s; }
-.qt-the:hover { background: #F0EAF4; transform: translateY(-1px); }
-.qt-ten { display: flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 700; color: var(--ink-2); white-space: nowrap; }
-.qt-ten i { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--cham); }
-.qt-so { display: flex; align-items: baseline; gap: 5px; font-size: 26px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
-.qt-so small { font-size: 11px; font-weight: 700; color: var(--muted); }
-.qt-the.rong .qt-so { color: #C4BDC9; }
-.qt-the.on { background: #17111A; color: #fff; transform: translateY(-2px); box-shadow: 0 12px 26px rgba(23,17,26,.22); }
-.qt-the.on .qt-ten { color: rgba(255,255,255,.82); }
-.qt-the.on .qt-ten i { box-shadow: 0 0 0 3px rgba(255,255,255,.16); }
-.qt-the.on .qt-so small { color: rgba(255,255,255,.55); }
-.qt-the.on::after { content: ''; position: absolute; left: 14px; right: 14px; bottom: -1px; height: 3px; border-radius: 3px; background: linear-gradient(90deg, #FF5FA8, #E0157E); box-shadow: 0 0 12px rgba(255,95,168,.75); }
-.qt-the.tha { background: #FDE6F1; box-shadow: inset 0 0 0 2px var(--pink); color: var(--ink); }
-.qt-mui { position: absolute; top: 50%; z-index: 3; width: 36px; height: 36px; margin-top: -10px; display: flex; align-items: center; justify-content: center; border: none; border-radius: 50%; background: #fff; color: var(--ink); box-shadow: 0 4px 16px rgba(23,17,26,.16); cursor: pointer; transition: transform .15s; }
-.qt-mui:hover { transform: scale(1.06); color: var(--pink); }
-.qt-mui.trai { left: -6px; }
-.qt-mui.phai { right: -6px; }
-.qt-ray-boc::before, .qt-ray-boc::after { content: ''; position: absolute; top: 0; bottom: 8px; width: 34px; z-index: 2; pointer-events: none; }
-.qt-ray-boc::before { left: 0; background: linear-gradient(90deg, var(--card), rgba(255,255,255,0)); opacity: 0; transition: opacity .2s; }
-.qt-ray-boc::after { right: 0; background: linear-gradient(270deg, var(--card), rgba(255,255,255,0)); opacity: 0; transition: opacity .2s; }
-.qt-ray-boc.t::before, .qt-ray-boc.p::after { opacity: 1; }
 
-.qt-bang { margin-top: 18px; background: var(--card); border-radius: var(--r-card); box-shadow: var(--shadow); padding: 18px 20px 20px; min-width: 0; animation: qt-len .3s var(--ease); }
-.qt-bang-dau { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 12px; margin-bottom: 14px; }
-.qt-bang-ten { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; flex: 1 1 260px; min-width: 0; }
-.qt-bang-ten i { width: 10px; height: 10px; border-radius: 50%; background: var(--cham); box-shadow: 0 0 0 4px color-mix(in srgb, var(--cham) 18%, transparent); }
-.qt-bang-ten b { font-size: 17px; font-weight: 800; }
-.qt-bang-ten .sl { min-width: 30px; height: 26px; padding: 0 9px; border-radius: 999px; background: #17111A; color: #fff; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; }
-.qt-bang-ten small { flex-basis: 100%; font-size: 12.5px; color: var(--muted); padding-left: 20px; }
-.qt-tim { display: flex; align-items: center; gap: 8px; width: 240px; max-width: 100%; height: 38px; padding: 0 12px; border-radius: 999px; background: #F6F3F8; color: var(--muted); }
-.qt-tim input { flex: 1; min-width: 0; border: none; background: none; font: inherit; font-size: 13px; color: var(--ink); outline: none; }
-.qt-tim button { display: inline-flex; border: none; background: none; padding: 2px; color: var(--muted); cursor: pointer; }
-.qt-link { display: inline-flex; align-items: center; gap: 2px; font-size: 13px; font-weight: 700; color: var(--chon-chu); text-decoration: none; white-space: nowrap; }
-.qt-link:hover { text-decoration: underline; }
-.qt-thu { width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 50%; background: #F6F3F8; color: var(--ink-2); cursor: pointer; }
-.qt-thu:hover { background: var(--chon-nen); color: var(--chon-chu); }
-.qt-luoi { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
-.qt-luoi .the-kb { box-shadow: inset 0 0 0 1px #EEE8F2; animation: qt-len .3s var(--ease) both; }
-.qt-luoi .the-kb:hover { box-shadow: inset 0 0 0 1px #E3DAE8, 0 10px 24px rgba(23,17,26,.08); }
-.qt-them { display: flex; align-items: center; gap: 6px; min-width: 0; padding: 6px 10px; border-radius: 12px; background: #F2FAF6; color: #0E7F63; font-size: 12px; font-weight: 600; }
-.qt-them svg { flex: none; }
-.qt-them.do { background: #FCEDEC; color: #A63A35; }
-.qt-them-nut { display: flex; margin: 16px auto 0; }
-@media (max-width: 640px) {
-  .qt-the { min-width: 128px; height: 76px; padding: 10px 12px; }
-  .qt-so { font-size: 22px; }
-  .qt-mui { display: none; }
-  .qt-tim { width: 100%; order: 3; }
-  .qt-bang { padding: 16px 14px; }
+/* ===== Quy trình (kanban) — chỉ dùng tiền tố qtk- để không ảnh hưởng thanh Quy trình ở trang Ứng viên ===== */
+@keyframes qtk-len { from { opacity: 0; transform: translateY(8px); } }
+.qtk-boc { position: relative; min-width: 0; }
+.qtk-boc .kanban { scroll-behavior: smooth; }
+.qtk-boc::before, .qtk-boc::after { content: ''; position: absolute; top: 0; bottom: 8px; width: 36px; z-index: 2; pointer-events: none; opacity: 0; transition: opacity .2s; }
+.qtk-boc::before { left: 0; border-radius: 28px 0 0 28px; background: linear-gradient(90deg, var(--bg, #F6F4F8), rgba(246,244,248,0)); }
+.qtk-boc::after { right: 0; border-radius: 0 28px 28px 0; background: linear-gradient(270deg, var(--bg, #F6F4F8), rgba(246,244,248,0)); }
+.qtk-boc.t::before, .qtk-boc.p::after { opacity: 1; }
+.qtk-mui { position: absolute; top: 28px; z-index: 3; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border: none; border-radius: 50%; background: #fff; color: var(--ink); box-shadow: 0 6px 18px rgba(23,17,26,.18); cursor: pointer; transition: transform .15s, color .15s; }
+.qtk-mui:hover { transform: scale(1.06); color: var(--pink); }
+.qtk-mui.trai { left: -8px; }
+.qtk-mui.phai { right: -8px; }
+.cot-kb .dau-cot .qtk-ten { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+.cot-kb .dau-cot .qtk-ten small { font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #A79FAE; }
+.cot-kb.phu { background: #F3F1F7; }
+.qtk-them { display: flex; align-items: center; gap: 6px; min-width: 0; padding: 6px 10px; border-radius: 12px; background: #F2FAF6; color: #0E7F63; font-size: 12px; font-weight: 600; }
+.qtk-them svg { flex: none; }
+.qtk-them.do { background: #FCEDEC; color: #A63A35; }
+.qtk-ket { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+.qtk-o { display: flex; align-items: center; gap: 10px; height: 60px; padding: 0 18px; border: 1.5px dashed #D9D3DE; border-radius: 22px; background: #fff; font: inherit; font-size: 13.5px; font-weight: 700; color: var(--ink-2); cursor: pointer; transition: background .2s, border-color .2s, color .2s, box-shadow .2s; }
+.qtk-o i { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--cham); }
+.qtk-o b { margin-left: auto; min-width: 34px; height: 28px; padding: 0 10px; border-radius: 999px; background: #F4F1F6; font-size: 13px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; font-variant-numeric: tabular-nums; }
+.qtk-o .mui { flex: none; color: var(--muted); transition: transform .25s var(--ease); }
+.qtk-o:hover { border-color: #C9C0CF; background: #FCFBFD; }
+.qtk-o.on { border-style: solid; border-color: transparent; background: linear-gradient(135deg, #FFE4F1 0%, #F3E6FF 100%); color: var(--pink-deep); box-shadow: 0 8px 20px rgba(224,21,126,.12); }
+.qtk-o.on b { background: #fff; color: var(--pink-deep); }
+.qtk-o.on .mui { transform: rotate(180deg); color: var(--pink-deep); }
+.qtk-o.tha { border-style: solid; border-color: var(--pink); background: #FFF1F8; color: var(--pink-deep); }
+.qtk-ds { margin-top: 12px; padding: 14px; border-radius: 28px; background: var(--soft-2); animation: qtk-len .3s var(--ease); }
+.qtk-luoi { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+@media (max-width: 720px) {
+  .qtk-ket { grid-template-columns: 1fr; gap: 8px; }
+  .qtk-o { height: 52px; }
+  .qtk-mui { display: none; }
 }

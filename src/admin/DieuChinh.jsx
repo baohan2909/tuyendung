@@ -16,7 +16,7 @@ const vaoO = (iso) => (iso ? ngayVN(iso) + 'T' + fmtGio(iso) : '')
 const raISO = (v) => (v ? new Date(v + ':00+07:00').toISOString() : null)
 const gio5 = (t) => (t ? String(t).slice(0, 5) : '')
 const dmy = (s) => (s ? s.slice(8, 10) + '/' + s.slice(5, 7) + '/' + s.slice(0, 4) : '—')
-const TT_CHON = ['moi', 'hen_pv', 'can_nhac', 'chua_lien_lac', 'dat', 'khong_den', 'khong_dat', 'rut']
+const TT_CHON = ['moi', 'hen_pv', 'can_nhac', 'chua_lien_lac', 'dat', 'khong_den', 'khong_dat']
 const CO_NV = ['dat', 'nhan_viec', 'nghi_viec', 'khong_den']
 
 /* ---------- Thẻ "Kết quả & nhận việc" trong hồ sơ ---------- */

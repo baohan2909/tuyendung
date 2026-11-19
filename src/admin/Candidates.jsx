@@ -425,9 +425,9 @@ export default function Candidates({ cheDo }) {
           ))}
         </div>
         <div className="qt-ket">
-          {['khong_dat', 'rut', ...(dem.du_bi ? ['du_bi'] : [])].map((m) => (
-            <button key={m} role="tab" aria-selected={gd === m} className={'qt-ket-o' + (gd === m ? ' on' : '')} onClick={() => datGD(gd === m ? '' : m)}>
-              <i style={{ background: GD[m].cham }} />{GD[m].ten}<b>{dem[m] || 0}</b>
+          {['khong_dat', 'khong_den', 'nghi_viec', ...(dem.rut ? ['rut'] : []), ...(dem.du_bi ? ['du_bi'] : [])].map((m) => (
+            <button key={m} role="tab" aria-selected={gd === m} className={'qt-ket-o' + (gd === m ? ' on' : '')} title={GD[m].ten} onClick={() => datGD(gd === m ? '' : m)}>
+              <i style={{ background: GD[m].cham }} />{GD[m].ngan || GD[m].ten}<b>{dem[m] || 0}</b>
             </button>
           ))}
         </div>
