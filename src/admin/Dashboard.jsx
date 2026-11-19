@@ -8,6 +8,7 @@ import { HINH_THUC } from '../lib/stages'
 import { Avatar, BieuDoCot, Btn, Empty, LichTag, Segment, Skeleton, StageTag } from '../components/ui'
 import { useStaff } from './context'
 import LichModal from './LichModal'
+import { ChiTietNgay, GioNopHoSo, NutDong } from './ThongKeGio'
 
 export const tenNgan = (t) => { const x = String(t || '').replace(/^Cộng tác viên.*/i, 'CTV').replace(/^Nhân viên /i, ''); return x.charAt(0).toUpperCase() + x.slice(1) }
 const MAU_PHEU = ['#F3C6DA', '#EC9CC0', '#E26FA2', '#D6006C', '#A3004F', '#17111A']
@@ -32,6 +33,7 @@ export default function Dashboard() {
   const [vt, setVt] = useState('tat_ca')
   const [tim, setTim] = useState('')
   const [moLich, setMoLich] = useState(false)
+  const [ngayGio, setNgayGio] = useState(null)
 
   const k = d?.kpi || {}
   const pheu = useMemo(() => {
@@ -41,8 +43,11 @@ export default function Dashboard() {
   }, [d, vt])
   const tongNguon = (d?.nguon || []).reduce((a, x) => a + x.n, 0)
   const doiTuan = k.moi_7n_truoc ? Math.round(((k.moi_7n - k.moi_7n_truoc) / k.moi_7n_truoc) * 100) : null
-  const xuHuong = (d?.xu_huong || []).map((x) => ({ n: x.n, nhan: x.ngay.slice(8, 10) + '/' + x.ngay.slice(5, 7), nhanDai: thu(x.ngay + 'T12:00:00+07:00') + ' ' + x.ngay.slice(8, 10) + '/' + x.ngay.slice(5, 7) }))
+  const xuHuong = (d?.xu_huong || []).map((x) => ({ ngay: x.ngay, n: x.n, nhan: x.ngay.slice(8, 10) + '/' + x.ngay.slice(5, 7), nhanDai: thu(x.ngay + 'T12:00:00+07:00') + ' ' + x.ngay.slice(8, 10) + '/' + x.ngay.slice(5, 7) }))
   const hnay = ngayVN()
+  const tu14 = xuHuong[0]?.ngay || congNgay(hnay, -13)
+  const { data: g14 } = useAsync(() => rpc('td_hs_theo_gio', { p: { tu: tu14, den: hnay } }), [tu14, hnay, s.nhip])
+  const iChon = ngayGio ? xuHuong.findIndex((x) => x.ngay === ngayGio) : -1
 
   return (
     <>
@@ -132,8 +137,11 @@ export default function Dashboard() {
 
         <div className="nho-cot cot" style={{ gap: 20 }}>
           <section className="card" aria-label="Hồ sơ theo ngày">
-            <div className="dau-the" style={{ marginBottom: 6 }}><h2>Hồ sơ 14 ngày</h2><span className="nho muted">{xuHuong.reduce((a, x) => a + x.n, 0)} hồ sơ</span></div>
-            {d ? <BieuDoCot ds={xuHuong.map((x) => ({ ...x, mau: x.nhan === hnay.slice(8, 10) + '/' + hnay.slice(5, 7) ? 'var(--pink)' : '#F09BC3' }))} nhanMoi={4} /> : <Skeleton h={130} />}
+            <div className="dau-the" style={{ marginBottom: 6 }}><h2>Hồ sơ 14 ngày</h2>{ngayGio ? <NutDong onClick={() => setNgayGio(null)} /> : <span className="nho muted">{xuHuong.reduce((a, x) => a + x.n, 0)} hồ sơ</span>}</div>
+            {d ? <BieuDoCot ds={xuHuong.map((x) => ({ ...x, mau: x.ngay === hnay ? 'var(--pink)' : '#F09BC3' }))} nhanMoi={4}
+              chon={iChon < 0 ? null : iChon} onChon={(i) => setNgayGio(i == null ? null : xuHuong[i].ngay)} /> : <Skeleton h={130} />}
+            {ngayGio ? (g14 ? <ChiTietNgay ngay={ngayGio} dong={g14.dong} dong14={g14.dong} soNgay={xuHuong.length || 14} /> : <Skeleton h={170} style={{ marginTop: 14 }} />)
+              : d && <p className="tkg-goi-y-bam">Bấm vào một cột để xem số hồ sơ theo giờ trong ngày</p>}
           </section>
           <section className="card" aria-label="Nguồn hồ sơ">
             <h2 style={{ marginBottom: 16 }}>Nguồn hồ sơ · 30 ngày</h2>
@@ -149,6 +157,7 @@ export default function Dashboard() {
           </section>
         </div>
       </div>
+      <GioNopHoSo nhip={s.nhip} />
       {moLich && <LichModal dong={() => setMoLich(false)} xong={() => { setMoLich(false); reload(true); s.lamMoi() }} />}
     </>
   )

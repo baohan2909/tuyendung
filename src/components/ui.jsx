@@ -329,16 +329,17 @@ export function AnhKho({ path, alt = '', className, style, onClick }) {
 }
 
 // ---------- Biểu đồ cột đơn (1 chuỗi) ----------
-export function BieuDoCot({ ds, cao = 120, nhanMoi = 1, mau = 'var(--pink)', donVi = 'hồ sơ' }) {
+export function BieuDoCot({ ds, cao = 120, nhanMoi = 1, mau = 'var(--pink)', donVi = 'hồ sơ', onChon, chon }) {
   const [hover, setHover] = useState(null)
   const max = Math.max(1, ...ds.map((x) => x.n))
   return (
     <div className="bieu-do">
       <div className="bd-cot" style={{ height: cao }} onMouseLeave={() => setHover(null)}>
         {ds.map((x, i) => (
-          <div key={i} className="c" onMouseEnter={() => setHover(i)} onFocus={() => setHover(i)} tabIndex={0} aria-label={x.nhan + ': ' + x.n + ' ' + donVi}>
+          <div key={i} className={'c' + (onChon ? ' bam' : '') + (chon === i ? ' chon' : '')} onMouseEnter={() => setHover(i)} onFocus={() => setHover(i)} tabIndex={0} aria-label={x.nhan + ': ' + x.n + ' ' + donVi}
+            role={onChon ? 'button' : undefined} aria-pressed={onChon ? chon === i : undefined} onClick={onChon ? () => onChon(chon === i ? null : i) : undefined} onKeyDown={onChon ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onChon(chon === i ? null : i) } } : undefined}>
             {hover === i && <span className="goi-y-bd" style={{ left: '50%', top: `calc(${100 - (x.n / max) * 100}% - 4px)` }}>{x.nhanDai || x.nhan}: <b>{x.n}</b> {donVi}</span>}
-            <span className="t" style={{ height: (x.n / max) * 100 + '%', background: x.mau || mau, opacity: hover == null || hover === i ? 1 : 0.55 }} />
+            <span className="t" style={{ height: (x.n / max) * 100 + '%', background: x.mau || mau, opacity: hover === i || chon === i || (hover == null && chon == null) ? 1 : 0.5 }} />
           </div>
         ))}
       </div>
