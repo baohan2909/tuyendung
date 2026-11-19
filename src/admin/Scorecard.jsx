@@ -119,7 +119,7 @@ export default function Scorecard() {
   const anh = d.tep.filter((t) => t.loai === 'anh')
   const video = d.tep.filter((t) => t.loai === 'video')
   const nguoiKhac = d.danh_gia.filter((g) => g.nguoi_cham !== s.toi.id)
-  const daChot = ['dat', 'khong_dat', 'nhan_viec'].includes(h.trang_thai)
+  const daChot = ['dat', 'khong_dat', 'nhan_viec', 'nghi_viec', 'khong_den'].includes(h.trang_thai)
   const luuTxt = trangThaiLuu === 'dang' ? 'Đang lưu…' : trangThaiLuu === 'loi' ? 'Chưa lưu được' : trangThaiLuu ? 'Đã lưu ' + fmtGio(Number(trangThaiLuu.split(':')[1])) : 'Tự lưu khi chấm'
   const datNv = (k) => (e) => setNv((x) => ({ ...x, [k]: e.target ? e.target.value : e }))
 

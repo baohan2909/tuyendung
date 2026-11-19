@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Calendar, Check, CheckCircle2, Clock, FileText, Heart, MapPin, MessageCircle, Phone, Search, Shirt, Trophy, UserCheck, Video } from 'lucide-react'
+import { Calendar, Check, CheckCircle2, ClipboardList, Clock, FileText, Heart, MapPin, MessageCircle, Phone, Search, Shirt, Trophy, UserCheck, Video } from 'lucide-react'
 import { rpc } from '../lib/api'
 import { CONG_KHAI, HINH_THUC } from '../lib/stages'
 import { DONG_VIEN, dsTacPhong } from '../lib/thongBao'
@@ -137,6 +137,7 @@ export default function TraCuu() {
           <ul className="luu-y">{['Mang theo hồ sơ xin việc và CCCD bản gốc', 'Đưa thông tin này cho nhân viên cửa hàng để được xác nhận'].map((x) => <li key={x}><Check size={14} strokeWidth={3} />{x}</li>)}</ul>
         </div>
       )}
+      {kq.trang_thai === 'trung_tuyen' && kq.ho_so_chuan_bi?.nhom?.length > 0 && <HoSoChuanBi d={kq.ho_so_chuan_bi} />}
       {kq.trang_thai === 'chua_phu_hop' && (
         <div className="the-dong-vien">
           <span className="tdv-icon"><Heart size={18} /></span>
@@ -177,7 +178,7 @@ export default function TraCuu() {
           const so = i + 1
           const xong = so < buoc || (so === buoc && so === 5)
           const dangO = so === buoc && so !== 5
-          const ten = so === 5 && buoc === 5 ? (ketThucTot ? 'Trúng tuyển' : kq.trang_thai === 'da_rut' ? 'Đã rút hồ sơ' : 'Chưa phù hợp lần này') : c.ten
+          const ten = so === 5 && buoc === 5 ? (ketThucTot ? 'Trúng tuyển' : kq.trang_thai === 'da_rut' ? 'Đã rút hồ sơ' : kq.trang_thai === 'ket_thuc' ? 'Hồ sơ đã khép lại' : 'Chưa phù hợp lần này') : c.ten
           return (
             <div key={i} className="moc" style={{ paddingTop: i ? 14 : 0 }}>
               <span className={'cham' + (xong ? ' xong' : dangO ? ' dang' : '')}>{xong ? <Check size={15} strokeWidth={3} /> : <c.ic size={15} />}</span>
@@ -203,5 +204,23 @@ export default function TraCuu() {
         </Field>
       </Modal>
     </PortalShell>
+  )
+}
+
+// Danh mục hồ sơ cần chuẩn bị khi nhận việc — cùng nguồn với email trúng tuyển
+function HoSoChuanBi({ d }) {
+  return (
+    <div className="the-ho-so">
+      <span className="ttp-dau"><ClipboardList size={17} /><b>Hồ sơ cần chuẩn bị</b></span>
+      {d.nhom.map((g) => (
+        <div key={g.ma} className={'ths-nhom ' + g.ma}>
+          <div className="ths-dau"><span className="ths-nhan">{g.nhan}</span><small>{g.ten}</small></div>
+          <ol>
+            {g.ds.map((x, i) => <li key={x.ten}><i>{i + 1}</i><span>{x.ten}</span><b>{x.sl}</b></li>)}
+          </ol>
+        </div>
+      ))}
+      {d.luu_y?.length > 0 && <p className="ths-luu-y"><b>Lưu ý:</b> {d.luu_y.join(' ')}</p>}
+    </div>
   )
 }

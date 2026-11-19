@@ -7,8 +7,10 @@ export const GIAI_DOAN = [
   { ma: 'de_xuat', ten: 'Đề xuất', bg: '#E1F3F6', fg: '#0F6375', cham: '#1590A8', cu: true },
   { ma: 'can_nhac', ten: 'Cân nhắc thêm', bg: '#FDF3E3', fg: '#8A5410', cham: '#D98A1C' },
   { ma: 'chua_lien_lac', ten: 'Chưa liên lạc được', bg: '#EEF2FF', fg: '#3F4FB5', cham: '#5B6CDB' },
-  { ma: 'dat', ten: 'Trúng tuyển', bg: '#E3F5EE', fg: '#0E7F63', cham: '#12A37F' },
-  { ma: 'nhan_viec', ten: 'Nhận việc', bg: '#17111A', fg: '#FFFFFF', cham: '#17111A' },
+  { ma: 'dat', ten: 'Chờ nhận việc', mo_ta: 'Đạt phỏng vấn, đã có lịch nhận việc', bg: '#E3F5EE', fg: '#0E7F63', cham: '#12A37F' },
+  { ma: 'nhan_viec', ten: 'Đang làm việc', bg: '#17111A', fg: '#FFFFFF', cham: '#17111A' },
+  { ma: 'nghi_viec', ten: 'Đã nghỉ việc', mo_ta: 'Đã vào làm rồi nghỉ', bg: '#EFEAF2', fg: '#5E5068', cham: '#8E7C99' },
+  { ma: 'khong_den', ten: 'Không đến nhận việc', ngan: 'Không đến', mo_ta: 'Đạt nhưng không đến theo lịch', bg: '#FCEDEC', fg: '#A63A35', cham: '#D9675F' },
   { ma: 'du_bi', ten: 'Dự bị', bg: '#EEF1F5', fg: '#475A70', cham: '#7A8CA3', cu: true },
   { ma: 'khong_dat', ten: 'Không đạt', bg: '#F4F1F5', fg: '#8C8494', cham: '#B9B2BF' },
   { ma: 'rut', ten: 'Rút hồ sơ', bg: '#F4F1F5', fg: '#8C8494', cham: '#B9B2BF' }
@@ -17,6 +19,7 @@ export const GD = Object.fromEntries(GIAI_DOAN.map((g) => [g.ma, g]))
 export const GD_DANG_XU_LY = ['moi', 'sang_loc', 'hen_pv', 'da_pv', 'de_xuat', 'can_nhac', 'chua_lien_lac']
 export const GD_COT = ['moi', 'hen_pv', 'dat', 'nhan_viec']
 export const GD_KET_THUC = ['khong_dat', 'rut']
+export const GD_SAU_TUYEN = ['dat', 'nhan_viec', 'nghi_viec', 'khong_den']
 export const GD_SANG_LOC = ['moi', 'sang_loc']
 // Còn mở: có thể bấm Phỏng vấn / Loại
 export const GD_MO = ['moi', 'sang_loc', 'hen_pv', 'da_pv', 'de_xuat', 'du_bi', 'can_nhac', 'chua_lien_lac']
@@ -66,5 +69,6 @@ export const CONG_KHAI = {
   trung_tuyen: { buoc: 5, tieu_de: ['Chúc mừng,', 'bạn đã trúng tuyển!'], mo_ta: 'Hãy đến đúng cửa hàng và giờ hẹn bên dưới nhé. Nón Sơn rất mong được làm việc cùng bạn.' },
   nhan_viec: { buoc: 5, tieu_de: ['Chào mừng bạn', 'đến với Nón Sơn!'], mo_ta: 'Hẹn gặp bạn tại nơi làm việc.' },
   chua_phu_hop: { buoc: 5, tieu_de: ['Hồ sơ', 'chưa phù hợp'], mo_ta: 'Cảm ơn bạn đã dành thời gian ứng tuyển và tham gia cùng Nón Sơn.' },
+  ket_thuc: { buoc: 5, tieu_de: ['Hồ sơ', 'đã khép lại'], mo_ta: 'Cảm ơn bạn đã đồng hành cùng Nón Sơn. Bạn có thể nộp hồ sơ mới bất cứ lúc nào.' },
   da_rut: { buoc: 5, tieu_de: ['Hồ sơ', 'đã được rút'], mo_ta: 'Bạn có thể nộp lại hồ sơ bất cứ lúc nào.' }
 }

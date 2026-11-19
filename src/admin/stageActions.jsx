@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Briefcase, MapPin, Check, ClipboardCheck, Mic, Search, Store, ThumbsDown, UserCheck } from 'lucide-react'
+import { Briefcase, MapPin, Check, ClipboardCheck, LogOut, Mic, RotateCcw, Search, Store, ThumbsDown, UserCheck, UserX } from 'lucide-react'
 import { docBang, rpc } from '../lib/api'
 import { useAsync } from '../lib/hooks'
 import { khongDau, ngayVN } from '../lib/format'
@@ -9,6 +9,7 @@ import { Bao, Btn, Chips, Field, Menu, Modal, Spinner, Switch, useToast } from '
 import { useStaff } from './context'
 import { GuiThuModal } from './Email'
 import { LY_DO_NHOM, LyDoTuChoi } from './LyDo'
+import { KhongDenModal, NghiViecModal } from './NghiViec'
 
 export const LY_DO_LOAI = LY_DO_NHOM.flatMap((n) => n.ds)
 
@@ -41,6 +42,8 @@ export function useDoiGiaiDoan({ xong, henPV }) {
   const [nhanViec, setNhanViec] = useState(null)
   const [guiEmail, setGuiEmail] = useState(true)
   const [moThu, setMoThu] = useState(null)
+  const [nghi, setNghi] = useState(null)
+  const [khongDen, setKhongDen] = useState(null)
   const s = useStaff()
 
   async function lam(ids, tt, rows, ghiChu) {
@@ -72,8 +75,26 @@ export function useDoiGiaiDoan({ xong, henPV }) {
     setHoi(null)
   }
 
+  async function huy(fn, id, tt, tb) {
+    try { await rpc(fn, { p_id: id, p: { huy: true } }); bao(tb); xong && xong([id], tt) } catch (e) { bao(e.message, 'loi') }
+  }
+
   function doi(ids, tt, rows) {
     if (!ids.length) return
+    const r0 = rows?.[0] || { id: ids[0] }
+    const mot = (tb) => (ids.length > 1 ? (bao(tb, 'loi'), true) : false)
+    if (tt === 'nghi_viec') {
+      if (mot('Cập nhật nghỉ việc từng người một (cần ngày nghỉ và lý do)')) return
+      if (r0.trang_thai && !['nhan_viec', 'nghi_viec'].includes(r0.trang_thai)) return bao('Chỉ nhân sự Đang làm việc mới chuyển sang Đã nghỉ việc', 'loi')
+      return setNghi(r0)
+    }
+    if (tt === 'khong_den') {
+      if (mot('Đánh dấu không đến nhận việc từng người một')) return
+      if (r0.trang_thai && !['dat', 'khong_den'].includes(r0.trang_thai)) return bao('Chỉ ứng viên Chờ nhận việc mới chuyển sang Không đến nhận việc', 'loi')
+      return setKhongDen(r0)
+    }
+    if (tt === 'nhan_viec' && r0.trang_thai === 'nghi_viec' && ids.length === 1) return huy('td_nghi_viec', r0.id, 'nhan_viec', 'Đã hủy nghỉ việc — quay lại Đang làm việc')
+    if (tt === 'dat' && r0.trang_thai === 'khong_den' && ids.length === 1) return huy('td_khong_den', r0.id, 'dat', 'Đã trả về Chờ nhận việc')
     if (tt === 'nhan_viec') {
       if (ids.length > 1) return bao('Nhận việc từng người một để phân công cửa hàng', 'loi')
       return setNhanViec(rows?.[0] || { id: ids[0] })
@@ -102,6 +123,8 @@ export function useDoiGiaiDoan({ xong, henPV }) {
         </div>
       </Modal>
       {moThu && <GuiThuModal hoSoId={moThu.id} loai="khong_dat" ten={moThu.ten} dong={() => setMoThu(null)} />}
+      {nghi && <NghiViecModal h={nghi} dong={() => setNghi(null)} xong={() => { const r = nghi; setNghi(null); xong && xong([r.id], 'nghi_viec') }} />}
+      {khongDen && <KhongDenModal h={khongDen} dong={() => setKhongDen(null)} xong={() => { const r = khongDen; setKhongDen(null); xong && xong([r.id], 'khong_den') }} />}
       {nhanViec && <NhanViecModal hs={nhanViec} dong={() => setNhanViec(null)} xong={() => { const r = nhanViec; setNhanViec(null); xong && xong([r.id], 'nhan_viec') }} />}
     </>
   )
@@ -178,13 +201,21 @@ export function HanhDongBuoc({ h, doiGD, toi, sang }) {
       {s.coSua && <Btn kieu={sang ? 'vien-sang' : 'do'} co="md" icon={ThumbsDown} onClick={() => doiGD([h.id], 'khong_dat', [h])}>Loại</Btn>}
     </>
   )
-  if (tt === 'dat') return (
+  if (tt === 'dat' || tt === 'khong_den') return (
     <>
       {s.coSua && <Btn kieu={sang ? 'trang' : 'den'} co="md" icon={Store} onClick={() => doiGD([h.id], 'nhan_viec', [h])}>Xác nhận nhận việc</Btn>}
-      {s.coCham && <Link to={'/quantri/ung-vien/' + h.id + '/cham'} className={'btn md ' + k} style={{ textDecoration: 'none' }}><ClipboardCheck size={16} />Phiếu phỏng vấn</Link>}
+      {s.coSua && tt === 'dat' && <Btn kieu={k} co="md" icon={UserX} onClick={() => doiGD([h.id], 'khong_den', [h])}>Không đến</Btn>}
+      {s.coSua && tt === 'khong_den' && <Btn kieu={k} co="md" icon={RotateCcw} onClick={() => doiGD([h.id], 'dat', [h])}>Trả về chờ nhận việc</Btn>}
+      {s.coCham && tt === 'dat' && <Link to={'/quantri/ung-vien/' + h.id + '/cham'} className={'btn md ' + k} style={{ textDecoration: 'none' }}><ClipboardCheck size={16} />Phiếu phỏng vấn</Link>}
     </>
   )
-  if (tt === 'nhan_viec' && s.vaiTro !== 'phong_van') return <Link to={'/quantri/nhan-vien/' + h.id} className={'btn md ' + k} style={{ textDecoration: 'none' }}><Briefcase size={16} />Hồ sơ nhân viên</Link>
+  if ((tt === 'nhan_viec' || tt === 'nghi_viec') && s.vaiTro !== 'phong_van') return (
+    <>
+      {s.coSua && tt === 'nhan_viec' && <Btn kieu={k} co="md" icon={LogOut} onClick={() => doiGD([h.id], 'nghi_viec', [h])}>Nghỉ việc</Btn>}
+      {s.coSua && tt === 'nghi_viec' && <Btn kieu={k} co="md" icon={RotateCcw} onClick={() => doiGD([h.id], 'nhan_viec', [h])}>Hủy nghỉ việc</Btn>}
+      <Link to={'/quantri/nhan-vien/' + h.id} className={'btn md ' + k} style={{ textDecoration: 'none' }}><Briefcase size={16} />Hồ sơ nhân viên</Link>
+    </>
+  )
   return toi || null
 }
 
@@ -209,7 +240,7 @@ function BoSungDiaChi({ ma, xong }) {
 }
 
 export function ChonCuaHang({ giaTri, onChon, goiY = [] }) {
-  const { data: ch } = useAsync(() => docBang('cua_hang', [['ten', true]]), [])
+  const { data: ch, reload: reloadCh } = useAsync(() => docBang('cua_hang', [['ten', true]]), [])
   const [tim, setTim] = useState('')
   const [mo, setMo] = useState(!giaTri)
   const chon = (ch || []).find((c) => c.ma === giaTri)

@@ -17,12 +17,17 @@ import { HoSoChiTiet } from './Profile'
    khong : không đạt · rut: ứng viên rút hồ sơ */
 export const NHOM = {
   cho: { ten: 'Chờ xử lý', mau: '#E0820B', bg: '#FFF3E0', fg: '#8A4B00' },
-  duyet: { ten: 'Đã duyệt · chờ nhận việc', ngan: 'Đã duyệt', mau: '#3B6FE0', bg: '#EAF0FD', fg: '#2E5BC9' },
-  nhan: { ten: 'Đã nhận việc', mau: '#12A37F', bg: '#E3F5EE', fg: '#0E7F63' },
+  duyet: { ten: 'Chờ nhận việc', mau: '#3B6FE0', bg: '#EAF0FD', fg: '#2E5BC9' },
+  nhan: { ten: 'Đang làm việc', mau: '#12A37F', bg: '#E3F5EE', fg: '#0E7F63' },
+  nghi: { ten: 'Đã nghỉ việc', mau: '#8E7C99', bg: '#EFEAF2', fg: '#5E5068' },
+  kden: { ten: 'Không đến nhận việc', ngan: 'Không đến', mau: '#A63A35', bg: '#FBE9E8', fg: '#8E2C28' },
   khong: { ten: 'Không đạt', mau: '#E05252', bg: '#FDECEC', fg: '#B42318' },
   rut: { ten: 'Rút hồ sơ', mau: '#CFC9D4', bg: '#F4F1F5', fg: '#6F6777' }
 }
-const THU_TU = ['cho', 'duyet', 'nhan', 'khong', 'rut']
+const THU_TU = ['cho', 'duyet', 'nhan', 'nghi', 'kden', 'khong', 'rut']
+const DA_DAT = ['duyet', 'nhan', 'nghi', 'kden']
+const DA_LAM = ['nhan', 'nghi']
+const NGHI_SOM = 3
 const MAU_PV = { xong: '#12A37F', chua: '#E0820B', doi: '#7B2CBF' }
 const trongKy = (n, tu, den) => !!n && n >= tu && n <= den
 // Bộ lọc nhanh của danh sách (theo từng mốc báo cáo)
@@ -30,17 +35,19 @@ const XEM_FN = {
   du_kien: (r) => r.duKien, qua_han: (r) => r.quaHan,
   pv_lich: (r, tu, den) => trongKy(r.pvdN, tu, den),
   pv_xong: (r, tu, den) => trongKy(r.pvtN, tu, den),
-  pv_dat: (r, tu, den) => trongKy(r.pvtN, tu, den) && (r.nhom === 'duyet' || r.nhom === 'nhan'),
+  pv_dat: (r, tu, den) => trongKy(r.pvtN, tu, den) && DA_DAT.includes(r.nhom),
+  nghi_som: (r) => r.nhom === 'nghi' && r.snl != null && r.snl <= NGHI_SOM,
+  da_lam: (r) => DA_LAM.includes(r.nhom),
   pv_khong: (r, tu, den) => trongKy(r.pvtN, tu, den) && r.nhom === 'khong',
   pv_chua: (r, tu, den) => !r.pvt && trongKy(r.pvdN, tu, den),
   pv_doi: (r) => r.dl > 0
 }
 const TAB = {
-  nop: [['', 'Tất cả'], ['cho', 'Chờ xử lý', NHOM.cho.mau], ['duyet', 'Đã duyệt', NHOM.duyet.mau], ['du_kien', 'Dự kiến nhận việc', NHOM.duyet.mau], ['qua_han', 'Quá hẹn', NHOM.khong.mau], ['nhan', 'Đã nhận việc', NHOM.nhan.mau], ['khong', 'Không đạt', NHOM.khong.mau], ['rut', 'Rút hồ sơ', NHOM.rut.mau]],
+  nop: [['', 'Tất cả'], ['cho', 'Chờ xử lý', NHOM.cho.mau], ['duyet', 'Chờ nhận việc', NHOM.duyet.mau], ['qua_han', 'Quá hẹn', NHOM.khong.mau], ['nhan', 'Đang làm việc', NHOM.nhan.mau], ['nghi', 'Đã nghỉ việc', NHOM.nghi.mau], ['kden', 'Không đến', NHOM.kden.mau], ['khong', 'Không đạt', NHOM.khong.mau], ['rut', 'Rút hồ sơ', NHOM.rut.mau]],
   phong_van: [['', 'Tất cả'], ['pv_xong', 'Đã phỏng vấn', MAU_PV.xong], ['pv_chua', 'Chưa phỏng vấn', MAU_PV.chua], ['pv_dat', 'Đạt', NHOM.nhan.mau], ['pv_khong', 'Không đạt', NHOM.khong.mau], ['pv_doi', 'Đổi lịch', MAU_PV.doi]],
-  nhan_viec: [['', 'Tất cả'], ['du_kien', 'Dự kiến', NHOM.duyet.mau], ['qua_han', 'Quá hẹn', NHOM.khong.mau], ['nhan', 'Đã nhận việc', NHOM.nhan.mau]]
+  nhan_viec: [['', 'Tất cả'], ['duyet', 'Chờ nhận việc', NHOM.duyet.mau], ['qua_han', 'Quá hẹn', NHOM.khong.mau], ['kden', 'Không đến', NHOM.kden.mau], ['nhan', 'Đang làm việc', NHOM.nhan.mau], ['nghi', 'Đã nghỉ việc', NHOM.nghi.mau], ['nghi_som', 'Nghỉ sớm ≤ 3 ngày', NHOM.kden.mau]]
 }
-const nhomCua = (tt) => (tt === 'nhan_viec' ? 'nhan' : tt === 'dat' ? 'duyet' : tt === 'khong_dat' ? 'khong' : tt === 'rut' ? 'rut' : 'cho')
+const nhomCua = (tt) => (tt === 'nhan_viec' ? 'nhan' : tt === 'nghi_viec' ? 'nghi' : tt === 'khong_den' ? 'kden' : tt === 'dat' ? 'duyet' : tt === 'khong_dat' ? 'khong' : tt === 'rut' ? 'rut' : 'cho')
 
 const KHOANG = [
   { v: 'hom_nay', t: 'Hôm nay' }, { v: 'ngay_mai', t: 'Ngày mai' }, { v: 'tuan', t: 'Tuần này' }, { v: 'tuan_truoc', t: 'Tuần trước' },
@@ -270,7 +277,7 @@ function LichNhanViec({ thang, setThang, ds, hn, ngayChon, setNgayChon, dangTai,
       const k = pv ? r.ngayPV : r.ngayNV
       if (!k) continue
       const o = g.get(k) || { n: 0, a: 0, b: 0, c: 0 }; o.n++
-      if (pv) { if (r.pvt) o.a++; else if (k < hn) o.c++; else o.b++ } else if (r.nhom === 'nhan') o.a++; else if (r.quaHan) o.c++; else o.b++
+      if (pv) { if (r.pvt) o.a++; else if (k < hn) o.c++; else o.b++ } else if (DA_LAM.includes(r.nhom)) o.a++; else if (r.quaHan || r.nhom === 'kden') o.c++; else o.b++
       g.set(k, o)
     }
     return g
@@ -302,8 +309,8 @@ function LichNhanViec({ thang, setThang, ds, hn, ngayChon, setNgayChon, dangTai,
           <span><i style={{ background: NHOM.khong.mau }} />Qua ngày hẹn, chưa cập nhật</span>
         </> : <>
           <span><i style={{ background: NHOM.duyet.mau }} />Dự kiến</span>
-          <span><i style={{ background: NHOM.nhan.mau }} />Đã nhận việc</span>
-          <span><i style={{ background: NHOM.khong.mau }} />Quá hẹn chưa xác nhận</span>
+          <span><i style={{ background: NHOM.nhan.mau }} />Đã vào làm</span>
+          <span><i style={{ background: NHOM.khong.mau }} />Quá hẹn / không đến</span>
         </>}
       </div>
       <div className={'bc-lich-luoi' + (dangTai ? ' dang-tai' : '')}>
@@ -425,7 +432,8 @@ export default function Reports() {
   const dem = useMemo(() => demNhom(nguoi), [nguoi])
   const duKien = nguoi.filter((r) => r.duKien).length
   const quaHan = nguoi.filter((r) => r.quaHan).length
-  const coKQ = (dem.duyet || 0) + (dem.nhan || 0) + (dem.khong || 0)
+  const soDat = DA_DAT.reduce((a, k) => a + (dem[k] || 0), 0)
+  const coKQ = soDat + (dem.khong || 0)
 
   // Khu vực
   const theoKV = useMemo(() => {
@@ -496,8 +504,8 @@ export default function Reports() {
           dong: theoKV.map((x) => ({ kv: x.kv, n: x.n, ...Object.fromEntries(THU_TU.map((k) => [k, x.dem[k] || 0])) })) },
         { ten: 'Danh sách', cot: [{ k: 'ma', ten: 'Mã hồ sơ', w: 16 }, { k: 'ten', ten: 'Họ tên', w: 24 }, { k: 'sdt', ten: 'Điện thoại', w: 13 }, { k: 'vtTen', ten: 'Vị trí', w: 20 },
           { k: 'kv', ten: 'Khu vực', w: 22 }, { k: 'chTen', ten: 'Cửa hàng', w: 24 }, { k: 'nopVN', ten: 'Ngày nộp', w: 12 }, { k: 'pvdVN', ten: 'Lịch PV dự kiến', w: 17 }, { k: 'pvtVN', ten: 'Ngày PV thực tế', w: 17 }, { k: 'dl', ten: 'Số lần đổi lịch' }, { k: 'ttTen', ten: 'Trạng thái', w: 22 },
-          { k: 'ttCT', ten: 'Giai đoạn chi tiết', w: 18 }, { k: 'dkVN', ten: 'Nhận việc dự kiến', w: 14 }, { k: 'tnVN', ten: 'Nhận việc thực tế', w: 14 }, { k: 'diem', ten: 'Điểm PV' }, { k: 'lanTxt', ten: 'Lần ứng tuyển' }, { k: 'ptTen', ten: 'Phụ trách', w: 20 }, { k: 'ld', ten: 'Lý do không đạt (nội bộ)', w: 30 }],
-          dong: dsXem.map((r) => ({ ...r, vtTen: tenVT(r.vt), nopVN: dmy(r.nop), ttTen: r.quaHan ? 'Quá hẹn chưa xác nhận' : NHOM[r.nhom].ten, ttCT: GD[r.tt]?.ten, dkVN: dmy(r.dk), tnVN: dmy(r.tn), pvdVN: r.pvd ? dmy(r.pvdN) + ' ' + fmtGio(r.pvd) : '', pvtVN: r.pvt ? dmy(r.pvtN) + ' ' + fmtGio(r.pvt) : '', ptTen: r.pt ? s.tenNS(r.pt) : '', lanTxt: r.sl > 1 ? r.lan + '/' + r.sl : 1 })) },
+          { k: 'ttCT', ten: 'Giai đoạn chi tiết', w: 18 }, { k: 'dkVN', ten: 'Nhận việc dự kiến', w: 14 }, { k: 'tnVN', ten: 'Nhận việc thực tế', w: 14 }, { k: 'diem', ten: 'Điểm PV' }, { k: 'lanTxt', ten: 'Lần ứng tuyển' }, { k: 'ptTen', ten: 'Phụ trách', w: 20 }, { k: 'ld', ten: 'Lý do không đạt (nội bộ)', w: 30 }, { k: 'nbdVN', ten: 'Ngày bắt đầu làm', w: 14 }, { k: 'nnVN', ten: 'Ngày nghỉ việc', w: 14 }, { k: 'snl', ten: 'Số ngày đã làm' }, { k: 'ldn', ten: 'Lý do nghỉ / không đến', w: 30 }],
+          dong: dsXem.map((r) => ({ ...r, vtTen: tenVT(r.vt), nopVN: dmy(r.nop), ttTen: r.quaHan ? 'Quá hẹn chưa xác nhận' : NHOM[r.nhom].ten, ttCT: GD[r.tt]?.ten, dkVN: dmy(r.dk), tnVN: dmy(r.tn), pvdVN: r.pvd ? dmy(r.pvdN) + ' ' + fmtGio(r.pvd) : '', pvtVN: r.pvt ? dmy(r.pvtN) + ' ' + fmtGio(r.pvt) : '', ptTen: r.pt ? s.tenNS(r.pt) : '', nbdVN: dmy(r.nbd), nnVN: dmy(r.nn), lanTxt: r.sl > 1 ? r.lan + '/' + r.sl : 1 })) },
         { ten: 'Lịch nhận việc', cot: [{ k: 'ngay', ten: 'Ngày', w: 12 }, { k: 'ten', ten: 'Họ tên', w: 24 }, { k: 'sdt', ten: 'Điện thoại', w: 13 }, { k: 'chTen', ten: 'Cửa hàng', w: 24 }, { k: 'kv', ten: 'Khu vực', w: 22 }, { k: 'gio', ten: 'Giờ' }, { k: 'ttTen', ten: 'Trạng thái', w: 22 }],
           dong: lichDs.filter((r) => r.ngayNV?.startsWith(thang)).sort((a, b) => a.ngayNV.localeCompare(b.ngayNV)).map((r) => ({ ...r, ngay: dmy(r.ngayNV), ttTen: r.quaHan ? 'Quá hẹn chưa xác nhận' : NHOM[r.nhom].ten })) }
       ])
@@ -552,13 +560,13 @@ export default function Reports() {
           {moc === 'nop' && <div className="bc-chi-so-hang">
             <O k="" nhan={<><Users size={13} />Ứng viên</>} so={nguoi.length} phu="người đã đăng ký" on={!xem} />
             <O k="cho" nhan="Chờ xử lý" mau={NHOM.cho.mau} so={dem.cho || 0} phu={phanTram(dem.cho || 0, nguoi.length) + '% chưa có kết quả'} on={xem === 'cho'} />
-            <O k="duyet" nhan="Đã duyệt" mau={NHOM.duyet.mau} so={dem.duyet || 0} phu={duKien + ' dự kiến' + (quaHan ? ' · ' + quaHan + ' quá hẹn' : '')} on={xem === 'duyet'} />
-            <O k="nhan" nhan="Đã nhận việc" mau={NHOM.nhan.mau} so={dem.nhan || 0} phu="đã xác nhận đi làm" on={xem === 'nhan'} />
+            <O k="duyet" nhan="Chờ nhận việc" mau={NHOM.duyet.mau} so={dem.duyet || 0} phu={duKien + ' dự kiến' + (quaHan ? ' · ' + quaHan + ' quá hẹn' : '')} on={xem === 'duyet'} />
+            <O k="nhan" nhan="Đang làm việc" mau={NHOM.nhan.mau} so={dem.nhan || 0} phu={(dem.nghi || 0) + ' đã nghỉ · ' + (dem.kden || 0) + ' không đến'} on={xem === 'nhan'} />
             <O k="khong" nhan="Không đạt" mau={NHOM.khong.mau} so={dem.khong || 0} phu={(dem.rut || 0) + ' rút hồ sơ'} on={xem === 'khong'} />
             <div className="bc-chi-so ti-le">
               <span className="bc-cs-nhan">Tỉ lệ đạt</span>
-              <b>{coKQ ? phanTram((dem.duyet || 0) + (dem.nhan || 0), coKQ) + '%' : '—'}</b>
-              <small>{(dem.duyet || 0) + (dem.nhan || 0)}/{coKQ} người đã có kết quả</small>
+              <b>{coKQ ? phanTram(soDat, coKQ) + '%' : '—'}</b>
+              <small>{soDat}/{coKQ} người đã có kết quả</small>
             </div>
           </div>}
           {moc === 'phong_van' && (() => {
@@ -576,15 +584,16 @@ export default function Reports() {
             )
           })()}
           {moc === 'nhan_viec' && (() => {
-            const soCH = new Set(nguoi.map((r) => r.ch).filter(Boolean)).size
+            const daLam = (dem.nhan || 0) + (dem.nghi || 0)
+            const som = nguoi.filter(XEM_FN.nghi_som).length
             return (
               <div className="bc-chi-so-hang">
-                <O k="" nhan={<><Users size={13} />Có lịch nhận việc</>} so={nguoi.length} phu="người trong kỳ" on={!xem} />
-                <O k="nhan" nhan="Đã nhận việc" mau={NHOM.nhan.mau} so={dem.nhan || 0} phu="đã xác nhận đi làm" on={xem === 'nhan'} />
-                <O k="du_kien" nhan="Dự kiến" mau={NHOM.duyet.mau} so={duKien} phu="từ hôm nay trở đi" on={xem === 'du_kien'} />
-                <O k="qua_han" nhan="Quá hẹn" mau={NHOM.khong.mau} so={quaHan} phu="qua ngày, chưa xác nhận" on={xem === 'qua_han'} />
-                <div className="bc-chi-so ti-le"><span className="bc-cs-nhan"><Store size={13} />Cửa hàng</span><b>{soCH}</b><small>cửa hàng nhận người</small></div>
-                <div className="bc-chi-so ti-le"><span className="bc-cs-nhan">Tỉ lệ đi làm</span><b>{(dem.nhan || 0) + quaHan ? phanTram(dem.nhan || 0, (dem.nhan || 0) + quaHan) + '%' : '—'}</b><small>đã nhận / (đã nhận + quá hẹn)</small></div>
+                <O k="" nhan={<><Users size={13} />Tổng ứng viên đạt</>} so={soDat} phu="có lịch nhận việc trong kỳ" on={!xem} />
+                <O k="duyet" nhan="Chờ nhận việc" mau={NHOM.duyet.mau} so={dem.duyet || 0} phu={duKien + ' dự kiến' + (quaHan ? ' · ' + quaHan + ' quá hẹn' : '')} on={xem === 'duyet'} />
+                <O k="kden" nhan="Không đến nhận việc" mau={NHOM.kden.mau} so={dem.kden || 0} phu={phanTram(dem.kden || 0, soDat) + '% số ứng viên đạt'} on={xem === 'kden'} />
+                <O k="nhan" nhan="Đang làm việc" mau={NHOM.nhan.mau} so={dem.nhan || 0} phu={'còn làm · ' + phanTram(dem.nhan || 0, daLam) + '% số đã vào làm'} on={xem === 'nhan'} />
+                <O k="nghi" nhan="Đã nghỉ việc" mau={NHOM.nghi.mau} so={dem.nghi || 0} phu={som + ' nghỉ trong 1–' + NGHI_SOM + ' ngày đầu'} on={xem === 'nghi'} />
+                <O k="nghi_som" nhan="Tỷ lệ nghỉ sớm" mau={NHOM.kden.mau} so={daLam ? phanTram(som, daLam) + '%' : '—'} phu={som + '/' + daLam + ' người đã vào làm'} on={xem === 'nghi_som'} />
               </div>
             )
           })()}
@@ -746,7 +755,7 @@ export default function Reports() {
                   <td className="c-chTen cat">{r.chTen || <span className="muted">—</span>}</td>
                   <td className="c-nop so">{dmy(r.nop)}</td>
                   <td className="c-ngayPV so">{r.ngayPV ? <>{dmy(r.ngayPV)}<small>{r.pvt ? 'thực tế' : 'dự kiến'}{r.dl > 0 ? ' · dời ' + r.dl : ''}</small></> : <span className="muted">—</span>}</td>
-                  <td className="c-nhom"><TagNhom n={r.nhom} quaHan={r.quaHan} />{r.nhom === 'cho' && r.tt !== 'moi' && <small className="bc-gd">{GD[r.tt]?.ngan || GD[r.tt]?.ten}</small>}</td>
+                  <td className="c-nhom"><TagNhom n={r.nhom} quaHan={r.quaHan} />{r.nhom === 'cho' && r.tt !== 'moi' && <small className="bc-gd">{GD[r.tt]?.ngan || GD[r.tt]?.ten}</small>}{r.nhom === 'nghi' && r.snl != null && <small className="bc-gd">làm {r.snl} ngày{r.snl <= NGHI_SOM ? ' · nghỉ sớm' : ''}</small>}</td>
                   <td className="c-ngayNV so">{r.ngayNV ? <>{dmy(r.ngayNV)}<small>{r.tn ? 'thực tế' : 'dự kiến'}</small></> : <span className="muted">—</span>}</td>
                   <td className="c-diem so">{r.diem != null ? fmtDiem(r.diem) : <span className="muted">—</span>}</td>
                 </tr>

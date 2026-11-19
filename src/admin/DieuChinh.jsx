@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CalendarClock, ClipboardCheck, Edit3, History, Lock, Mail, RotateCcw, Store, UserCheck } from 'lucide-react'
+import { CalendarClock, ClipboardCheck, Edit3, History, Lock, LogOut, Mail, RotateCcw, Store, UserCheck, UserX } from 'lucide-react'
 import { rpc } from '../lib/api'
 import { congNgay, fmtGio, fmtNgayGio, ngayVN, thu } from '../lib/format'
 import { GD } from '../lib/stages'
@@ -9,20 +9,23 @@ import { ChonCuaHang } from './stageActions'
 import { LyDoTuChoi } from './LyDo'
 import { NhatKyDs } from './NhatKy'
 import { GuiThuModal } from './Email'
+import { KhongDenModal, NGHI_SOM, NghiViecModal } from './NghiViec'
 
 // ISO ↔ ô datetime-local theo giờ Việt Nam
 const vaoO = (iso) => (iso ? ngayVN(iso) + 'T' + fmtGio(iso) : '')
 const raISO = (v) => (v ? new Date(v + ':00+07:00').toISOString() : null)
 const gio5 = (t) => (t ? String(t).slice(0, 5) : '')
 const dmy = (s) => (s ? s.slice(8, 10) + '/' + s.slice(5, 7) + '/' + s.slice(0, 4) : '—')
-const TT_CHON = ['moi', 'hen_pv', 'can_nhac', 'chua_lien_lac', 'dat', 'khong_dat', 'rut']
+const TT_CHON = ['moi', 'hen_pv', 'can_nhac', 'chua_lien_lac', 'dat', 'khong_den', 'khong_dat', 'rut']
+const CO_NV = ['dat', 'nhan_viec', 'nghi_viec', 'khong_den']
 
 /* ---------- Thẻ "Kết quả & nhận việc" trong hồ sơ ---------- */
 export function TheTuyenDung({ h, coSua, onDoi, children }) {
   const s = useStaff()
   const [mo, setMo] = useState(false)
   const [moLs, setMoLs] = useState(false)
-  const coNV = ['dat', 'nhan_viec'].includes(h.trang_thai)
+  const [moNghi, setMoNghi] = useState(null)
+  const coNV = CO_NV.includes(h.trang_thai)
   const xemNK = s.vaiTro === 'quan_tri' || s.vaiTro === 'tuyen_dung'
   const Dong = ({ ic: Ic, nhan, children: c }) => <div className="ttd-dong"><span className="ttd-nhan"><Ic size={14} />{nhan}</span><div className="ttd-gt">{c}</div></div>
   return (
@@ -32,16 +35,32 @@ export function TheTuyenDung({ h, coSua, onDoi, children }) {
         {coSua && <Btn kieu="den" co="sm" icon={Edit3} onClick={() => setMo(true)}>Điều chỉnh</Btn>}
       </div>
       <div className="ttd">
-        <Dong ic={ClipboardCheck} nhan="Trạng thái"><StageTag ma={h.trang_thai} />{h.nguoi_chot && ['dat', 'khong_dat', 'nhan_viec'].includes(h.trang_thai) && <small>Chốt bởi {s.tenNS(h.nguoi_chot)}{h.chot_luc ? ' · ' + fmtNgayGio(h.chot_luc) : ''}</small>}</Dong>
+        <Dong ic={ClipboardCheck} nhan="Trạng thái"><StageTag ma={h.trang_thai} />{h.nguoi_chot && ['dat', 'khong_dat', 'nhan_viec', 'nghi_viec', 'khong_den'].includes(h.trang_thai) && <small>Chốt bởi {s.tenNS(h.nguoi_chot)}{h.chot_luc ? ' · ' + fmtNgayGio(h.chot_luc) : ''}</small>}</Dong>
         <Dong ic={CalendarClock} nhan="Phỏng vấn">
           {h.pv_thuc_te ? <b>{fmtGio(h.pv_thuc_te)} · {thu(h.pv_thuc_te, true)} {dmy(ngayVN(h.pv_thuc_te))}</b> : <span className="muted">Chưa phỏng vấn</span>}
           <small>{h.pv_thuc_te ? 'thực tế' : ''}{h.pv_du_kien ? (h.pv_thuc_te ? ' · ' : '') + 'dự kiến ' + fmtGio(h.pv_du_kien) + ' ' + dmy(ngayVN(h.pv_du_kien)) : ''}{h.so_lan_doi_lich > 0 ? ' · đổi lịch ' + h.so_lan_doi_lich + ' lần' : ''}</small>
         </Dong>
         {(coNV || (h.cua_hang_du_kien && !['khong_dat', 'rut'].includes(h.trang_thai))) && (
-          <Dong ic={Store} nhan={h.trang_thai === 'nhan_viec' ? 'Đã nhận việc' : 'Nhận việc'}>
+          <Dong ic={Store} nhan={['nhan_viec', 'nghi_viec'].includes(h.trang_thai) ? 'Đã nhận việc' : 'Nhận việc'}>
             <b>{h.noi_lam_viec || <span className="muted">Chưa chọn cửa hàng</span>}</b>
             <small>{h.ngay_nhan_viec ? thu(h.ngay_nhan_viec + 'T12:00:00+07:00', true) + ' ' + dmy(h.ngay_nhan_viec) : 'Chưa có ngày'}{h.gio_nhan_viec ? ' · ca ' + gio5(h.gio_nhan_viec) + (h.gio_ket_thuc ? '–' + gio5(h.gio_ket_thuc) : '') : ''}{h.gioi_tinh ? ' · trang phục ' + h.gioi_tinh.toLowerCase() : ''}</small>
             {h.ghi_chu_nhan_viec && <small>“{h.ghi_chu_nhan_viec}”</small>}
+          </Dong>
+        )}
+        {h.trang_thai === 'nghi_viec' && (
+          <Dong ic={LogOut} nhan="Nghỉ việc">
+            <span className="ttd-nghi"><b>Đã làm {h.so_ngay_lam ?? '—'} ngày</b>{h.so_ngay_lam != null && h.so_ngay_lam <= NGHI_SOM && <i>Nghỉ sớm</i>}</span>
+            <small>Bắt đầu {thu(h.ngay_bat_dau_lam + 'T12:00:00+07:00', true)} {dmy(h.ngay_bat_dau_lam)} · nghỉ từ {thu(h.ngay_nghi_viec + 'T12:00:00+07:00', true)} {dmy(h.ngay_nghi_viec)}</small>
+            {h.ly_do_nghi_viec && <span className="ttd-ly-do xam">{h.ly_do_nghi_viec}</span>}
+            <small>{h.ket_thuc_boi ? 'Cập nhật bởi ' + s.tenNS(h.ket_thuc_boi) : ''}{h.ket_thuc_luc ? ' · ' + fmtNgayGio(h.ket_thuc_luc) : ''}</small>
+            {coSua && <button type="button" className="ttd-sua-nho" onClick={() => setMoNghi('nghi')}><Edit3 size={12} />Sửa ngày / lý do nghỉ</button>}
+          </Dong>
+        )}
+        {h.trang_thai === 'khong_den' && (
+          <Dong ic={UserX} nhan="Không đến">
+            {h.ly_do_khong_den ? <span className="ttd-ly-do xam">{h.ly_do_khong_den}</span> : <span className="muted">Chưa ghi lý do</span>}
+            <small>{h.ket_thuc_boi ? 'Cập nhật bởi ' + s.tenNS(h.ket_thuc_boi) : ''}{h.ket_thuc_luc ? ' · ' + fmtNgayGio(h.ket_thuc_luc) : ''}</small>
+            {coSua && <button type="button" className="ttd-sua-nho" onClick={() => setMoNghi('khong_den')}><Edit3 size={12} />Sửa lý do</button>}
           </Dong>
         )}
         {h.ly_do_loai && (
@@ -56,6 +75,8 @@ export function TheTuyenDung({ h, coSua, onDoi, children }) {
         </div>
       )}
       {mo && <SuaTuyenDung h={h} dong={() => setMo(false)} xong={() => { setMo(false); onDoi?.() }} />}
+      {moNghi === 'nghi' && <NghiViecModal h={h} dong={() => setMoNghi(null)} xong={() => { setMoNghi(null); onDoi?.() }} />}
+      {moNghi === 'khong_den' && <KhongDenModal h={h} dong={() => setMoNghi(null)} xong={() => { setMoNghi(null); onDoi?.() }} />}
     </section>
   )
 }
@@ -77,7 +98,7 @@ export function SuaTuyenDung({ h, dong, xong }) {
   const [loi, setLoi] = useState(null)
   const [moThu, setMoThu] = useState(null)
   const dat = (k) => (v) => setF((x) => ({ ...x, [k]: v && v.target ? v.target.value : v }))
-  const coNV = ['dat', 'nhan_viec'].includes(f.trang_thai)
+  const coNV = CO_NV.includes(f.trang_thai)
   const dsTT = [...TT_CHON, ...(TT_CHON.includes(h.trang_thai) ? [] : [h.trang_thai])]
   const doi = Object.keys(goc).filter((k) => f[k] !== goc[k])
   const doiNV = doi.some((k) => ['cua_hang_du_kien', 'ngay_nhan_viec', 'gio_nhan_viec', 'gio_ket_thuc', 'gioi_tinh', 'ghi_chu_nhan_viec'].includes(k))
@@ -117,7 +138,9 @@ export function SuaTuyenDung({ h, dong, xong }) {
             ))}
           </div>
           {f.trang_thai !== goc.trang_thai && goc.trang_thai === 'nhan_viec' && <Bao kieu="vang">Hồ sơ nhân viên đã tạo vẫn được giữ lại — cập nhật thêm ở mục Nhân viên mới nếu cần.</Bao>}
-          {f.trang_thai === 'nhan_viec' && goc.trang_thai !== 'nhan_viec' && <Bao kieu="xanh">Xác nhận nhận việc dùng nút “Ứng viên đã đến — xác nhận nhận việc” để tạo hồ sơ nhân viên.</Bao>}
+          {f.trang_thai === 'nhan_viec' && goc.trang_thai === 'nghi_viec' && <Bao kieu="xanh">Hồ sơ trở lại Đang làm việc. Ngày nghỉ và lý do nghỉ sẽ được xóa (vẫn lưu trong lịch sử).</Bao>}
+          {f.trang_thai === 'khong_den' && goc.trang_thai !== 'khong_den' && <Bao kieu="vang">Ghi lý do không đến bằng nút “Không đến” trên hồ sơ để có số liệu đầy đủ.</Bao>}
+          {f.trang_thai === 'nhan_viec' && !['nhan_viec', 'nghi_viec'].includes(goc.trang_thai) && <Bao kieu="xanh">Xác nhận nhận việc dùng nút “Ứng viên đã đến — xác nhận nhận việc” để tạo hồ sơ nhân viên.</Bao>}
           <label className="field gon"><span className="nhan">Vị trí ứng tuyển / được phân công</span>
             <select value={f.vi_tri_id} onChange={dat('vi_tri_id')}>{s.dm.viTri.map((v) => <option key={v.id} value={String(v.id)}>{v.ten}</option>)}</select>
           </label>

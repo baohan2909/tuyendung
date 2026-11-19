@@ -200,3 +200,19 @@
 .hdk-gia-lap .o-nhap { flex: 1; min-width: 0; display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: 999px; background: #fff; box-shadow: inset 0 0 0 1.5px #F2C6DD; font-size: 14px; font-weight: 700; color: var(--ink); letter-spacing: .03em; }
 .hdk-gia-lap .o-nhap svg { color: var(--pink); flex: none; }
 .hdk-gia-lap .nut-gl { flex: none; height: 40px; padding: 0 16px; border-radius: 999px; display: inline-flex; align-items: center; background: linear-gradient(135deg, #E0157E 0%, #A0189A 58%, #7B2CBF 100%); color: #fff; font-size: 13px; font-weight: 800; }
+
+/* Hồ sơ cần chuẩn bị khi nhận việc */
+.the-ho-so { display: flex; flex-direction: column; gap: 12px; padding: 16px 18px; border-radius: 24px; background: #F7F4F9; }
+.ths-nhom { display: flex; flex-direction: column; gap: 8px; }
+.ths-dau { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.ths-nhan { height: 22px; padding: 0 10px; border-radius: 999px; font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; display: inline-flex; align-items: center; background: #E3F5EE; color: #0E7F63; }
+.ths-nhom.bo_sung .ths-nhan { background: #FDF0DC; color: #8A5410; }
+.ths-dau small { font-size: 12.5px; color: var(--muted); }
+.the-ho-so ol { list-style: none; margin: 0; padding: 0; border-radius: 16px; background: #fff; box-shadow: inset 0 0 0 1px #EBE4EF; overflow: hidden; }
+.the-ho-so li { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; font-size: 13.5px; line-height: 1.45; }
+.the-ho-so li + li { border-top: 1px solid #F1EBF4; }
+.the-ho-so li i { flex: none; width: 18px; font-style: normal; font-size: 12px; font-weight: 800; color: #A79FAE; padding-top: 1px; }
+.the-ho-so li span { flex: 1; min-width: 0; color: var(--ink); }
+.the-ho-so li b { flex: none; font-size: 13px; font-weight: 800; white-space: nowrap; }
+.ths-luu-y { margin: 0; padding: 10px 12px; border-radius: 14px; background: #FFF7FB; box-shadow: inset 0 0 0 1px #F6DCEA; font-size: 12.5px; line-height: 1.55; color: #5C5363; }
+.ths-luu-y b { color: #B0005A; }

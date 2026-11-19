@@ -14,7 +14,7 @@ export const KQ_LAN = {
   rut: { ten: 'Đã rút', mau: '#B9B2BF' },
   dang: { ten: 'Đang xét', mau: '#E0820B' }
 }
-export const nhomKQ = (tt) => (['dat', 'nhan_viec'].includes(tt) ? 'dat' : tt === 'khong_dat' ? 'khong' : tt === 'rut' ? 'rut' : 'dang')
+export const nhomKQ = (tt) => (['dat', 'nhan_viec', 'nghi_viec', 'khong_den'].includes(tt) ? 'dat' : tt === 'khong_dat' ? 'khong' : tt === 'rut' ? 'rut' : 'dang')
 
 function Cham({ tt, dang }) {
   const k = KQ_LAN[nhomKQ(tt)]
@@ -126,6 +126,7 @@ export function LichSuUngTuyen({ id, nhip }) {
                   <div className="ls-chi-tiet">
                     {x.diem != null && <span>Điểm PV <b>{Number(x.diem).toFixed(1)}</b></span>}
                     {x.cua_hang && <span>Nhận việc tại <b>{x.cua_hang}</b>{x.ngay_nhan_viec ? ' · ' + fmtNgay(x.ngay_nhan_viec) : ''}</span>}
+                    {x.tt === 'nghi_viec' && x.so_ngay_lam != null && <span>Đã làm <b>{x.so_ngay_lam} ngày</b>{x.ngay_nghi ? ' · nghỉ từ ' + fmtNgay(x.ngay_nghi) : ''}</span>}
                     {x.ly_do && <span>Lý do: {x.ly_do}</span>}
                     {x.nguoi_chot && <span>Chốt bởi {x.nguoi_chot}{x.chot_luc ? ' · ' + fmtNgay(x.chot_luc) : ''}</span>}
                   </div>
